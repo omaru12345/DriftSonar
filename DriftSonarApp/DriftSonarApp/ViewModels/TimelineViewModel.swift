@@ -43,17 +43,24 @@ class TimelineViewModel {
         isLoading = false
     }
 
-    func createPost(content: String, authorPublicKey: Data, authorPrivateKey: Data, isAnonymous: Bool = false) {
+    func createPost(content: String, authorPublicKey: Data, isAnonymous: Bool = false) {
         guard let useCase = createUseCase else { return }
         // TASK-110: When anonymous, substitute ephemeral keys so the post is unlinkable.
+        // TASK-153: Load the signing key here and abort+report on failure rather than
+        // signing with an empty key (which would produce an invalid signature).
         let (pubKey, privKey): (Data, Data)
         if isAnonymous {
             let ephemeral = EphemeralKeyService.generate()
             pubKey = ephemeral.publicKey
             privKey = ephemeral.privateKey
         } else {
+            do {
+                privKey = try KeychainService.loadSigningPrivateKey()
+            } catch {
+                errorMessage = "署名鍵を取得できないため投稿できません。アプリを再起動しても直らない場合は再セットアップが必要です。"
+                return
+            }
             pubKey = authorPublicKey
-            privKey = authorPrivateKey
         }
         let request = CreatePostRequest(content: content, authorPublicKey: pubKey, authorPrivateKey: privKey)
         do {

@@ -9,11 +9,10 @@ struct SecretMessageView: View {
     /// Optional nickname received via BLE (TASK-080). Falls back to fingerprint.
     private let peerNickname: String?
 
-    init(otherPublicKey: Data, myPublicKey: Data, myPrivateKey: Data, peerNickname: String? = nil) {
+    init(otherPublicKey: Data, myPublicKey: Data, peerNickname: String? = nil) {
         _viewModel = State(initialValue: SecretMessageViewModel(
             otherPublicKey: otherPublicKey,
-            myPublicKey: myPublicKey,
-            myPrivateKey: myPrivateKey
+            myPublicKey: myPublicKey
         ))
         self.peerNickname = peerNickname
     }

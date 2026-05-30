@@ -31,9 +31,11 @@ public class SwiftDataUserRepository: UserRepository {
         let descriptor = FetchDescriptor<UserProfileModel>()
         guard let model = try context.fetch(descriptor).first else { return nil }
 
-        // Load private keys from Keychain; fall back to empty Data for pre-migration installs
-        let privateKey = (try? KeychainService.load(account: KeychainService.agreementPrivateKeyAccount)) ?? Data()
-        let signingPrivateKey = (try? KeychainService.load(account: KeychainService.signingPrivateKeyAccount)) ?? Data()
+        // Load private keys from Keychain. A profile without its matching keys is
+        // an integrity violation (TASK-153) — fail loudly instead of returning empty
+        // Data, which would silently break signing/decryption downstream.
+        let privateKey = try KeychainService.loadAgreementPrivateKey()
+        let signingPrivateKey = try KeychainService.loadSigningPrivateKey()
 
         return UserProfile(
             id: model.id,

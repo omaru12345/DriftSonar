@@ -70,14 +70,12 @@ struct PostTimelineView: View {
             }
             .sheet(isPresented: $showingCompose) {
                 // TASK-109/110: Pass isAnonymous flag from ComposeView to ViewModel.
+                // TASK-153: The signing key is loaded inside the ViewModel; the View no
+                // longer touches the Keychain, and key-load failures surface as an alert.
                 ComposeView(authorPublicKey: myProfile.signingPublicKey) { content, isAnonymous in
-                    let signingKey = (try? KeychainService.load(
-                        account: KeychainService.signingPrivateKeyAccount
-                    )) ?? Data()
                     viewModel.createPost(
                         content: content,
                         authorPublicKey: myProfile.signingPublicKey,
-                        authorPrivateKey: signingKey,
                         isAnonymous: isAnonymous
                     )
                 }

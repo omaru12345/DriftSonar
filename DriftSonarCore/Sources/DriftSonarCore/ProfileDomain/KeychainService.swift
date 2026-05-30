@@ -63,4 +63,20 @@ public extension KeychainService {
     static let agreementPrivateKeyAccount = "com.driftsonar.key.agreement"
     /// Account key for the Ed25519 signing private key.
     static let signingPrivateKeyAccount   = "com.driftsonar.key.signing"
+
+    // MARK: - Typed accessors (TASK-153)
+    //
+    // Centralised, intention-revealing key loaders. Callers MUST handle the
+    // thrown error rather than substituting empty `Data()` — an empty key
+    // silently produces invalid signatures / undecryptable messages.
+
+    /// Loads the X25519 agreement private key used for SecretMessage E2E.
+    static func loadAgreementPrivateKey() throws -> Data {
+        try load(account: agreementPrivateKeyAccount)
+    }
+
+    /// Loads the Ed25519 signing private key used to sign posts.
+    static func loadSigningPrivateKey() throws -> Data {
+        try load(account: signingPrivateKeyAccount)
+    }
 }

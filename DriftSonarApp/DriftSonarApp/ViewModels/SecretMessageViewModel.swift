@@ -10,26 +10,35 @@ class SecretMessageViewModel {
 
     private let secretService = SecretMessageService()
     let otherPublicKey: Data
-    private let myPrivateKey: Data
+    /// Loaded from the Keychain in `setup` (TASK-153). `nil` means the key could
+    /// not be retrieved — messages can be neither decrypted nor sent.
+    private var myPrivateKey: Data?
     private let myPublicKey: Data
 
     private var messageRepository: SecretMessageRepository?
     /// Called with encrypted data to enqueue for BLE delivery.
     var onSendEncrypted: ((Data) -> Void)?
 
-    init(otherPublicKey: Data, myPublicKey: Data, myPrivateKey: Data) {
+    init(otherPublicKey: Data, myPublicKey: Data) {
         self.otherPublicKey = otherPublicKey
         self.myPublicKey = myPublicKey
-        self.myPrivateKey = myPrivateKey
     }
 
     func setup(repository: SecretMessageRepository) {
         self.messageRepository = repository
+        // TASK-153: Load the agreement private key here instead of receiving it from
+        // the View. Failure is surfaced to the user rather than silently using empty Data.
+        do {
+            myPrivateKey = try KeychainService.loadAgreementPrivateKey()
+        } catch {
+            errorMessage = "暗号鍵を取得できないため、メッセージを表示・送信できません。"
+            return
+        }
         loadMessages()
     }
 
     func loadMessages() {
-        guard let repo = messageRepository else { return }
+        guard let repo = messageRepository, let myPrivateKey else { return }
         let stored = (try? repo.fetchMessages(for: otherPublicKey)) ?? []
         messages = stored.compactMap { item in
             guard let text = try? secretService.decrypt(
@@ -43,6 +52,11 @@ class SecretMessageViewModel {
 
     func sendMessage() {
         guard !draftMessage.isEmpty else { return }
+        // TASK-153: Abort if the key is unavailable rather than encrypting with empty Data.
+        guard let myPrivateKey else {
+            errorMessage = "暗号鍵が利用できないため送信できません。"
+            return
+        }
         let text = draftMessage
         draftMessage = ""
 
@@ -71,6 +85,7 @@ class SecretMessageViewModel {
     /// Called when a direct message arrives over BLE from this peer.
     func receiveEncrypted(_ encryptedData: Data, senderPublicKey: Data) {
         guard senderPublicKey == otherPublicKey else { return }
+        guard let myPrivateKey else { return }
         do {
             let text = try secretService.decrypt(
                 encryptedMessage: EncryptedMessage(data: encryptedData),

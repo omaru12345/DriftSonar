@@ -87,13 +87,12 @@ struct EncounterView: View {
                                 .listRowSeparator(.hidden)
                         } else {
                             ForEach(viewModel.encounteredPeers, id: \.peerPublicKey) { peer in
-                                let myPrivateKey = (try? KeychainService.load(
-                                    account: KeychainService.agreementPrivateKeyAccount
-                                )) ?? Data()
+                                // TASK-153: The private key is loaded inside
+                                // SecretMessageViewModel (with error handling), so the
+                                // View no longer reads the Keychain per row.
                                 NavigationLink(destination: SecretMessageView(
                                     otherPublicKey: peer.peerPublicKey,
                                     myPublicKey: myProfile.publicKey,
-                                    myPrivateKey: myPrivateKey,
                                     peerNickname: peer.nickname
                                 )) {
                                     HStack {
