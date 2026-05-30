@@ -77,5 +77,56 @@ final class AppServices {
                 signingPublicKey: profile.signingPublicKey
             )
         }
+
+        // TASK-170: Seed a built-in welcome post so a fresh, solo install never shows
+        // a blank Timeline (App Store Guideline 4.2). Skipped if the install is in a
+        // broken state — there is no point seeding into a profile we are about to reset.
+        if integrityStatus == .ok {
+            seedWelcomePostIfNeeded(container: container)
+        }
+    }
+
+    // MARK: - Welcome post (TASK-170)
+
+    private static let welcomeSeededKey = "hasSeededWelcomePost"
+    /// Stable ID so the welcome post is upserted (never duplicated) even if the
+    /// UserDefaults flag is somehow lost.
+    private static let welcomePostID = UUID(uuidString: "D71F7500-0000-0000-0000-000000000001")!
+
+    /// Inserts the welcome post once. Best-effort: a failure here must never block
+    /// startup, so errors are swallowed and the flag is only set on success.
+    private func seedWelcomePostIfNeeded(container: ModelContainer) {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.welcomeSeededKey) else { return }
+
+        let post = Post(
+            id: Self.welcomePostID,
+            content: WelcomePost.content,
+            authorPublicKey: WelcomePost.authorKey,
+            timestamp: Date(),
+            signature: Data(),
+            ttl: 0,
+            hopCount: 0
+        )
+        do {
+            try postRepository.save(post)
+        } catch {
+            return
+        }
+
+        // TimelineView resolves author names from encountered peers; register the
+        // sentinel key with a friendly system name so it shows "DriftSonar" rather
+        // than a raw key fingerprint.
+        let context = container.mainContext
+        context.insert(EncounteredEventModel(
+            peerId: "driftsonar-welcome",
+            peerPublicKey: WelcomePost.authorKey,
+            encounteredAt: Date(),
+            nickname: WelcomePost.authorName
+        ))
+        try? context.save()
+
+        defaults.set(true, forKey: Self.welcomeSeededKey)
+        timelineViewModel.refresh()
     }
 }

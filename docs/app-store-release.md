@@ -131,7 +131,7 @@ App Store Connect → App Privacy で申告。DriftSonar は:
 - アカウント不要アプリなので **デモアカウントは不要**である旨も明記。
 
 ### その他のリジェクト要因
-- **Minimum Functionality**: 単体で何もできないと見なされない様、空状態 UI やデモ性を担保（デモシード・空状態イラスト実装済み）。
+- **Minimum Functionality**: 単体で何もできないと見なされない様、空状態 UI やデモ性を担保。**初回起動時に「ようこそ」システム投稿を自動シードし、単独端末（審査員環境）でも Timeline が必ず非空になる**（TASK-170、Release ビルドでも有効）。詳細 → §8.2。
 - **暗号**: `ITSAppUsesNonExemptEncryption=false` で標準暗号の適用除外を申告済み（CryptoKit のみ使用前提）。
 
 ---
@@ -155,6 +155,27 @@ App Store Connect → App Privacy で申告。DriftSonar は:
 
 - `PostTimelineView` は `@Query private var blockedKeyModels` で**ブロックリストをライブ購読**しており、ブロック追加と同時に `visiblePosts` から該当著者の投稿が消える（アプリ再起動・再取得は不要）。
 - 受信側でもブロック著者の投稿は表示されない。BLE 受信自体の遮断強化は別 Issue（脅威モデル系）で扱う。
+
+---
+
+## 8.2 単独端末デモ / Minimum Functionality（GL 4.2）— TASK-170 🔄
+
+審査員は基本 1 台でテストするため、周囲に端末がなく Timeline が「真っ白」だと最小機能未達でリジェクトされやすい（GL 4.2 / 2.1）。対策の実装済み・残作業:
+
+| 項目 | 状態 | 内容 |
+|---|---|---|
+| ようこそシステム投稿 | ✅ 実装済み | 初回起動時に `WelcomePost`（システム由来・送信者名「DriftSonar」）を 1 件シード。`AppServices.seedWelcomePostIfNeeded` が `UserDefaults("hasSeededWelcomePost")` ＋安定 UUID で二重投入を防止。**Release ビルドでも動作**（旧デモシード TASK-107 は `#if DEBUG` 限定だったため審査ビルドでは空だった点を解消）。 |
+| デモ動画（2台伝播・E2E DM） | ⬜ あなたの手作業 | 実機2台で投稿伝播・DM を録画し、限定公開 URL を Review Notes に貼る。URL: `（ここに貼る）` |
+| Review Notes 追記 | ⬜ 提出時 | 下記文面を §8 の注記に追加。 |
+
+### Review Notes に追記する文面（案）
+
+> 本アプリは近接2台のすれ違いでメッセージが伝播する P2P SNS です。**初回起動時に「ようこそ」投稿が自動表示される**ため、周囲に端末がない単独環境でもタイムライン・投稿作成・各画面の UI をご確認いただけます。実際の端末間伝播と E2E 暗号 DM の動作は、添付のデモ動画（近接2台での伝播）をご参照ください。
+
+### 仕様メモ
+- 投稿の実体は通常の `Post`（センチネル鍵 `0xD5`×32・署名空）で、表示名解決のため `EncounteredEventModel` にシステム名「DriftSonar」を登録。本物の受信投稿と体裁が混同しないよう、本文自体がアプリ説明（ようこそ文）になっている。
+- 既存ユーザーにも初回 1 回だけ表示される（フラグ未設定のため）。公開前のため実害なし。
+- 関連未対応: オンボーディングでの**疑似伝播アニメーション**演出は別 Issue TASK-121（#156, P2）。
 
 ---
 
