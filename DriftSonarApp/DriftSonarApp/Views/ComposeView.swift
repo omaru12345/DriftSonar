@@ -4,11 +4,14 @@ import DriftSonarCore
 struct ComposeView: View {
     let authorPublicKey: Data
     /// Called with (content, isAnonymous) when the user taps "投稿" (TASK-109/110).
-    let onSubmit: (String, Bool) -> Void
+    /// Returns `nil` on success, or an `AppError` to keep the sheet open and report (TASK-142).
+    let onSubmit: (String, Bool) async -> AppError?
 
     @State private var content = ""
     @State private var isAnonymous = false
     @State private var isPosting = false
+    /// Post failure surfaced in-sheet so it isn't hidden behind the dismissed sheet (TASK-142).
+    @State private var postError: AppError?
     @Environment(\.dismiss) private var dismiss
 
     private let maxLength = CreatePostUseCase.maxContentLength
@@ -51,22 +54,37 @@ struct ComposeView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") { dismiss() }
+                        .disabled(isPosting)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    // TASK-089: Show spinner while posting.
+                    // TASK-089/142: Show the spinner for the duration of the post and only
+                    // dismiss on success. Swapping the button for the spinner also blocks
+                    // double submission.
                     if isPosting {
                         ProgressView()
                     } else {
-                        Button("投稿") {
-                            isPosting = true
-                            onSubmit(content, isAnonymous)
-                            isPosting = false
-                            dismiss()
-                        }
-                        .bold()
-                        .disabled(!canPost)
+                        Button("投稿") { submit() }
+                            .bold()
+                            .disabled(!canPost)
                     }
                 }
+            }
+            // TASK-142/154: Report a post failure in-sheet so it isn't hidden behind dismiss.
+            .errorAlert($postError)
+        }
+    }
+
+    /// Runs the post asynchronously, keeping the spinner visible until it completes,
+    /// dismissing only on success and surfacing the error otherwise (TASK-142).
+    private func submit() {
+        Task {
+            isPosting = true
+            let result = await onSubmit(content, isAnonymous)
+            isPosting = false
+            if let result {
+                postError = result
+            } else {
+                dismiss()
             }
         }
     }

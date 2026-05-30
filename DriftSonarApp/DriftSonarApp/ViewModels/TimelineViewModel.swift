@@ -44,8 +44,13 @@ class TimelineViewModel {
         isLoading = false
     }
 
-    func createPost(content: String, authorPublicKey: Data, isAnonymous: Bool = false) {
-        guard let useCase = createUseCase else { return }
+    /// Creates a post. Returns `nil` on success, or an `AppError` describing the failure
+    /// so the caller (ComposeView) can keep its sheet open and present the error there
+    /// instead of dismissing into a hidden alert (TASK-142). Post failures are intentionally
+    /// not written to `self.error`, which is reserved for timeline-fetch failures.
+    @discardableResult
+    func createPost(content: String, authorPublicKey: Data, isAnonymous: Bool = false) -> AppError? {
+        guard let useCase = createUseCase else { return .postFailed }
         // TASK-110: When anonymous, substitute ephemeral keys so the post is unlinkable.
         // TASK-153: Load the signing key here and abort+report on failure rather than
         // signing with an empty key (which would produce an invalid signature).
@@ -58,8 +63,7 @@ class TimelineViewModel {
             do {
                 privKey = try KeychainService.loadSigningPrivateKey()
             } catch {
-                self.error = .keyUnavailable
-                return
+                return .keyUnavailable
             }
             pubKey = authorPublicKey
         }
@@ -68,12 +72,13 @@ class TimelineViewModel {
             let post = try useCase.execute(request)
             if isAnonymous { anonymousPostIds.insert(post.id) }
             refresh()
+            return nil
         } catch CreatePostError.emptyContent {
-            self.error = .message("投稿内容を入力してください。")
+            return .message("投稿内容を入力してください。")
         } catch CreatePostError.contentTooLong {
-            self.error = .message("\(CreatePostUseCase.maxContentLength)文字以内で入力してください。")
+            return .message("\(CreatePostUseCase.maxContentLength)文字以内で入力してください。")
         } catch {
-            self.error = .postFailed
+            return .postFailed
         }
     }
 }

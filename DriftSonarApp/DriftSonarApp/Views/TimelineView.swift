@@ -73,6 +73,8 @@ struct PostTimelineView: View {
                 // TASK-153: The signing key is loaded inside the ViewModel; the View no
                 // longer touches the Keychain, and key-load failures surface as an alert.
                 ComposeView(authorPublicKey: myProfile.signingPublicKey) { content, isAnonymous in
+                    // TASK-142: createPost returns nil on success or an AppError on failure,
+                    // letting ComposeView keep the sheet open and report the problem.
                     viewModel.createPost(
                         content: content,
                         authorPublicKey: myProfile.signingPublicKey,
