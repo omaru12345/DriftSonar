@@ -4,7 +4,7 @@ import DriftSonarCore
 
 @Observable
 class SecretMessageViewModel {
-    var messages: [(isMine: Bool, text: String)] = []
+    var messages: [(isMine: Bool, text: String, timestamp: Date)] = []
     var draftMessage: String = ""
     /// Unified user-facing error surfaced as an alert (TASK-154).
     var error: AppError?
@@ -47,7 +47,7 @@ class SecretMessageViewModel {
                 receiverPrivateKey: item.isMine ? myPrivateKey : myPrivateKey,
                 senderPublicKey: item.isMine ? myPublicKey : otherPublicKey
             ) else { return nil }
-            return (isMine: item.isMine, text: text)
+            return (isMine: item.isMine, text: text, timestamp: item.timestamp)
         }
     }
 
@@ -68,14 +68,15 @@ class SecretMessageViewModel {
                 receiverPublicKey: otherPublicKey
             )
             // Persist
+            let now = Date()
             try? messageRepository?.save(
                 encryptedData: encrypted.data,
                 otherPublicKey: otherPublicKey,
                 isMine: true,
-                timestamp: Date()
+                timestamp: now
             )
             // Show in UI immediately
-            messages.append((isMine: true, text: text))
+            messages.append((isMine: true, text: text, timestamp: now))
             // Enqueue for BLE delivery
             onSendEncrypted?(encrypted.data)
         } catch {
@@ -93,13 +94,14 @@ class SecretMessageViewModel {
                 receiverPrivateKey: myPrivateKey,
                 senderPublicKey: senderPublicKey
             )
+            let now = Date()
             try? messageRepository?.save(
                 encryptedData: encryptedData,
                 otherPublicKey: senderPublicKey,
                 isMine: false,
-                timestamp: Date()
+                timestamp: now
             )
-            messages.append((isMine: false, text: text))
+            messages.append((isMine: false, text: text, timestamp: now))
         } catch {
             print("[SecretMessage] Decryption failed: \(error)")
         }
