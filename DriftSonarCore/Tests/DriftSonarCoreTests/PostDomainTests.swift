@@ -130,6 +130,62 @@ final class CreatePostUseCaseTests: XCTestCase {
     }
 }
 
+// MARK: - PostSerializer wire format (TASK-163: protocol version)
+
+final class PostSerializerTests: XCTestCase {
+
+    private func makePost(content: String = "Hello mesh") -> Post {
+        Post(
+            content: content,
+            authorPublicKey: Data(repeating: 0x01, count: 32),
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000),
+            signature: Data(repeating: 0x02, count: 64),
+            ttl: 7,
+            hopCount: 0
+        )
+    }
+
+    func testEncodeWritesProtocolVersionAsFirstByte() throws {
+        let data = try PostSerializer.encode(makePost())
+        XCTAssertEqual(data.first, PostSerializer.protocolVersion)
+        XCTAssertEqual(PostSerializer.protocolVersion, 1)
+    }
+
+    func testRoundTripPreservesFields() throws {
+        let post = makePost(content: "Round trip ✅")
+        let decoded = try PostSerializer.decode(try PostSerializer.encode(post))
+
+        XCTAssertEqual(decoded.id, post.id)
+        XCTAssertEqual(decoded.content, post.content)
+        XCTAssertEqual(decoded.authorPublicKey, post.authorPublicKey)
+        XCTAssertEqual(decoded.timestamp, post.timestamp)
+        XCTAssertEqual(decoded.ttl, post.ttl)
+        XCTAssertEqual(decoded.hopCount, post.hopCount)
+    }
+
+    func testDecodeUnsupportedVersionThrows() throws {
+        var data = try PostSerializer.encode(makePost())
+        data[data.startIndex] = 0x99  // tamper the version byte
+
+        XCTAssertThrowsError(try PostSerializer.decode(data)) { error in
+            XCTAssertEqual(error as? PostSerializer.SerializationError, .unsupportedVersion(0x99))
+        }
+    }
+
+    func testDecodeFromNonZeroIndexedSliceSucceeds() throws {
+        let post = makePost()
+        let encoded = try PostSerializer.encode(post)
+        // Embed the payload inside a larger buffer and decode the trailing slice,
+        // which has a non-zero startIndex.
+        let prefixed = Data([0xAA, 0xBB, 0xCC]) + encoded
+        let slice = prefixed[prefixed.startIndex.advanced(by: 3)...]
+
+        let decoded = try PostSerializer.decode(slice)
+        XCTAssertEqual(decoded.id, post.id)
+        XCTAssertEqual(decoded.content, post.content)
+    }
+}
+
 // MARK: - In-memory test doubles (local to PostDomainTests)
 
 final class InMemoryPostRepo: PostRepository {

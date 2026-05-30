@@ -4,6 +4,7 @@ import Foundation
 ///
 /// Layout (little-endian):
 /// ```
+/// [1]   protocolVersion (UInt8) — current = 1
 /// [16]  id (UUID bytes)
 /// [32]  authorPublicKey
 /// [8]   timestamp (seconds since epoch, Double)
@@ -11,20 +12,30 @@ import Foundation
 /// [1]   hopCount (UInt8)
 /// [64]  signature
 /// [2]   contentLength (UInt16)
-/// [N]   content (UTF-8, N ≤ 377 to fit 512-byte BLE MTU)
+/// [N]   content (UTF-8, N ≤ 387 to fit 512-byte BLE MTU)
 /// ```
-/// Total overhead: 124 bytes. Max content: 388 bytes (= 512 - 124).
+/// Total overhead: 125 bytes. Max content: 387 bytes (= 512 - 125).
+///
+/// The leading version byte lets future peers detect incompatible wire formats
+/// and reject them explicitly instead of mis-decoding. Bump `protocolVersion`
+/// whenever the layout below changes; keep the policy aligned with
+/// `EncryptedMessage` versioning (EP-024 / TASK-125).
 public enum PostSerializer {
 
-    public enum SerializationError: Error {
+    /// Current wire-format version. Written as the first byte of every payload.
+    public static let protocolVersion: UInt8 = 1
+
+    public enum SerializationError: Error, Equatable {
         case contentTooLong
         case dataTooShort
         case invalidUTF8
         case invalidPublicKeyLength
+        /// Decoded payload carries a `protocolVersion` this build does not support.
+        case unsupportedVersion(UInt8)
     }
 
-    private static let headerSize = 16 + 32 + 8 + 1 + 1 + 64 + 2  // 124
-    public static let maxBLEContentBytes = 512 - headerSize         // 388
+    private static let headerSize = 1 + 16 + 32 + 8 + 1 + 1 + 64 + 2  // 125
+    public static let maxBLEContentBytes = 512 - headerSize             // 387
 
     public static func encode(_ post: Post) throws -> Data {
         let contentData = Data(post.content.utf8)
@@ -36,6 +47,9 @@ public enum PostSerializer {
         }
 
         var data = Data(capacity: headerSize + contentData.count)
+
+        // protocolVersion (1 byte)
+        data.append(protocolVersion)
 
         // UUID (16 bytes)
         withUnsafeBytes(of: post.id.uuid) { data.append(contentsOf: $0) }
@@ -68,14 +82,25 @@ public enum PostSerializer {
         return data
     }
 
-    public static func decode(_ data: Data) throws -> Post {
+    public static func decode(_ rawData: Data) throws -> Post {
+        // Re-base to a 0-indexed buffer so the integer offsets below are valid even
+        // when the caller hands us a Data slice with a non-zero startIndex.
+        let data = Data(rawData)
         guard data.count >= headerSize else { throw SerializationError.dataTooShort }
 
         var offset = 0
 
-        // UUID (16 bytes)
+        // protocolVersion (1 byte)
+        let version = data[offset]
+        guard version == protocolVersion else {
+            throw SerializationError.unsupportedVersion(version)
+        }
+        offset += 1
+
+        // UUID (16 bytes). loadUnaligned: the version byte shifts every field off
+        // its natural alignment, so a plain load(as:) would trap.
         let uuidBytes = data[offset..<offset + 16]
-        let id = UUID(uuid: uuidBytes.withUnsafeBytes { $0.load(as: uuid_t.self) })
+        let id = UUID(uuid: uuidBytes.withUnsafeBytes { $0.loadUnaligned(as: uuid_t.self) })
         offset += 16
 
         // authorPublicKey (32 bytes)
@@ -84,7 +109,7 @@ public enum PostSerializer {
 
         // timestamp (8 bytes)
         let tsBits = data[offset..<offset + 8].withUnsafeBytes {
-            UInt64(littleEndian: $0.load(as: UInt64.self))
+            UInt64(littleEndian: $0.loadUnaligned(as: UInt64.self))
         }
         let timestamp = Date(timeIntervalSince1970: Double(bitPattern: tsBits))
         offset += 8
@@ -103,7 +128,7 @@ public enum PostSerializer {
 
         // contentLength (2 bytes)
         let contentLength = Int(data[offset..<offset + 2].withUnsafeBytes {
-            UInt16(littleEndian: $0.load(as: UInt16.self))
+            UInt16(littleEndian: $0.loadUnaligned(as: UInt16.self))
         })
         offset += 2
 
