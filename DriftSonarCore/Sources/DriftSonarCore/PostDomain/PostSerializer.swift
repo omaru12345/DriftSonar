@@ -28,6 +28,8 @@ public enum PostSerializer {
     public enum SerializationError: Error, Equatable {
         case contentTooLong
         case dataTooShort
+        /// Payload is larger than any valid post could be (exceeds the BLE MTU budget).
+        case dataTooLarge
         case invalidUTF8
         case invalidPublicKeyLength
         /// Decoded payload carries a `protocolVersion` this build does not support.
@@ -36,6 +38,9 @@ public enum PostSerializer {
 
     private static let headerSize = 1 + 16 + 32 + 8 + 1 + 1 + 64 + 2  // 125
     public static let maxBLEContentBytes = 512 - headerSize             // 387
+    /// Largest a well-formed payload can be (`headerSize + maxBLEContentBytes` = 512).
+    /// Anything larger is malformed and rejected before being materialised.
+    public static let maxPayloadBytes = headerSize + maxBLEContentBytes  // 512
 
     public static func encode(_ post: Post) throws -> Data {
         let contentData = Data(post.content.utf8)
@@ -83,6 +88,10 @@ public enum PostSerializer {
     }
 
     public static func decode(_ rawData: Data) throws -> Post {
+        // Reject implausibly large payloads up front (TASK-176): a valid post never
+        // exceeds the BLE MTU budget, so anything larger is malformed and not worth
+        // copying. Checked before the re-base below to avoid materialising huge buffers.
+        guard rawData.count <= maxPayloadBytes else { throw SerializationError.dataTooLarge }
         // Re-base to a 0-indexed buffer so the integer offsets below are valid even
         // when the caller hands us a Data slice with a non-zero startIndex.
         let data = Data(rawData)

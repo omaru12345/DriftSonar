@@ -138,6 +138,25 @@ final class MeshForwardingServiceTests: XCTestCase {
         XCTAssertEqual(posts.first?.content, "Timeline check")
     }
 
+    // TASK-176: the whole receive path must survive arbitrary garbage without crashing.
+    func testReceiveGarbagePayloadsNeverCrash() throws {
+        let (service, postRepo, _) = makeService()
+        var seed: UInt64 = 0xC0FFEE
+        for _ in 0..<2_000 {
+            seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+            let length = Int(seed % 600)
+            var bytes = Data(count: length)
+            for i in 0..<length {
+                seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+                bytes[i] = UInt8((seed >> 33) & 0xFF)
+            }
+            // Must return cleanly (almost always false) and never trap.
+            _ = service.receive(payload: bytes)
+        }
+        // Nothing malformed should have been persisted.
+        XCTAssertEqual(try postRepo.fetchTimeline(limit: 10, offset: 0).count, 0)
+    }
+
     func testReceiveInvalidDataReturnsFalse() throws {
         let (service, _, cacheRepo) = makeService()
 
