@@ -52,7 +52,7 @@ struct SecretMessageView: View {
                     viewModel.sendMessage()
                 } label: {
                     Image(systemName: "paperplane.fill")
-                        .foregroundStyle(viewModel.draftMessage.isEmpty ? .gray : .blue)
+                        .foregroundStyle(viewModel.draftMessage.isEmpty ? .gray : .accentColor)
                 }
                 .disabled(viewModel.draftMessage.isEmpty)
             }
@@ -85,7 +85,7 @@ private struct MessageBubble: View {
             Text(text)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(isMine ? Color.blue : Color(.systemGray5))
+                .background(isMine ? Color.accentColor : Color(.systemGray5))
                 .foregroundStyle(isMine ? .white : .primary)
                 .clipShape(RoundedRectangle(cornerRadius: 18))
             if !isMine { Spacer(minLength: 60) }

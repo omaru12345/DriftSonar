@@ -171,7 +171,7 @@ struct PostRowView: View {
     }
 
     private var hopBadge: some View {
-        let color: Color = post.hopCount == 0 ? .blue
+        let color: Color = post.hopCount == 0 ? .accentColor
             : post.hopCount <= 2 ? .green
             : post.hopCount <= 5 ? .orange
             : .red
