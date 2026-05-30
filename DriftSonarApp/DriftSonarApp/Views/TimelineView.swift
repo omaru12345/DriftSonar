@@ -80,11 +80,11 @@ struct PostTimelineView: View {
                     )
                 }
             }
-            .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+            // TASK-154: Unified error alert.
+            .errorAlert(Binding(
+                get: { viewModel.error },
+                set: { viewModel.error = $0 }
+            ))
         }
     }
 

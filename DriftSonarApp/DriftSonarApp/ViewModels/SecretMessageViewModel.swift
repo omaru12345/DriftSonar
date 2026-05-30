@@ -6,7 +6,8 @@ import DriftSonarCore
 class SecretMessageViewModel {
     var messages: [(isMine: Bool, text: String)] = []
     var draftMessage: String = ""
-    var errorMessage: String?
+    /// Unified user-facing error surfaced as an alert (TASK-154).
+    var error: AppError?
 
     private let secretService = SecretMessageService()
     let otherPublicKey: Data
@@ -31,7 +32,7 @@ class SecretMessageViewModel {
         do {
             myPrivateKey = try KeychainService.loadAgreementPrivateKey()
         } catch {
-            errorMessage = "暗号鍵を取得できないため、メッセージを表示・送信できません。"
+            self.error = .keyUnavailable
             return
         }
         loadMessages()
@@ -54,7 +55,7 @@ class SecretMessageViewModel {
         guard !draftMessage.isEmpty else { return }
         // TASK-153: Abort if the key is unavailable rather than encrypting with empty Data.
         guard let myPrivateKey else {
-            errorMessage = "暗号鍵が利用できないため送信できません。"
+            self.error = .keyUnavailable
             return
         }
         let text = draftMessage
@@ -78,7 +79,7 @@ class SecretMessageViewModel {
             // Enqueue for BLE delivery
             onSendEncrypted?(encrypted.data)
         } catch {
-            errorMessage = "暗号化に失敗しました: \(error.localizedDescription)"
+            self.error = .encryptionFailed
         }
     }
 

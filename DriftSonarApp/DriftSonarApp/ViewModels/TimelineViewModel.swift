@@ -6,7 +6,8 @@ import CryptoKit
 class TimelineViewModel {
     var posts: [Post] = []
     var isLoading = false
-    var errorMessage: String?
+    /// Unified user-facing error surfaced as an alert (TASK-154).
+    var error: AppError?
     /// Post IDs created anonymously this session — session-only, never persisted (TASK-110).
     var anonymousPostIds: Set<UUID> = []
 
@@ -34,11 +35,11 @@ class TimelineViewModel {
     private func fetchNow() {
         guard let useCase = fetchUseCase else { return }
         isLoading = true
-        errorMessage = nil
+        error = nil
         do {
             posts = try useCase.execute(limit: 50)
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = .message("タイムラインの読み込みに失敗しました。")
         }
         isLoading = false
     }
@@ -57,7 +58,7 @@ class TimelineViewModel {
             do {
                 privKey = try KeychainService.loadSigningPrivateKey()
             } catch {
-                errorMessage = "署名鍵を取得できないため投稿できません。アプリを再起動しても直らない場合は再セットアップが必要です。"
+                self.error = .keyUnavailable
                 return
             }
             pubKey = authorPublicKey
@@ -68,11 +69,11 @@ class TimelineViewModel {
             if isAnonymous { anonymousPostIds.insert(post.id) }
             refresh()
         } catch CreatePostError.emptyContent {
-            errorMessage = "投稿内容を入力してください"
+            self.error = .message("投稿内容を入力してください。")
         } catch CreatePostError.contentTooLong {
-            errorMessage = "\(CreatePostUseCase.maxContentLength)文字以内で入力してください"
+            self.error = .message("\(CreatePostUseCase.maxContentLength)文字以内で入力してください。")
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = .postFailed
         }
     }
 }

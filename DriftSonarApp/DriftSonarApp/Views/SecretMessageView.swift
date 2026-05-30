@@ -41,13 +41,6 @@ struct SecretMessageView: View {
                 }
             }
 
-            if let error = viewModel.errorMessage {
-                Text(error)
-                    .foregroundStyle(.red)
-                    .font(.caption)
-                    .padding(.horizontal)
-            }
-
             Divider()
 
             HStack(spacing: 12) {
@@ -67,6 +60,11 @@ struct SecretMessageView: View {
         }
         .navigationTitle(peerTitle)
         .navigationBarTitleDisplayMode(.inline)
+        // TASK-154: Unified error alert (key unavailable / encryption failed).
+        .errorAlert(Binding(
+            get: { viewModel.error },
+            set: { viewModel.error = $0 }
+        ))
         .onAppear {
             viewModel.setup(
                 repository: SwiftDataSecretMessageRepository(container: modelContext.container)
