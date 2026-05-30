@@ -292,6 +292,7 @@ final class MeshForwardingServiceBoundaryTests: XCTestCase {
 
     private func makeServiceNoSig(
         maxAllowedTTL: Int = 7,
+        maxHopCount: Int = 7,
         rateLimitPerSender: Int = 10
     ) -> (MeshForwardingService, InMemoryPostRepository, InMemoryMessageCacheRepository) {
         let postRepo = InMemoryPostRepository()
@@ -299,6 +300,7 @@ final class MeshForwardingServiceBoundaryTests: XCTestCase {
         let config = MeshForwardingService.Config(
             requireValidSignature: false,
             maxAllowedTTL: maxAllowedTTL,
+            maxHopCount: maxHopCount,
             rateLimitPerSender: rateLimitPerSender,
             rateLimitWindow: 60
         )
@@ -367,5 +369,37 @@ final class MeshForwardingServiceBoundaryTests: XCTestCase {
         // Only first 3 should be accepted (relayed decrements TTL so check cache)
         let saved = try postRepo.fetchTimeline(limit: 10, offset: 0)
         XCTAssertEqual(saved.count, 3)
+    }
+
+    // MARK: - TASK-174: hop count upper bound
+
+    // hopCount ≥ maxHopCount → dropped (forged hopCount cannot keep relaying)
+    func testHopCountAtMaxIsDropped() throws {
+        let (service, postRepo, _) = makeServiceNoSig(maxHopCount: 7)
+        let payload = try makePayload(ttl: 7, hopCount: 7)   // forged: ttl high yet already 7 hops
+
+        let accepted = service.receive(payload: payload)
+
+        XCTAssertFalse(accepted)
+        XCTAssertEqual(try postRepo.fetchTimeline(limit: 10, offset: 0).count, 0)
+    }
+
+    // hopCount far above the bound → dropped
+    func testHopCountAboveMaxIsDropped() throws {
+        let (service, _, cacheRepo) = makeServiceNoSig(maxHopCount: 7)
+        let payload = try makePayload(ttl: 7, hopCount: 200)
+
+        XCTAssertFalse(service.receive(payload: payload))
+        XCTAssertEqual(try cacheRepo.count(), 0)
+    }
+
+    // hopCount = maxHopCount - 1 → still accepted and relayed (boundary)
+    func testHopCountJustBelowMaxIsAccepted() throws {
+        let (service, postRepo, _) = makeServiceNoSig(maxHopCount: 7)
+        let payload = try makePayload(ttl: 5, hopCount: 6)
+
+        XCTAssertTrue(service.receive(payload: payload))
+        let saved = try postRepo.fetchTimeline(limit: 10, offset: 0)
+        XCTAssertEqual(saved.first?.hopCount, 7)   // relayed: 6 → 7
     }
 }

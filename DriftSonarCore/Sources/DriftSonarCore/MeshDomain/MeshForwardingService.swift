@@ -34,6 +34,12 @@ public final class MeshForwardingService {
         public var requireValidSignature: Bool
         /// Global TTL cap — incoming posts claiming TTL above this are clamped (TASK-031).
         public var maxAllowedTTL: Int
+        /// Hard upper bound on hop count (TASK-174). Posts that have already traveled
+        /// `maxHopCount` or more hops are dropped instead of relayed, bounding propagation
+        /// depth even when a peer forges `hopCount` (it is not covered by the signature).
+        /// Defaults to `maxAllowedTTL`: in legitimate traffic `ttl + hopCount` is invariant,
+        /// so a post with `ttl > 0` never reaches this bound — only forged ones do.
+        public var maxHopCount: Int
         /// Max posts accepted from a single author within `rateLimitWindow` (TASK-032).
         public var rateLimitPerSender: Int
         /// Time window for rate limiting (default: 60 seconds).
@@ -55,6 +61,7 @@ public final class MeshForwardingService {
             maxCacheSize: Int = 100,
             requireValidSignature: Bool = true,
             maxAllowedTTL: Int = 7,
+            maxHopCount: Int = 7,
             rateLimitPerSender: Int = 10,
             rateLimitWindow: TimeInterval = 60,
             maxClockSkew: TimeInterval = 5 * 60,
@@ -67,6 +74,7 @@ public final class MeshForwardingService {
             self.maxCacheSize = maxCacheSize
             self.requireValidSignature = requireValidSignature
             self.maxAllowedTTL = maxAllowedTTL
+            self.maxHopCount = maxHopCount
             self.rateLimitPerSender = rateLimitPerSender
             self.rateLimitWindow = rateLimitWindow
             self.maxClockSkew = maxClockSkew
@@ -152,6 +160,23 @@ public final class MeshForwardingService {
                 print("[MeshForwarding] Dropped post \(post.id): invalid signature")
                 return false
             }
+        }
+
+        // Propagation bounds (TASK-174). `ttl` and `hopCount` are NOT signed
+        // (see PostSigningService), so a malicious peer can forge them freely.
+        // Negative values cannot arise from the wire format (both are UInt8 on the
+        // wire), but we reject them defensively rather than relay malformed state.
+        guard post.ttl >= 0, post.hopCount >= 0 else {
+            print("[MeshForwarding] Dropped post \(post.id): negative ttl/hopCount")
+            return false
+        }
+        // Drop posts that already traveled the maximum number of hops. This bounds
+        // propagation depth independently of TTL, so a forged hopCount cannot keep a
+        // message relaying. In legitimate traffic ttl+hopCount is invariant, so a post
+        // with ttl > 0 never trips this — only forged ones do.
+        guard post.hopCount < config.maxHopCount else {
+            print("[MeshForwarding] Dropped post \(post.id): hopCount \(post.hopCount) ≥ maxHopCount \(config.maxHopCount)")
+            return false
         }
 
         // TTL check (TASK-014)
