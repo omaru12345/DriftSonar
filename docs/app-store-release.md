@@ -3,7 +3,7 @@
 iOS アプリを初めて App Store に出すための実践手順。DriftSonar 固有の設定値・注意点を埋め込んである。
 **実機テスト（TASK-073）は一旦スキップ**して公開フローの習得を優先する前提。
 
-関連: ISSUES.md EP-019 / TASK-105 / TASK-106、`docs/privacy-policy.md`
+関連: GitHub Issues #19 (EP-019) / #140 (TASK-105) / #141 (TASK-106)、`docs/privacy-policy.md`
 
 ---
 

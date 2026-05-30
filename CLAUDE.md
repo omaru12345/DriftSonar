@@ -11,7 +11,6 @@ iOS専用（SwiftUI + DriftSonarCore Swift Package）
 
 ```
 DriftSonar/
-├── ISSUES.md                  ← Issue backlog（優先順・進捗管理）
 ├── DriftSonarApp/             ← SwiftUI iOSアプリ
 │   └── DriftSonarApp/
 │       ├── DriftSonarApp/     ← 同期ルートグループ（ContentView等）
@@ -30,7 +29,11 @@ DriftSonar/
 ## 実装状態
 
 主要機能はすべて実装済み（BLE・メッシュ・E2E暗号・SwiftData・UI・SwiftLint）。
-未対応はP3機能のみ（アプリアイコン・テストカバレッジ・匿名投稿・PoW等）→ `ISSUES.md` 参照。
+未対応はP3機能のみ（アプリアイコン・テストカバレッジ・匿名投稿・PoW等）→ GitHub Issues 参照。
+
+> **Issue 管理は GitHub Issues が正**（旧 `ISSUES.md` は 2026-05-31 に全 217 件を GitHub へ移行し削除）。
+> Issue タイトルに旧 ID（`[EP-XXX]` / `[TASK-XXX]`）を保持。EPIC=親 Issue（`epic` ラベル + タスクチェックリスト）、TASK=子 Issue（本文に親EPIC #参照）。
+> 一覧: `gh issue list -R omaru12345/DriftSonar`
 
 ## ビルド
 
@@ -54,7 +57,7 @@ xcodebuild \
 ## 詳細ドキュメント
 
 - BLE UUID・Xcodeプロジェクト構造・秘密鍵・SwiftData注意点 → `docs/design-notes.md`
-- Issue管理 → `ISSUES.md`
+- Issue管理 → GitHub Issues（`gh issue list -R omaru12345/DriftSonar`）
 
 ## CLAUDE.md・スキル最適化ルール（トークン節約）
 
