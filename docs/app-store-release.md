@@ -26,10 +26,10 @@ iOS アプリを初めて App Store に出すための実践手順。DriftSonar 
 ### あなたが Apple 側で手を動かす必要がある作業（以降の手順）
 Developer 登録 → 署名 → App Store Connect 登録 → メタデータ → Archive/アップロード → 審査提出。
 
-### ⚠️ 事前に検討したい1点: Deployment Target
-現在 `IPHONEOS_DEPLOYMENT_TARGET = 26.2` と高め＝インストールできる端末が非常に狭い。
-学習目的の公開なら問題ないが、配布範囲を広げたいなら下げる（例 iOS 18）。
-ただし新しい API を使っていると下げるとビルドが壊れるため、下げる場合はビルド確認必須。
+### Deployment Target（対応済み ✅）
+`IPHONEOS_DEPLOYMENT_TARGET` を `26.2` → **`17.0`** に変更済み（配布範囲を iOS 17+ に拡大）。
+Core パッケージが元々 `.iOS(.v17)`・コードも `@available(iOS 17, *)` 設計のため iOS 17 が安全な下限。
+Debug / Release 両構成でビルド成功・API 非互換ゼロを確認済み。
 
 ---
 
