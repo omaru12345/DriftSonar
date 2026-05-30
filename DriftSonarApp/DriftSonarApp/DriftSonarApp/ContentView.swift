@@ -16,10 +16,15 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var profiles: [UserProfileModel]
     @State private var setupViewModel = InitialSetupViewModel()
+    /// TASK-167: First-launch agreement to the UGC terms (App Store GL 1.2).
+    @AppStorage("hasAcceptedEULA") private var hasAcceptedEULA = false
 
     var body: some View {
         Group {
-            if let existingProfile = profiles.first {
+            if !hasAcceptedEULA {
+                // TASK-167: Require agreement to community/UGC terms before any use.
+                EULAGateView { hasAcceptedEULA = true }
+            } else if let existingProfile = profiles.first {
                 MainTabView(profile: existingProfile)
             } else {
                 // No profile found, show Setup
