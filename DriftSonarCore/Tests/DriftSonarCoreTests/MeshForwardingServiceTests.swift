@@ -159,6 +159,56 @@ final class MeshForwardingServiceTests: XCTestCase {
         XCTAssertLessThanOrEqual(stored.first?.ttl ?? 99, 3)
     }
 
+    // MARK: - Timestamp plausibility（pinning 対策 TASK-173）
+
+    private func makeTimestampedPayload(timestamp: Date, ttl: Int = 7) throws -> Data {
+        let post = Post(
+            content: "Timestamp check",
+            authorPublicKey: Data(repeating: 0x02, count: 32),
+            timestamp: timestamp,
+            ttl: ttl
+        )
+        return try PostSerializer.encode(post)
+    }
+
+    func testReceiveRejectsFarFutureTimestamp() throws {
+        let (service, postRepo, cacheRepo) = makeService()
+        // One day in the future — well beyond the 5-minute skew tolerance.
+        let payload = try makeTimestampedPayload(timestamp: Date(timeIntervalSinceNow: 24 * 60 * 60))
+
+        XCTAssertFalse(service.receive(payload: payload), "Far-future post should be rejected")
+        XCTAssertEqual(try cacheRepo.count(), 0)
+        XCTAssertEqual(try postRepo.fetchTimeline(limit: 10, offset: 0).count, 0)
+    }
+
+    func testReceiveAcceptsTimestampWithinClockSkew() throws {
+        let (service, _, cacheRepo) = makeService()
+        // 1 minute ahead — inside the default 5-minute skew window.
+        let payload = try makeTimestampedPayload(timestamp: Date(timeIntervalSinceNow: 60))
+
+        XCTAssertTrue(service.receive(payload: payload), "Small clock skew should be tolerated")
+        XCTAssertEqual(try cacheRepo.count(), 1)
+    }
+
+    func testReceiveRejectsTooOldTimestamp() throws {
+        let (service, _, cacheRepo) = makeService()
+        // Two days old — older than the default 24h retention window.
+        let payload = try makeTimestampedPayload(timestamp: Date(timeIntervalSinceNow: -2 * 24 * 60 * 60))
+
+        XCTAssertFalse(service.receive(payload: payload), "Post older than retention window should be rejected")
+        XCTAssertEqual(try cacheRepo.count(), 0)
+    }
+
+    func testFutureTimestampRejectionRespectsConfiguredSkew() throws {
+        let config = MeshForwardingService.Config(requireValidSignature: false, maxClockSkew: 600)
+        let (service, _, cacheRepo) = makeService(config: config)
+        // 8 minutes ahead — within a 10-minute configured skew.
+        let payload = try makeTimestampedPayload(timestamp: Date(timeIntervalSinceNow: 8 * 60))
+
+        XCTAssertTrue(service.receive(payload: payload))
+        XCTAssertEqual(try cacheRepo.count(), 1)
+    }
+
     // MARK: - payloadsToForward()
 
     func testPayloadsToForwardReturnsAllCachedPosts() throws {

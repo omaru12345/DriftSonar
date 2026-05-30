@@ -38,6 +38,13 @@ public final class MeshForwardingService {
         public var rateLimitPerSender: Int
         /// Time window for rate limiting (default: 60 seconds).
         public var rateLimitWindow: TimeInterval
+        /// Allowed clock skew for future-dated posts (TASK-173).
+        /// A post whose `timestamp` is more than this far ahead of the receiver's
+        /// clock is rejected, preventing permanent timeline pinning via inflated timestamps.
+        public var maxClockSkew: TimeInterval
+        /// Oldest accepted post age (TASK-173). Posts whose `timestamp` predates
+        /// `now - maxTimestampAge` are rejected since they would be purged anyway.
+        public var maxTimestampAge: TimeInterval
         /// Strategy for ordering messages in the forwarding batch (TASK-016).
         public var forwardPriority: ForwardPriority
 
@@ -50,6 +57,8 @@ public final class MeshForwardingService {
             maxAllowedTTL: Int = 7,
             rateLimitPerSender: Int = 10,
             rateLimitWindow: TimeInterval = 60,
+            maxClockSkew: TimeInterval = 5 * 60,
+            maxTimestampAge: TimeInterval = 24 * 60 * 60,
             forwardPriority: ForwardPriority = .latestFirst
         ) {
             self.cacheTTLInterval = cacheTTLInterval
@@ -60,6 +69,8 @@ public final class MeshForwardingService {
             self.maxAllowedTTL = maxAllowedTTL
             self.rateLimitPerSender = rateLimitPerSender
             self.rateLimitWindow = rateLimitWindow
+            self.maxClockSkew = maxClockSkew
+            self.maxTimestampAge = maxTimestampAge
             self.forwardPriority = forwardPriority
         }
     }
@@ -118,6 +129,14 @@ public final class MeshForwardingService {
         // Deduplication (TASK-006)
         guard !isKnown(id: post.id) else { return false }
         markSeen(id: post.id)
+
+        // Timestamp sanity check (TASK-173)
+        // Reject posts dated implausibly far in the future (timeline-pinning attack)
+        // or older than the retention window. Marked seen above so they aren't reprocessed.
+        guard isTimestampPlausible(post.timestamp) else {
+            print("[MeshForwarding] Dropped post \(post.id): implausible timestamp \(post.timestamp)")
+            return false
+        }
 
         // Rate limiting (TASK-032)
         guard !isRateLimited(authorPublicKey: post.authorPublicKey) else {
@@ -213,6 +232,14 @@ public final class MeshForwardingService {
     }
 
     // MARK: - Private helpers (TASK-006 / TASK-032)
+
+    /// True when `timestamp` falls within the accepted window:
+    /// no further than `maxClockSkew` in the future, no older than `maxTimestampAge` (TASK-173).
+    private func isTimestampPlausible(_ timestamp: Date, now: Date = Date()) -> Bool {
+        if timestamp > now.addingTimeInterval(config.maxClockSkew) { return false }
+        if timestamp < now.addingTimeInterval(-config.maxTimestampAge) { return false }
+        return true
+    }
 
     private func isRateLimited(authorPublicKey: Data) -> Bool {
         let cutoff = Date(timeIntervalSinceNow: -config.rateLimitWindow)
