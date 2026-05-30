@@ -6,7 +6,14 @@ struct PostTimelineView: View {
     let myProfile: UserProfileModel
     let appServices: AppServices
     @State private var showingCompose = false
+    /// TASK-167: Locally reported (hidden) post IDs, loaded from `ReportStore`.
+    @State private var reportedPostIds: Set<UUID> = ReportStore.reportedIDs()
+    /// TASK-167: Post currently targeted by the report confirmation dialog.
+    @State private var reportTarget: Post?
     @Environment(\.modelContext) private var modelContext
+
+    /// TASK-167: Shared content filter for masking the copy action.
+    private static let contentFilter = ContentFilter()
 
     private var viewModel: TimelineViewModel { appServices.timelineViewModel }
     /// TASK-033: Live query of blocked keys — filters posts from blocked authors.
@@ -30,7 +37,10 @@ struct PostTimelineView: View {
     }
 
     private var visiblePosts: [Post] {
-        viewModel.posts.filter { !blockedKeys.contains($0.authorPublicKey) }
+        viewModel.posts.filter {
+            // TASK-033: hide blocked authors. TASK-167: hide reported posts.
+            !blockedKeys.contains($0.authorPublicKey) && !reportedPostIds.contains($0.id)
+        }
     }
 
     var body: some View {
@@ -87,6 +97,26 @@ struct PostTimelineView: View {
                 get: { viewModel.error },
                 set: { viewModel.error = $0 }
             ))
+            // TASK-167: Report reasons. Reporting hides the post locally at once;
+            // there is no server, so the report is purely an on-device action.
+            .confirmationDialog(
+                "この投稿を通報",
+                isPresented: Binding(
+                    get: { reportTarget != nil },
+                    set: { if !$0 { reportTarget = nil } }
+                ),
+                titleVisibility: .visible,
+                presenting: reportTarget
+            ) { post in
+                ForEach(ReportStore.Reason.allCases) { reason in
+                    Button(reason.rawValue, role: .destructive) {
+                        report(post: post, reason: reason)
+                    }
+                }
+                Button("キャンセル", role: .cancel) { reportTarget = nil }
+            } message: { _ in
+                Text("通報した投稿はこの端末で即座に非表示になります。投稿者をまとめて非表示にするにはブロックをご利用ください。")
+            }
         }
     }
 
@@ -99,11 +129,18 @@ struct PostTimelineView: View {
         PostRowView(post: post, displayName: displayName, isAnonymous: isAnonymous)
             .contextMenu {
                 Button {
-                    UIPasteboard.general.string = post.content
+                    // TASK-167: Copy the masked text so prohibited words stay filtered.
+                    UIPasteboard.general.string = Self.contentFilter.mask(post.content)
                 } label: {
                     Label("テキストをコピー", systemImage: "doc.on.doc")
                 }
                 if !isMine {
+                    // TASK-167: Report this post — hides it immediately on this device.
+                    Button(role: .destructive) {
+                        reportTarget = post
+                    } label: {
+                        Label("この投稿を通報", systemImage: "flag.fill")
+                    }
                     Button(role: .destructive) {
                         blockAuthor(publicKey: post.authorPublicKey)
                     } label: {
@@ -126,6 +163,12 @@ struct PostTimelineView: View {
         modelContext.insert(model)
         try? modelContext.save()
     }
+
+    // TASK-167: Report a post — record it and hide it from this device immediately.
+    private func report(post: Post, reason: ReportStore.Reason) {
+        reportedPostIds = ReportStore.report(postID: post.id, reason: reason)
+        reportTarget = nil
+    }
 }
 
 // MARK: - PostRowView
@@ -136,6 +179,14 @@ struct PostRowView: View {
     let displayName: String
     /// True when this post was created anonymously this session (TASK-111).
     var isAnonymous: Bool = false
+
+    /// TASK-167: Shared content filter that masks prohibited words on display.
+    private static let contentFilter = ContentFilter()
+
+    /// TASK-167: Post body with any prohibited words replaced by mask characters.
+    private var displayedContent: String {
+        Self.contentFilter.mask(post.content)
+    }
 
     private var relativeTime: String {
         let formatter = RelativeDateTimeFormatter()
@@ -156,7 +207,7 @@ struct PostRowView: View {
                     .foregroundStyle(.tertiary)
             }
 
-            Text(post.content)
+            Text(displayedContent)
                 .font(.body)
                 .fixedSize(horizontal: false, vertical: true)
 
