@@ -81,10 +81,12 @@ Developer 登録 → 署名 → App Store Connect 登録 → メタデータ →
 | **プライバシーポリシー URL** | **必須**。TASK-105 のホスト先 URL（後述） |
 | 年齢制限 | 質問に回答して自動設定 |
 
-### プライバシーポリシーのホスト（TASK-105 の残作業）
-1. このリポジトリを GitHub に push。
-2. リポジトリ Settings → Pages → Source を `main` ブランチ `/docs` フォルダに設定。
-3. 公開 URL `https://<ユーザー名>.github.io/<リポジトリ名>/privacy-policy.html` を上の「プライバシーポリシー URL」に登録。
+### プライバシーポリシーのホスト（TASK-105 完了 ✅）
+GitHub Pages で配信済み。App Store Connect の「プライバシーポリシー URL」に以下を登録するだけ:
+
+**https://omaru12345.github.io/DriftSonar/privacy-policy.html**
+
+（リポジトリ https://github.com/omaru12345/DriftSonar の main / docs フォルダから配信、HTTP 200 確認済み）
 
 ---
 
