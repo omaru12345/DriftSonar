@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DriftSonar — プライバシーポリシー / Privacy Policy</title>
+<style>
+  :root {
+    --sonar: #40C8E0;
+    --drift: #1AA7C0;
+    --ink: #1c2024;
+    --muted: #5b6670;
+    --bg: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.75;
+  }
+  header {
+    background: linear-gradient(135deg, var(--sonar), var(--drift));
+    color: #fff;
+    padding: 48px 24px 40px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 8px; font-size: 1.9rem; letter-spacing: .02em; }
+  header p { margin: 0; opacity: .92; font-size: .95rem; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 24px 80px; }
+  .lang-nav { text-align: center; margin: 24px 0 8px; }
+  .lang-nav a {
+    color: var(--drift); text-decoration: none; font-weight: 600;
+    margin: 0 10px; border-bottom: 2px solid transparent; padding-bottom: 2px;
+  }
+  .lang-nav a:hover { border-color: var(--sonar); }
+  section { margin-top: 40px; }
+  h2 {
+    font-size: 1.4rem; border-bottom: 2px solid var(--sonar);
+    padding-bottom: 6px; margin-top: 48px;
+  }
+  h3 { font-size: 1.08rem; margin-top: 28px; color: var(--drift); }
+  ul { padding-left: 1.3em; }
+  li { margin: 6px 0; }
+  strong { color: var(--ink); }
+  .updated { color: var(--muted); font-size: .9rem; text-align: center; }
+  .notice {
+    background: #f0fafc; border-left: 4px solid var(--sonar);
+    padding: 12px 16px; border-radius: 4px; margin: 16px 0;
+  }
+  footer {
+    text-align: center; color: var(--muted); font-size: .85rem;
+    padding: 24px; border-top: 1px solid #eee;
+  }
+  a { color: var(--drift); }
+</style>
+</head>
+<body>
+<header>
+  <h1>DriftSonar</h1>
+  <p>プライバシーポリシー / Privacy Policy</p>
+</header>
+<main>
+  <p class="updated">最終更新日 / Last updated: 2026-05-30</p>
+  <div class="lang-nav">
+    <a href="#ja">日本語</a> · <a href="#en">English</a>
+  </div>
+
+  <p>DriftSonar（以下「本アプリ」）は、Bluetooth Low Energy（BLE）メッシュを用いて、インターネット接続なしで近くのデバイス間にメッセージを伝播するオフグリッド型 SNS アプリです。<br>
+  DriftSonar ("the App") is an off-grid social app that propagates messages between nearby devices over a Bluetooth Low Energy (BLE) mesh, without any internet connection.</p>
+
+  <section id="ja">
+    <h2>日本語</h2>
+
+    <h3>1. 収集する情報はありません（サーバーは存在しません）</h3>
+    <p>本アプリにはバックエンドサーバーがありません。開発者はあなたのデータを受信・収集・保存しません。アカウント登録、メールアドレス、電話番号は一切不要です。アクセス解析・トラッキング・広告 SDK・サードパーティ SDK を一切使用していません。</p>
+
+    <h3>2. デバイス内に保存される情報</h3>
+    <p>以下の情報はすべて <strong>あなたのデバイス内にのみ</strong> 保存され、開発者を含む第三者のサーバーには送信されません。</p>
+    <ul>
+      <li><strong>投稿・受信メッセージ</strong>: SwiftData ローカルストア（ファイル保護レベル: complete）に保存されます。</li>
+      <li><strong>暗号鍵</strong>: 署名・鍵共有用の秘密鍵は iOS の Keychain に保存されます。</li>
+      <li><strong>ニックネーム</strong>: あなたが設定した表示名。</li>
+      <li><strong>重複排除用メッセージ ID</strong>: 同じメッセージの再受信を防ぐため、メッセージ ID のリストを UserDefaults にローカル保存します（メッセージ本文は含みません）。</li>
+    </ul>
+
+    <h3>3. BLE による近接デバイスとのデータ共有（本アプリの中核機能）</h3>
+    <p>本アプリは設計上、以下を BLE 経由で近くのデバイスと直接やり取りします。</p>
+    <ul>
+      <li><strong>公開鍵・ニックネーム</strong>: 近くのデバイスにあなたを識別させるため、BLE で公開（アドバタイズ／読み取り）されます。</li>
+      <li><strong>投稿（Post）</strong>: あなたの投稿は、Store-and-Forward メッシュにより近くのデバイスへ中継・伝播されます。</li>
+      <li><strong>ダイレクトメッセージ（DM）</strong>: DM は Curve25519 鍵共有 + AES-GCM によりエンドツーエンドで暗号化され、宛先デバイスのみが復号できます。中継デバイスは暗号文しか扱えません。</li>
+    </ul>
+    <div class="notice">⚠️ 投稿は物理的に近くにいる人やメッシュ上の参加者に届く前提のものです。秘密にしたい内容は投稿しないでください。</div>
+    <p>すべての通信は端末間の P2P であり、インターネットや開発者のサーバーを経由しません。</p>
+
+    <h3>4. 匿名投稿</h3>
+    <p>本アプリには使い捨て鍵ペアによる匿名投稿機能があります。匿名投稿に使われる鍵は永続化されず、通常のプロフィールとは紐づきません。</p>
+
+    <h3>5. 端末の権限</h3>
+    <ul>
+      <li><strong>Bluetooth</strong>: 近くのユーザーの検出とメッセージ伝播に使用します。位置情報の取得には使用しません。</li>
+      <li><strong>通知</strong>: 新しい投稿・DM の受信をローカル通知でお知らせするために使用します。通知はすべて端末内で生成され、リモートプッシュサーバーは使用しません。</li>
+    </ul>
+
+    <h3>6. データの保持と削除</h3>
+    <p>データはあなたのデバイス内にのみ存在します。本アプリを削除（アンインストール）すると、ローカルに保存された投稿・メッセージ・鍵・設定はすべて削除されます。一度メッシュに伝播した投稿は、それを受信した他のデバイス上に残る場合があります（本アプリからは制御できません）。</p>
+
+    <h3>7. 子どものプライバシー</h3>
+    <p>本アプリは特定の個人情報を収集しません。</p>
+
+    <h3>8. 本ポリシーの変更</h3>
+    <p>本ポリシーを更新する場合は、本ページの「最終更新日」を改定します。</p>
+
+    <h3>9. お問い合わせ</h3>
+    <p>ご質問は次の連絡先までお願いします: <a href="mailto:bleachonn77@gmail.com">bleachonn77@gmail.com</a></p>
+  </section>
+
+  <section id="en">
+    <h2>English</h2>
+
+    <h3>1. We collect nothing (there is no server)</h3>
+    <p>The App has no backend server. The developer does not receive, collect, or store any of your data. No account, email address, or phone number is required. The App uses no analytics, tracking, advertising SDKs, or any third-party SDKs.</p>
+
+    <h3>2. Information stored on your device</h3>
+    <p>All of the following is stored <strong>only on your device</strong> and is never transmitted to any server, including the developer's:</p>
+    <ul>
+      <li><strong>Posts and received messages</strong>: stored in a local SwiftData store (file protection level: complete).</li>
+      <li><strong>Cryptographic keys</strong>: private keys for signing and key agreement are stored in the iOS Keychain.</li>
+      <li><strong>Nickname</strong>: your chosen display name.</li>
+      <li><strong>Seen message IDs</strong>: a list of message IDs is stored locally in UserDefaults to avoid re-receiving the same message (message contents are not included).</li>
+    </ul>
+
+    <h3>3. Data shared with nearby devices over BLE (the App's core function)</h3>
+    <p>By design, the App exchanges the following directly with nearby devices over BLE:</p>
+    <ul>
+      <li><strong>Public key and nickname</strong>: broadcast/readable over BLE so nearby devices can identify you.</li>
+      <li><strong>Posts</strong>: your posts are relayed and propagated to nearby devices via a store-and-forward mesh.</li>
+      <li><strong>Direct messages (DMs)</strong>: DMs are end-to-end encrypted using Curve25519 key agreement + AES-GCM, and can be decrypted only by the intended recipient device. Relaying devices handle ciphertext only.</li>
+    </ul>
+    <div class="notice">⚠️ Posts are intended to reach people physically near you and participants on the mesh. Do not post anything you wish to keep private.</div>
+    <p>All communication is peer-to-peer between devices and never goes through the internet or the developer's servers.</p>
+
+    <h3>4. Anonymous posting</h3>
+    <p>The App offers anonymous posting using ephemeral key pairs. Keys used for anonymous posts are not persisted and are not linked to your regular profile.</p>
+
+    <h3>5. Device permissions</h3>
+    <ul>
+      <li><strong>Bluetooth</strong>: used to discover nearby users and propagate messages. It is not used to determine your location.</li>
+      <li><strong>Notifications</strong>: used to alert you to incoming posts/DMs via local notifications. All notifications are generated on-device; no remote push server is used.</li>
+    </ul>
+
+    <h3>6. Data retention and deletion</h3>
+    <p>Your data exists only on your device. Deleting (uninstalling) the App removes all locally stored posts, messages, keys, and settings. Posts that have already propagated through the mesh may remain on other devices that received them (this is outside the App's control).</p>
+
+    <h3>7. Children's privacy</h3>
+    <p>The App does not collect any specific personal information.</p>
+
+    <h3>8. Changes to this policy</h3>
+    <p>If we update this policy, we will revise the "Last updated" date on this page.</p>
+
+    <h3>9. Contact</h3>
+    <p>For questions, contact: <a href="mailto:bleachonn77@gmail.com">bleachonn77@gmail.com</a></p>
+  </section>
+</main>
+<footer>© 2026 DriftSonar</footer>
+</body>
+</html>

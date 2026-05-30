@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Background: white -->
+  <rect width="1024" height="1024" fill="#FFFFFF"/>
+
+  <!-- Sonar waves (arcs from dolphin nose area, center ~400,520, radiating right) -->
+  <!-- Wave 3 - outermost, most transparent -->
+  <path d="M 430 390 A 200 200 0 0 1 430 650" fill="none" stroke="#40C8E0" stroke-width="28" stroke-linecap="round" opacity="0.25"/>
+  <!-- Wave 2 - middle -->
+  <path d="M 430 430 A 140 140 0 0 1 430 610" fill="none" stroke="#40C8E0" stroke-width="28" stroke-linecap="round" opacity="0.50"/>
+  <!-- Wave 1 - innermost, most opaque -->
+  <path d="M 430 468 A 80 80 0 0 1 430 572" fill="none" stroke="#40C8E0" stroke-width="28" stroke-linecap="round" opacity="0.80"/>
+
+  <!-- Dolphin body - jumping pose, facing right-upward -->
+  <!-- Main body ellipse rotated -->
+  <ellipse cx="500" cy="530" rx="195" ry="78" fill="#40C8E0" transform="rotate(-28 500 530)"/>
+
+  <!-- Head / snout bump -->
+  <ellipse cx="370" cy="460" rx="72" ry="52" fill="#40C8E0" transform="rotate(-20 370 460)"/>
+
+  <!-- Snout / beak -->
+  <ellipse cx="310" cy="500" rx="68" ry="26" fill="#40C8E0" transform="rotate(-10 310 500)"/>
+
+  <!-- Dorsal fin -->
+  <path d="M 520 380 Q 580 280 620 330 Q 590 370 555 390 Z" fill="#40C8E0"/>
+
+  <!-- Tail fluke -->
+  <path d="M 660 620 Q 720 570 750 530 Q 730 580 760 610 Q 720 630 700 660 Q 680 640 660 620 Z" fill="#40C8E0"/>
+  <path d="M 660 620 Q 690 660 710 700 Q 680 690 650 670 Q 650 645 660 620 Z" fill="#40C8E0"/>
+
+  <!-- Pectoral fin -->
+  <path d="M 460 560 Q 500 620 470 650 Q 430 620 420 580 Z" fill="#1AA7C0"/>
+
+  <!-- Eye - small white circle -->
+  <circle cx="348" cy="472" r="14" fill="#FFFFFF"/>
+</svg>

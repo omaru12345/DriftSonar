@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- DriftSonar はトラッキングを行いません -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<!-- トラッキングドメインなし -->
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<!-- サーバーが存在せず、開発者はいかなるデータも収集しません -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<!-- Required Reason API の使用理由 -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<!-- seenMessageIDs などをアプリ内ローカルに保存するために UserDefaults を使用 -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

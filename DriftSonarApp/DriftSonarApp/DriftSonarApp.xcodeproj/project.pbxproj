@@ -1,0 +1,423 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3DBC25DA2F4CB8AD00D66431 /* DriftSonarCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3DBC25D92F4CB8AD00D66431 /* DriftSonarCore */; };
+		3DBC25E12F4CBD2400D66431 /* EncounterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25DE2F4CBD2400D66431 /* EncounterView.swift */; };
+		3DBC25E22F4CBD2400D66431 /* InitialSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25DC2F4CBD2400D66431 /* InitialSetupViewModel.swift */; };
+		3DBC25E32F4CBD2400D66431 /* InitialSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25DF2F4CBD2400D66431 /* InitialSetupView.swift */; };
+		3DBC25E42F4CBD2400D66431 /* EncounterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25DB2F4CBD2400D66431 /* EncounterViewModel.swift */; };
+		3DBC25E62F4CBD2400D66431 /* SecretMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25E52F4CBD2400D66431 /* SecretMessageViewModel.swift */; };
+		3DBC25E82F4CBD2400D66431 /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25E72F4CBD2400D66431 /* TimelineViewModel.swift */; };
+		3DBC25EA2F4CBD2400D66431 /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25E92F4CBD2400D66431 /* ComposeView.swift */; };
+		3DBC25EC2F4CBD2400D66431 /* SecretMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25EB2F4CBD2400D66431 /* SecretMessageView.swift */; };
+		3DBC25EE2F4CBD2400D66431 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC25ED2F4CBD2400D66431 /* TimelineView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		3D52D7922F4CB1C400293211 /* DriftSonarApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DriftSonarApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D52D7A32F4CB3F000293211 /* DriftSonarCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = DriftSonarCore; path = ../../../DriftSonarCore; sourceTree = "<group>"; };
+		3DBC25DB2F4CBD2400D66431 /* EncounterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterViewModel.swift; sourceTree = "<group>"; };
+		3DBC25DC2F4CBD2400D66431 /* InitialSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSetupViewModel.swift; sourceTree = "<group>"; };
+		3DBC25DE2F4CBD2400D66431 /* EncounterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterView.swift; sourceTree = "<group>"; };
+		3DBC25DF2F4CBD2400D66431 /* InitialSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSetupView.swift; sourceTree = "<group>"; };
+		3DBC25E52F4CBD2400D66431 /* SecretMessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretMessageViewModel.swift; sourceTree = "<group>"; };
+		3DBC25E72F4CBD2400D66431 /* TimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineViewModel.swift; sourceTree = "<group>"; };
+		3DBC25E92F4CBD2400D66431 /* ComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeView.swift; sourceTree = "<group>"; };
+		3DBC25EB2F4CBD2400D66431 /* SecretMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretMessageView.swift; sourceTree = "<group>"; };
+		3DBC25ED2F4CBD2400D66431 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3D52D7B12F4CB1C400293211 /* Exceptions for "DriftSonarApp" folder in "DriftSonarApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3D52D7912F4CB1C400293211 /* DriftSonarApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		3D52D7942F4CB1C400293211 /* DriftSonarApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3D52D7B12F4CB1C400293211 /* Exceptions for "DriftSonarApp" folder in "DriftSonarApp" target */,
+			);
+			path = DriftSonarApp;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3D52D78F2F4CB1C400293211 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3DBC25DA2F4CB8AD00D66431 /* DriftSonarCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3D52D7892F4CB1C400293211 = {
+			isa = PBXGroup;
+			children = (
+				3DBC25DD2F4CBD2400D66431 /* ViewModels */,
+				3DBC25E02F4CBD2400D66431 /* Views */,
+				3D52D7942F4CB1C400293211 /* DriftSonarApp */,
+				3D52D7A22F4CB3F000293211 /* Frameworks */,
+				3D52D7932F4CB1C400293211 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3D52D7932F4CB1C400293211 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3D52D7922F4CB1C400293211 /* DriftSonarApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3D52D7A22F4CB3F000293211 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3D52D7A32F4CB3F000293211 /* DriftSonarCore */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		3DBC25DD2F4CBD2400D66431 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				3DBC25DB2F4CBD2400D66431 /* EncounterViewModel.swift */,
+				3DBC25DC2F4CBD2400D66431 /* InitialSetupViewModel.swift */,
+				3DBC25E52F4CBD2400D66431 /* SecretMessageViewModel.swift */,
+				3DBC25E72F4CBD2400D66431 /* TimelineViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		3DBC25E02F4CBD2400D66431 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3DBC25DE2F4CBD2400D66431 /* EncounterView.swift */,
+				3DBC25DF2F4CBD2400D66431 /* InitialSetupView.swift */,
+				3DBC25E92F4CBD2400D66431 /* ComposeView.swift */,
+				3DBC25EB2F4CBD2400D66431 /* SecretMessageView.swift */,
+				3DBC25ED2F4CBD2400D66431 /* TimelineView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3D52D7912F4CB1C400293211 /* DriftSonarApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D52D79F2F4CB1C500293211 /* Build configuration list for PBXNativeTarget "DriftSonarApp" */;
+			buildPhases = (
+				3D52D78E2F4CB1C400293211 /* Sources */,
+				3D52D78F2F4CB1C400293211 /* Frameworks */,
+				3D52D7902F4CB1C400293211 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3D52D7942F4CB1C400293211 /* DriftSonarApp */,
+			);
+			name = DriftSonarApp;
+			packageProductDependencies = (
+				3DBC25D92F4CB8AD00D66431 /* DriftSonarCore */,
+			);
+			productName = DriftSonarApp;
+			productReference = 3D52D7922F4CB1C400293211 /* DriftSonarApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3D52D78A2F4CB1C400293211 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					3D52D7912F4CB1C400293211 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+				};
+			};
+			buildConfigurationList = 3D52D78D2F4CB1C400293211 /* Build configuration list for PBXProject "DriftSonarApp" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3D52D7892F4CB1C400293211;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3DBC25D82F4CB8AD00D66431 /* XCLocalSwiftPackageReference "../../DriftSonarCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3D52D7932F4CB1C400293211 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3D52D7912F4CB1C400293211 /* DriftSonarApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3D52D7902F4CB1C400293211 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3D52D78E2F4CB1C400293211 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3DBC25E12F4CBD2400D66431 /* EncounterView.swift in Sources */,
+				3DBC25E22F4CBD2400D66431 /* InitialSetupViewModel.swift in Sources */,
+				3DBC25E32F4CBD2400D66431 /* InitialSetupView.swift in Sources */,
+				3DBC25E42F4CBD2400D66431 /* EncounterViewModel.swift in Sources */,
+				3DBC25E62F4CBD2400D66431 /* SecretMessageViewModel.swift in Sources */,
+				3DBC25E82F4CBD2400D66431 /* TimelineViewModel.swift in Sources */,
+				3DBC25EA2F4CBD2400D66431 /* ComposeView.swift in Sources */,
+				3DBC25EC2F4CBD2400D66431 /* SecretMessageView.swift in Sources */,
+				3DBC25EE2F4CBD2400D66431 /* TimelineView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3D52D79D2F4CB1C500293211 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		3D52D79E2F4CB1C500293211 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3D52D7A02F4CB1C500293211 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DriftSonarApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.driftsonar.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3D52D7A12F4CB1C500293211 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DriftSonarApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.driftsonar.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3D52D78D2F4CB1C400293211 /* Build configuration list for PBXProject "DriftSonarApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D52D79D2F4CB1C500293211 /* Debug */,
+				3D52D79E2F4CB1C500293211 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3D52D79F2F4CB1C500293211 /* Build configuration list for PBXNativeTarget "DriftSonarApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D52D7A02F4CB1C500293211 /* Debug */,
+				3D52D7A12F4CB1C500293211 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		3DBC25D82F4CB8AD00D66431 /* XCLocalSwiftPackageReference "../../DriftSonarCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../DriftSonarCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3DBC25D92F4CB8AD00D66431 /* DriftSonarCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DriftSonarCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3D52D78A2F4CB1C400293211 /* Project object */;
+}

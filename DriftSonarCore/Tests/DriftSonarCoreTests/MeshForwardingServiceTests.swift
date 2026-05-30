@@ -1,0 +1,321 @@
+import XCTest
+@testable import DriftSonarCore
+
+// MARK: - In-memory test doubles
+// SwiftData repositories require @MainActor and a ModelContainer, which causes
+// crashes in SPM's swift-test runner.  These lightweight stubs implement the
+// same protocols using plain Swift collections so the tests run anywhere.
+
+private final class InMemoryPostRepository: PostRepository {
+    private var posts: [UUID: Post] = [:]
+
+    func save(_ post: Post) throws {
+        posts[post.id] = post
+    }
+
+    func fetchTimeline(limit: Int, offset: Int) throws -> [Post] {
+        Array(posts.values
+            .sorted { $0.timestamp > $1.timestamp }
+            .dropFirst(offset)
+            .prefix(limit))
+    }
+
+    func exists(id: UUID) throws -> Bool { posts[id] != nil }
+    func delete(id: UUID) throws { posts.removeValue(forKey: id) }
+}
+
+private final class InMemoryMessageCacheRepository: MessageCacheRepository {
+    private var messages: [UUID: CachedMessage] = [:]
+
+    func save(_ message: CachedMessage) throws {
+        guard messages[message.postId] == nil else { return }
+        messages[message.postId] = message
+    }
+
+    func fetchForwardable(limit: Int) throws -> [CachedMessage] {
+        Array(messages.values
+            .filter { $0.ttl > 0 }
+            .sorted { $0.receivedAt > $1.receivedAt }
+            .prefix(limit))
+    }
+
+    func exists(postId: UUID) throws -> Bool { messages[postId] != nil }
+    func delete(postId: UUID) throws { messages.removeValue(forKey: postId) }
+    func deleteExpired(before cutoff: Date) throws {
+        messages = messages.filter { $0.value.receivedAt >= cutoff }
+    }
+    func incrementForwardCount(postId: UUID) throws {
+        guard let msg = messages[postId] else { return }
+        messages[postId] = msg.incrementingForwardCount()
+    }
+    func count() throws -> Int { messages.count }
+    func evictToLimit(_ maxCount: Int) throws {
+        guard messages.count > maxCount else { return }
+        let sorted = messages.values
+            .sorted { $0.forwardedCount == $1.forwardedCount
+                ? $0.receivedAt < $1.receivedAt
+                : $0.forwardedCount > $1.forwardedCount }
+        let toDelete = sorted.prefix(messages.count - maxCount)
+        toDelete.forEach { messages.removeValue(forKey: $0.postId) }
+    }
+}
+
+// MARK: - Helpers
+
+private func makeService(
+    config: MeshForwardingService.Config = MeshForwardingService.Config(requireValidSignature: false)
+) -> (MeshForwardingService, InMemoryPostRepository, InMemoryMessageCacheRepository) {
+    let postRepo = InMemoryPostRepository()
+    let cacheRepo = InMemoryMessageCacheRepository()
+    let service = MeshForwardingService(postRepository: postRepo, cacheRepository: cacheRepo, config: config)
+    return (service, postRepo, cacheRepo)
+}
+
+private func makePayload(content: String = "Hello mesh", ttl: Int = 7) throws -> Data {
+    let post = Post(content: content, authorPublicKey: Data(repeating: 0x01, count: 32), ttl: ttl)
+    return try PostSerializer.encode(post)
+}
+
+// MARK: - MeshForwardingService unit tests
+
+final class MeshForwardingServiceTests: XCTestCase {
+
+    // MARK: - receive()
+
+    func testReceiveNewPostReturnsTrueAndCachesIt() throws {
+        let (service, _, cacheRepo) = makeService()
+        let payload = try makePayload()
+
+        XCTAssertTrue(service.receive(payload: payload))
+        XCTAssertEqual(try cacheRepo.count(), 1)
+    }
+
+    func testReceiveSamePostTwiceDeduplicates() throws {
+        let (service, _, cacheRepo) = makeService()
+        let payload = try makePayload()
+
+        XCTAssertTrue(service.receive(payload: payload))
+        XCTAssertFalse(service.receive(payload: payload), "Duplicate should be rejected")
+        XCTAssertEqual(try cacheRepo.count(), 1)
+    }
+
+    func testReceiveTTLZeroIsRejected() throws {
+        let (service, _, cacheRepo) = makeService()
+        let payload = try makePayload(ttl: 0)
+
+        XCTAssertFalse(service.receive(payload: payload))
+        XCTAssertEqual(try cacheRepo.count(), 0)
+    }
+
+    func testReceiveDecrementsTTLByOne() throws {
+        let (service, postRepo, _) = makeService()
+        let payload = try makePayload(ttl: 5)
+
+        service.receive(payload: payload)
+
+        let stored = try postRepo.fetchTimeline(limit: 1, offset: 0)
+        XCTAssertEqual(stored.first?.ttl, 4, "TTL should drop from 5 to 4 on relay")
+    }
+
+    func testReceiveIncrementsHopCount() throws {
+        let (service, postRepo, _) = makeService()
+        let payload = try makePayload()
+
+        service.receive(payload: payload)
+
+        let stored = try postRepo.fetchTimeline(limit: 1, offset: 0)
+        XCTAssertEqual(stored.first?.hopCount, 1, "hopCount should go from 0 to 1 on first relay")
+    }
+
+    func testReceiveStoresPostToTimeline() throws {
+        let (service, postRepo, _) = makeService()
+        let payload = try makePayload(content: "Timeline check")
+
+        service.receive(payload: payload)
+
+        let posts = try postRepo.fetchTimeline(limit: 10, offset: 0)
+        XCTAssertEqual(posts.count, 1)
+        XCTAssertEqual(posts.first?.content, "Timeline check")
+    }
+
+    func testReceiveInvalidDataReturnsFalse() throws {
+        let (service, _, cacheRepo) = makeService()
+
+        XCTAssertFalse(service.receive(payload: Data([0xDE, 0xAD, 0xBE, 0xEF])))
+        XCTAssertEqual(try cacheRepo.count(), 0)
+    }
+
+    // MARK: - TTL cap（増幅攻撃対策）
+
+    func testTTLAboveCapIsClamped() throws {
+        let config = MeshForwardingService.Config(requireValidSignature: false, maxAllowedTTL: 3)
+        let (service, postRepo, _) = makeService(config: config)
+        let payload = try makePayload(ttl: 10)   // far above cap
+
+        service.receive(payload: payload)
+
+        // clamped to 3, then relayed() decrements → stored ttl = 2
+        let stored = try postRepo.fetchTimeline(limit: 1, offset: 0)
+        XCTAssertLessThanOrEqual(stored.first?.ttl ?? 99, 3)
+    }
+
+    // MARK: - payloadsToForward()
+
+    func testPayloadsToForwardReturnsAllCachedPosts() throws {
+        let (service, _, _) = makeService()
+        service.receive(payload: try makePayload(content: "Post 1"))
+        service.receive(payload: try makePayload(content: "Post 2"))
+
+        XCTAssertEqual(service.payloadsToForward().count, 2)
+    }
+
+    func testPayloadsToForwardReturnsDecodablePosts() throws {
+        let (service, _, _) = makeService()
+        service.receive(payload: try makePayload(content: "Decodable check"))
+
+        let forwarding = service.payloadsToForward()
+        XCTAssertEqual(forwarding.count, 1)
+        let decoded = try PostSerializer.decode(forwarding[0])
+        XCTAssertEqual(decoded.content, "Decodable check")
+    }
+
+    func testPayloadsToForwardRespectsLatestFirstOrdering() throws {
+        let config = MeshForwardingService.Config(requireValidSignature: false, forwardPriority: .latestFirst)
+        let (service, _, _) = makeService(config: config)
+
+        service.receive(payload: try makePayload(content: "Older"))
+        Thread.sleep(forTimeInterval: 0.01)
+        service.receive(payload: try makePayload(content: "Newer"))
+
+        let forwarding = service.payloadsToForward()
+        XCTAssertEqual(forwarding.count, 2)
+        let first = try PostSerializer.decode(forwarding[0])
+        XCTAssertEqual(first.content, "Newer", "latestFirst should return the newer post first")
+    }
+
+    // MARK: - purgeExpired()
+
+    func testPurgeExpiredRemovesOldEntries() throws {
+        let config = MeshForwardingService.Config(
+            cacheTTLInterval: 0,   // everything is immediately expired
+            requireValidSignature: false
+        )
+        let (service, _, cacheRepo) = makeService(config: config)
+        service.receive(payload: try makePayload())
+
+        XCTAssertEqual(try cacheRepo.count(), 1)
+        service.purgeExpired()
+        XCTAssertEqual(try cacheRepo.count(), 0)
+    }
+}
+
+// MARK: - Post.relayed() tests
+
+final class PostRelayedTests: XCTestCase {
+
+    func testRelayedDecrementsTTL() {
+        let post = Post(content: "test", authorPublicKey: Data(repeating: 0x01, count: 32), ttl: 5)
+        XCTAssertEqual(post.relayed().ttl, 4)
+    }
+
+    func testRelayedIncrementsHopCount() {
+        let post = Post(content: "test", authorPublicKey: Data(repeating: 0x01, count: 32), hopCount: 2)
+        XCTAssertEqual(post.relayed().hopCount, 3)
+    }
+
+    func testRelayedAtTTLOneGivesZero() {
+        let post = Post(content: "test", authorPublicKey: Data(repeating: 0x01, count: 32), ttl: 1)
+        XCTAssertEqual(post.relayed().ttl, 0)
+    }
+
+    func testRelayedPreservesID() {
+        let post = Post(content: "test", authorPublicKey: Data(repeating: 0x01, count: 32))
+        XCTAssertEqual(post.relayed().id, post.id)
+    }
+}
+
+// MARK: - MeshForwardingService boundary tests (TASK-101)
+
+final class MeshForwardingServiceBoundaryTests: XCTestCase {
+
+    // Re-use make helpers from parent test class via global helpers.
+
+    private func makeServiceNoSig(
+        maxAllowedTTL: Int = 7,
+        rateLimitPerSender: Int = 10
+    ) -> (MeshForwardingService, InMemoryPostRepository, InMemoryMessageCacheRepository) {
+        let postRepo = InMemoryPostRepository()
+        let cacheRepo = InMemoryMessageCacheRepository()
+        let config = MeshForwardingService.Config(
+            requireValidSignature: false,
+            maxAllowedTTL: maxAllowedTTL,
+            rateLimitPerSender: rateLimitPerSender,
+            rateLimitWindow: 60
+        )
+        let service = MeshForwardingService(postRepository: postRepo, cacheRepository: cacheRepo, config: config)
+        return (service, postRepo, cacheRepo)
+    }
+
+    private func makePayload(ttl: Int = 5, hopCount: Int = 1, authorKey: Data? = nil) throws -> Data {
+        let post = Post(
+            id: UUID(),
+            content: "Test",
+            authorPublicKey: authorKey ?? Data(repeating: 0xAA, count: 32),
+            timestamp: Date(),
+            signature: Data(repeating: 0, count: 64),
+            ttl: ttl,
+            hopCount: hopCount
+        )
+        return try PostSerializer.encode(post)
+    }
+
+    // TASK-101-a: TTL = 0 → dropped
+    func testTTLZeroMessageIsDropped() throws {
+        let (service, postRepo, _) = makeServiceNoSig()
+        let payload = try makePayload(ttl: 0)
+
+        let accepted = service.receive(payload: payload)
+
+        XCTAssertFalse(accepted)
+        XCTAssertEqual(try postRepo.fetchTimeline(limit: 10, offset: 0).count, 0)
+    }
+
+    // TASK-101-b: TTL > maxAllowedTTL → clamped and accepted
+    func testTTLAboveMaxIsClamped() throws {
+        let (service, postRepo, _) = makeServiceNoSig(maxAllowedTTL: 3)
+        let payload = try makePayload(ttl: 10)
+
+        let accepted = service.receive(payload: payload)
+
+        XCTAssertTrue(accepted)
+        let saved = try postRepo.fetchTimeline(limit: 10, offset: 0)
+        XCTAssertEqual(saved.first?.ttl, 2)   // clamped to 3 then relayed → 2
+    }
+
+    // TASK-101-c: Duplicate message ID → second receive returns false
+    func testDuplicateMessageIDIsRejected() throws {
+        let (service, _, _) = makeServiceNoSig()
+        let payload = try makePayload()
+
+        let first = service.receive(payload: payload)
+        let second = service.receive(payload: payload)
+
+        XCTAssertTrue(first)
+        XCTAssertFalse(second)
+    }
+
+    // TASK-101-d: Rate limit exceeded → extra messages dropped
+    func testRateLimitDropsExcessMessages() throws {
+        let authorKey = Data(repeating: 0xBB, count: 32)
+        let (service, postRepo, _) = makeServiceNoSig(rateLimitPerSender: 3)
+
+        for _ in 1...5 {
+            let payload = try makePayload(authorKey: authorKey)
+            service.receive(payload: payload)
+        }
+
+        // Only first 3 should be accepted (relayed decrements TTL so check cache)
+        let saved = try postRepo.fetchTimeline(limit: 10, offset: 0)
+        XCTAssertEqual(saved.count, 3)
+    }
+}

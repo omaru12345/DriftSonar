@@ -1,0 +1,61 @@
+name: DriftSonarCore Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'DriftSonarCore/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'DriftSonarCore/**'
+      - '.github/workflows/test.yml'
+
+jobs:
+  test:
+    name: Swift Package Tests
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.3.app
+
+      - name: Build & Test DriftSonarCore
+        working-directory: DriftSonarCore
+        run: |
+          swift test \
+            --configuration debug \
+            --parallel \
+            --enable-code-coverage \
+            2>&1 | xcpretty || swift test --configuration debug --parallel --enable-code-coverage
+
+      # TASK-044: Export LCOV coverage report and upload to Codecov.
+      - name: Export coverage report
+        working-directory: DriftSonarCore
+        run: |
+          BINARY_PATH=$(swift build --configuration debug --show-bin-path 2>/dev/null)
+          PROFDATA=$(find .build -name "*.profdata" | head -1)
+          EXECUTABLES=$(find .build/debug -name "*.xctest" -type d | head -1)
+          if [ -n "$PROFDATA" ] && [ -n "$EXECUTABLES" ]; then
+            xcrun llvm-cov export \
+              "$EXECUTABLES/Contents/MacOS/$(basename $EXECUTABLES .xctest)" \
+              --instr-profile="$PROFDATA" \
+              --format=lcov \
+              > coverage.lcov
+            echo "Coverage report generated: $(wc -l < coverage.lcov) lines"
+          else
+            echo "No profdata found, skipping coverage export"
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: DriftSonarCore/coverage.lcov
+          flags: DriftSonarCore
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
