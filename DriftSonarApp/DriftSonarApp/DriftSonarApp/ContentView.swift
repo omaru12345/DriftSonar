@@ -45,6 +45,11 @@ private struct MainTabView: View {
 
     var body: some View {
         if let appServices {
+            // TASK-155: Block the app if the profile no longer matches its Keychain keys,
+            // and offer a recovery path instead of running with broken crypto.
+            if appServices.integrityStatus != .ok {
+                ProfileIntegrityErrorView(status: appServices.integrityStatus, onReset: resetProfile)
+            } else {
             // TASK-085: selectedTab binding enables deep-link navigation from notification taps.
             TabView(selection: Binding(
                 get: { appServices.selectedTab },
@@ -82,6 +87,7 @@ private struct MainTabView: View {
             .onChange(of: scenePhase) { _, newPhase in
                 onScenePhaseChange(newPhase)
             }
+            } // end integrity-ok branch
         } else {
             ProgressView()
                 .onAppear {
@@ -94,6 +100,76 @@ private struct MainTabView: View {
         if newPhase == .active {
             // TASK-094: Restart BLE on foreground return to recover stale scan state.
             appServices?.bleService.restart()
+        }
+    }
+
+    /// TASK-155: Recovery from an integrity violation — removes the orphaned profile
+    /// and any Keychain keys so the app returns to initial setup with a fresh identity.
+    /// (Full data wipe of posts/messages is tracked separately in TASK-151.)
+    private func resetProfile() {
+        let descriptor = FetchDescriptor<UserProfileModel>()
+        if let models = try? modelContext.fetch(descriptor) {
+            for model in models { modelContext.delete(model) }
+            try? modelContext.save()
+        }
+        try? KeychainService.delete(account: KeychainService.agreementPrivateKeyAccount)
+        try? KeychainService.delete(account: KeychainService.signingPrivateKeyAccount)
+    }
+}
+
+// MARK: - ProfileIntegrityErrorView (TASK-155)
+
+/// Shown when the persisted profile no longer matches its Keychain keys.
+/// Explains the situation and offers a re-setup recovery action.
+private struct ProfileIntegrityErrorView: View {
+    let status: ProfileIntegrity.Status
+    let onReset: () -> Void
+    @State private var showingConfirm = false
+
+    private var message: String {
+        switch status {
+        case .keysMissing:
+            return "この端末の暗号鍵が見つかりませんでした。アプリの再インストールやバックアップ復元で鍵が失われた可能性があります。プロフィールを作り直すと再び利用できます。"
+        case .keyMismatch:
+            return "プロフィールと暗号鍵が一致しません。データが破損しているか、別の端末の鍵が混在している可能性があります。プロフィールを作り直すと再び利用できます。"
+        case .ok:
+            return ""
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "key.slash.fill")
+                .font(.system(size: 56))
+                .foregroundStyle(.secondary)
+
+            Text("鍵の不整合を検出しました")
+                .font(.title2)
+                .bold()
+                .multilineTextAlignment(.center)
+
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button(role: .destructive) {
+                showingConfirm = true
+            } label: {
+                Text("プロフィールを作り直す")
+                    .bold()
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.horizontal, 40)
+        }
+        .padding()
+        .alert("プロフィールを作り直しますか？", isPresented: $showingConfirm) {
+            Button("作り直す", role: .destructive, action: onReset)
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("現在のプロフィールと鍵を削除し、初期セットアップからやり直します。新しい公開鍵が発行されます。")
         }
     }
 }

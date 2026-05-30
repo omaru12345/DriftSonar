@@ -26,6 +26,8 @@ final class AppServices {
     var isBluetoothUnavailable: Bool = false
     /// Currently selected tab index for deep-link navigation (TASK-085).
     var selectedTab: Int = 0
+    /// Result of the startup profile/key integrity check (TASK-155).
+    var integrityStatus: ProfileIntegrity.Status = .ok
 
     // MARK: - Init
 
@@ -64,6 +66,16 @@ final class AppServices {
             if let post = try? PostSerializer.decode(payload) {
                 NotificationService.sendPostNotification(post: post)
             }
+        }
+
+        // TASK-155: Verify the persisted profile still matches its Keychain keys.
+        // AppServices is only created once a profile exists, so a missing/mismatched
+        // key here means the install is in a broken state that the UI must surface.
+        if let profile = try? container.mainContext.fetch(FetchDescriptor<UserProfileModel>()).first {
+            integrityStatus = ProfileIntegrity.verify(
+                publicKey: profile.publicKey,
+                signingPublicKey: profile.signingPublicKey
+            )
         }
     }
 }
