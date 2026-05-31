@@ -94,9 +94,14 @@ final class MediaDomainTests: XCTestCase {
         let processor = ImageMediaProcessor(budget: .default)
         let result = try processor.process(source)
 
+        // プライバシー上重要な位置情報・ユーザー埋め込みメタデータが消えていること。
+        // ImageIO は再エンコード時に ColorSpace / 画素寸法のみの最小 EXIF を付与するため、
+        // EXIF 辞書そのものの不在ではなく「機微フィールドが残っていないこと」を検証する。
         let outProps = properties(of: result.data)
         XCTAssertNil(outProps[kCGImagePropertyGPSDictionary], "GPS が除去されていない")
-        XCTAssertNil(outProps[kCGImagePropertyExifDictionary], "EXIF が除去されていない")
+        let exif = outProps[kCGImagePropertyExifDictionary] as? [CFString: Any]
+        XCTAssertNil(exif?[kCGImagePropertyExifUserComment], "EXIF のユーザーコメントが残存")
+        XCTAssertNil(outProps[kCGImagePropertyExifAuxDictionary], "EXIF Aux が残存")
     }
 
     func test_process_withinByteBudget() throws {

@@ -32,10 +32,12 @@ public struct ImageMediaProcessor {
         // 長辺を段階的に下げながら、各段で品質を下げて byte 上限に収める。
         // メタデータを持たない再エンコードなので、出力に EXIF/GPS は残らない。
         let edgeSteps = longEdgeSteps(max: budget.imageMaxLongEdge)
+        var decodedAny = false
         for maxEdge in edgeSteps {
             guard let cgImage = downscaledImage(from: imageSource, maxPixelSize: maxEdge) else {
                 continue
             }
+            decodedAny = true
             for quality in qualitySteps() {
                 let encoded = try JPEGEncoder.encode(cgImage, quality: quality)
                 if encoded.count <= budget.imageMaxByteSize {
@@ -50,7 +52,8 @@ public struct ImageMediaProcessor {
                 }
             }
         }
-        throw MediaError.cannotFitBudget
+        // 一度もデコードできなければ壊れた入力。デコードはできたが上限に収まらない場合のみ予算エラー。
+        throw decodedAny ? MediaError.cannotFitBudget : MediaError.decodeFailed
     }
 
     /// サムネイル（JPEG）のみを生成する。
