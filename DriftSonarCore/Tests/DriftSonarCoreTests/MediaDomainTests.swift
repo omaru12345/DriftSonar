@@ -72,6 +72,10 @@ final class MediaDomainTests: XCTestCase {
         return (width, height)
     }
 
+    private func hex(_ data: Data) -> String {
+        data.map { String(format: "%02x", $0) }.joined()
+    }
+
     // MARK: - ImageMediaProcessor
 
     func test_process_resizesWithinLongEdge() throws {
@@ -102,8 +106,8 @@ final class MediaDomainTests: XCTestCase {
             imageMaxByteSize: 80 * 1024,
             thumbnailMaxLongEdge: 320,
             videoMaxLongEdge: 1280,
-            videoMaxDuration: 60,
-            videoMaxByteSize: 10 * 1024 * 1024,
+            videoMaxDuration: 15,
+            videoMaxByteSize: 2 * 1024 * 1024,
             cacheMaxTotalBytes: 200 * 1024 * 1024,
             allowedMimeTypes: ["image/jpeg"]
         )
@@ -141,11 +145,10 @@ final class MediaDomainTests: XCTestCase {
 
     func test_hash_isStableForSameBytes() {
         let data = Data("driftsonar".utf8)
-        let first = MediaHashing.sha256Hex(data)
-        let second = MediaHashing.sha256Hex(data)
-        XCTAssertEqual(first, second)
-        XCTAssertEqual(first.count, 64)
-        XCTAssertNotEqual(first, MediaHashing.sha256Hex(Data("other".utf8)))
+        XCTAssertEqual(MediaHashing.sha256(data), MediaHashing.sha256(data))
+        XCTAssertEqual(MediaHashing.sha256(data).count, MediaAttachment.contentHashByteCount)
+        XCTAssertEqual(MediaHashing.sha256Hex(data).count, 64)
+        XCTAssertNotEqual(MediaHashing.sha256(data), MediaHashing.sha256(Data("other".utf8)))
     }
 
     // MARK: - MediaStore
@@ -200,18 +203,21 @@ final class MediaDomainTests: XCTestCase {
         let service = MediaIngestService(store: store)
         let source = makeJPEG(width: 1600, height: 1200, withGPS: true)
         let result = try service.ingestImage(source)
+        let key = hex(result.attachment.contentHash)
 
         XCTAssertEqual(result.attachment.kind, .image)
-        XCTAssertEqual(result.attachment.contentHash.count, 64)
-        XCTAssertEqual(result.attachment.mime, "image/jpeg")
-        XCTAssertEqual(result.attachment.byteSize, store.data(contentHash: result.attachment.contentHash, fileExtension: "jpg")?.count)
+        XCTAssertEqual(result.attachment.contentHash.count, MediaAttachment.contentHashByteCount)
+        XCTAssertEqual(result.attachment.mimeType, "image/jpeg")
+        XCTAssertNil(result.attachment.durationMs)
         // 本体とサムネが保存されている。
-        XCTAssertNotNil(store.url(contentHash: result.attachment.contentHash, fileExtension: "jpg"))
-        XCTAssertNotNil(store.url(contentHash: result.attachment.contentHash, fileExtension: "thumb.jpg"))
+        XCTAssertEqual(result.attachment.byteSize, store.data(contentHash: key, fileExtension: "jpg")?.count)
+        XCTAssertNotNil(store.url(contentHash: key, fileExtension: "jpg"))
+        XCTAssertNotNil(store.url(contentHash: key, fileExtension: "thumb.jpg"))
 
         // contentHash は保存本体の SHA-256 と一致する（完全性検証の前提）。
-        let stored = try XCTUnwrap(store.data(contentHash: result.attachment.contentHash, fileExtension: "jpg"))
-        XCTAssertEqual(MediaHashing.sha256Hex(stored), result.attachment.contentHash)
+        let stored = try XCTUnwrap(store.data(contentHash: key, fileExtension: "jpg"))
+        XCTAssertEqual(MediaHashing.sha256(stored), result.attachment.contentHash)
+        XCTAssertLessThanOrEqual(result.attachment.byteSize, CreatePostUseCase.maxImageBytes)
     }
 
     func test_ingestImage_canFeedCreatePostUseCase() throws {
@@ -222,12 +228,15 @@ final class MediaDomainTests: XCTestCase {
         let source = makeJPEG(width: 800, height: 600, withGPS: false)
         let result = try service.ingestImage(source)
 
-        let profile = UserProfile(id: UUID(), nickname: "tester", publicKey: nil)
-        let post = try CreatePostUseCase()(
+        let repo = InMemoryPostRepo()
+        let useCase = CreatePostUseCase(repository: repo)
+        let request = CreatePostRequest(
             content: "写真付き",
-            media: [result.attachment],
-            author: profile
+            authorPublicKey: Data(repeating: 0x01, count: 32),
+            authorPrivateKey: Data(repeating: 0x02, count: 32),
+            media: [result.attachment]
         )
+        let post = try useCase.execute(request)
         XCTAssertEqual(post.media.count, 1)
         XCTAssertEqual(post.media.first?.contentHash, result.attachment.contentHash)
     }

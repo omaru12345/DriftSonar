@@ -77,7 +77,7 @@ public final class MediaStore {
 
     /// 総量が上限を超えていたら、`keeping` を除いて最古から削除する。
     private func enforceCapacity(keeping survivor: URL) throws {
-        var files = storedFiles().sorted { $0.modified < $1.modified }
+        let files = storedFiles().sorted { $0.modified < $1.modified }
         var total = files.reduce(0) { $0 + $1.size }
         let survivorPath = survivor.standardizedFileURL.path
         for file in files where total > maxTotalBytes {
@@ -85,7 +85,6 @@ public final class MediaStore {
             try? fileManager.removeItem(at: file.url)
             total -= file.size
         }
-        files.removeAll()
     }
 
     private struct StoredFile {

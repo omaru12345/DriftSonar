@@ -49,14 +49,14 @@ public struct MediaBudget: Equatable, Sendable {
         self.allowedMimeTypes = allowedMimeTypes
     }
 
-    /// `docs/media-propagation.md` の標準値。
+    /// `docs/media-propagation.md` §3 の標準値（`CreatePostUseCase` の上限と一致させる）。
     public static let `default` = MediaBudget(
         imageMaxLongEdge: 2048,
-        imageMaxByteSize: 500 * 1024,
+        imageMaxByteSize: 256 * 1024,
         thumbnailMaxLongEdge: 320,
         videoMaxLongEdge: 1280,
-        videoMaxDuration: 60,
-        videoMaxByteSize: 10 * 1024 * 1024,
+        videoMaxDuration: 15,
+        videoMaxByteSize: 2 * 1024 * 1024,
         cacheMaxTotalBytes: 200 * 1024 * 1024,
         allowedMimeTypes: ["image/jpeg", "video/mp4"]
     )

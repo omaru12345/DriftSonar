@@ -38,23 +38,24 @@ public struct MediaIngestService {
 
         // contentHash は「圧縮後の本体」に対して採番する。
         // 同一入力でも圧縮結果が一致すれば重複排除でき、ハッシュは取得時検証と一致する。
-        let contentHash = MediaHashing.sha256Hex(processed.data)
-        let bodyURL = try store.store(processed.data, contentHash: contentHash, fileExtension: "jpg")
+        // descriptor には SHA-256 を Data（32B）で持たせ、保存ファイル名には hex を使う。
+        let hashHex = MediaHashing.sha256Hex(processed.data)
+        let bodyURL = try store.store(processed.data, contentHash: hashHex, fileExtension: "jpg")
         let thumbnailURL = try store.store(
             processed.thumbnailData,
-            contentHash: contentHash,
+            contentHash: hashHex,
             fileExtension: "thumb.jpg"
         )
 
         let attachment = MediaAttachment(
             kind: .image,
-            contentHash: contentHash,
+            contentHash: MediaHashing.sha256(processed.data),
             width: processed.width,
             height: processed.height,
             byteSize: processed.data.count,
-            mime: processed.mime,
+            mimeType: processed.mime,
             blurHash: nil,
-            duration: nil
+            durationMs: nil
         )
         return IngestResult(attachment: attachment, bodyURL: bodyURL, thumbnailURL: thumbnailURL)
     }
