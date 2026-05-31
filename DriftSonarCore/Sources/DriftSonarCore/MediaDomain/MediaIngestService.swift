@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(AVFoundation)
+import AVFoundation
+#endif
 
 /// メディアの取り込み（加工 → ハッシュ採番 → ローカル保存 → descriptor 生成）を束ねる。
 ///
@@ -8,6 +11,9 @@ public struct MediaIngestService {
     private let imageProcessor: ImageMediaProcessor
     private let store: MediaStore
     private let budget: MediaBudget
+    #if canImport(AVFoundation)
+    private let videoProcessor: VideoMediaProcessor
+    #endif
 
     public init(
         store: MediaStore,
@@ -17,6 +23,9 @@ public struct MediaIngestService {
         self.store = store
         self.budget = budget
         self.imageProcessor = imageProcessor ?? ImageMediaProcessor(budget: budget)
+        #if canImport(AVFoundation)
+        self.videoProcessor = VideoMediaProcessor(budget: budget)
+        #endif
     }
 
     /// 取り込み結果。descriptor と保存先の対応。
@@ -59,4 +68,38 @@ public struct MediaIngestService {
         )
         return IngestResult(attachment: attachment, bodyURL: bodyURL, thumbnailURL: thumbnailURL)
     }
+
+    #if canImport(AVFoundation)
+    /// 動画を取り込む。
+    ///
+    /// 720p / 15s 上限へトランスコード（EXIF 等は再エンコードで除去）→ 本体の SHA-256 を
+    /// contentHash として採番 → 本体（mp4）とサムネ（jpg）を保存 → `MediaAttachment` を返す。
+    /// `ingestImage` と対称な構造で、kind/duration/拡張子のみ異なる。
+    public func ingestVideo(_ sourceURL: URL) async throws -> IngestResult {
+        let processed = try await videoProcessor.process(sourceURL)
+        guard budget.allowedMimeTypes.contains(processed.mime) else {
+            throw MediaError.unsupportedMIME(processed.mime)
+        }
+
+        let hashHex = MediaHashing.sha256Hex(processed.data)
+        let bodyURL = try store.store(processed.data, contentHash: hashHex, fileExtension: "mp4")
+        let thumbnailURL = try store.store(
+            processed.thumbnailData,
+            contentHash: hashHex,
+            fileExtension: "thumb.jpg"
+        )
+
+        let attachment = MediaAttachment(
+            kind: .video,
+            contentHash: MediaHashing.sha256(processed.data),
+            width: processed.width,
+            height: processed.height,
+            byteSize: processed.data.count,
+            mimeType: processed.mime,
+            blurHash: nil,
+            durationMs: Int((processed.duration * 1000).rounded())
+        )
+        return IngestResult(attachment: attachment, bodyURL: bodyURL, thumbnailURL: thumbnailURL)
+    }
+    #endif
 }

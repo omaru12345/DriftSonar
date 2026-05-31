@@ -82,13 +82,18 @@ struct PostTimelineView: View {
                 // TASK-109/110: Pass isAnonymous flag from ComposeView to ViewModel.
                 // TASK-153: The signing key is loaded inside the ViewModel; the View no
                 // longer touches the Keychain, and key-load failures surface as an alert.
-                ComposeView(authorPublicKey: myProfile.signingPublicKey) { content, isAnonymous in
+                ComposeView(
+                    authorPublicKey: myProfile.signingPublicKey,
+                    mediaIngestService: appServices.mediaIngestService
+                ) { content, isAnonymous, media in
                     // TASK-142: createPost returns nil on success or an AppError on failure,
                     // letting ComposeView keep the sheet open and report the problem.
+                    // TASK-187: media descriptors travel through to the use case.
                     viewModel.createPost(
                         content: content,
                         authorPublicKey: myProfile.signingPublicKey,
-                        isAnonymous: isAnonymous
+                        isAnonymous: isAnonymous,
+                        media: media
                     )
                 }
             }

@@ -2,6 +2,7 @@ import XCTest
 import ImageIO
 import CoreGraphics
 import UniformTypeIdentifiers
+import AVFoundation
 @testable import DriftSonarCore
 
 final class MediaDomainTests: XCTestCase {
@@ -244,5 +245,94 @@ final class MediaDomainTests: XCTestCase {
         let post = try useCase.execute(request)
         XCTAssertEqual(post.media.count, 1)
         XCTAssertEqual(post.media.first?.contentHash, result.attachment.contentHash)
+    }
+
+    func test_ingestVideo_producesAttachmentAndStores() async throws {
+        let (store, dir) = try makeTempStore(maxTotalBytes: 10 * 1024 * 1024)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let sourceURL = try await makeMP4(seconds: 1.0, width: 320, height: 240)
+        defer { try? FileManager.default.removeItem(at: sourceURL) }
+
+        let service = MediaIngestService(store: store)
+        let result = try await service.ingestVideo(sourceURL)
+        let key = hex(result.attachment.contentHash)
+
+        XCTAssertEqual(result.attachment.kind, .video)
+        XCTAssertEqual(result.attachment.mimeType, "video/mp4")
+        // 動画は再生時間を持つ（画像との差分）。
+        XCTAssertNotNil(result.attachment.durationMs)
+        XCTAssertGreaterThan(result.attachment.durationMs ?? 0, 0)
+        XCTAssertNil(result.attachment.blurHash)
+
+        // 本体（mp4）とサムネ（jpg）が保存され、サイズ上限に収まる。
+        XCTAssertEqual(result.attachment.byteSize, store.data(contentHash: key, fileExtension: "mp4")?.count)
+        XCTAssertNotNil(store.url(contentHash: key, fileExtension: "mp4"))
+        XCTAssertNotNil(store.url(contentHash: key, fileExtension: "thumb.jpg"))
+        XCTAssertLessThanOrEqual(result.attachment.byteSize, CreatePostUseCase.maxVideoBytes)
+
+        // contentHash は保存本体の SHA-256 と一致する（取得時の完全性検証の前提）。
+        let stored = try XCTUnwrap(store.data(contentHash: key, fileExtension: "mp4"))
+        XCTAssertEqual(MediaHashing.sha256(stored), result.attachment.contentHash)
+    }
+
+    // MARK: - テスト用動画生成
+
+    /// ノイズフレームを書き込んだ短い MP4 を生成する（トランスコード経路の入力用）。
+    private func makeMP4(seconds: Double, width: Int, height: Int) async throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("src-\(UUID().uuidString).mp4")
+        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height
+        ])
+        input.expectsMediaDataInRealTime = false
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+            assetWriterInput: input,
+            sourcePixelBufferAttributes: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
+                kCVPixelBufferWidthKey as String: width,
+                kCVPixelBufferHeightKey as String: height
+            ]
+        )
+        writer.add(input)
+        guard writer.startWriting() else { throw MediaError.transcodeFailed }
+        writer.startSession(atSourceTime: .zero)
+
+        let fps: Int32 = 24
+        let frameCount = max(1, Int(seconds * Double(fps)))
+        for frame in 0..<frameCount {
+            while !input.isReadyForMoreMediaData { await Task.yield() }
+            let buffer = try makeNoisePixelBuffer(width: width, height: height)
+            let time = CMTime(value: CMTimeValue(frame), timescale: fps)
+            adaptor.append(buffer, withPresentationTime: time)
+        }
+        input.markAsFinished()
+        await writer.finishWriting()
+        guard writer.status == .completed else { throw MediaError.transcodeFailed }
+        return url
+    }
+
+    /// ノイズで埋めた ARGB ピクセルバッファ（圧縮で消えないよう乱数を入れる）。
+    private func makeNoisePixelBuffer(width: Int, height: Int) throws -> CVPixelBuffer {
+        var pixelBuffer: CVPixelBuffer?
+        let attrs = [
+            kCVPixelBufferCGImageCompatibilityKey: true,
+            kCVPixelBufferCGBitmapContextCompatibilityKey: true
+        ] as CFDictionary
+        CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
+        guard let buffer = pixelBuffer else { throw MediaError.transcodeFailed }
+
+        CVPixelBufferLockBaseAddress(buffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+        guard let base = CVPixelBufferGetBaseAddress(buffer) else { throw MediaError.transcodeFailed }
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(buffer)
+        let ptr = base.assumingMemoryBound(to: UInt8.self)
+        for index in 0..<(bytesPerRow * height) {
+            ptr[index] = UInt8.random(in: 0...255)
+        }
+        return buffer
     }
 }

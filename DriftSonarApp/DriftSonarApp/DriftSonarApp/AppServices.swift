@@ -18,6 +18,10 @@ final class AppServices {
     let meshService: MeshForwardingService
     let postRepository: SwiftDataPostRepository
     let cacheRepository: SwiftDataMessageCacheRepository
+    /// Ingests picked photos/videos into the local media store and produces signed
+    /// `MediaAttachment` descriptors (EP-037 / TASK-186/187). `nil` when the on-disk
+    /// media store could not be created — the Compose media button hides in that case.
+    let mediaIngestService: MediaIngestService?
     /// Shared timeline view model — wired to BLE receive events for auto-refresh (TASK-069).
     let timelineViewModel: TimelineViewModel
     /// Unread post count for tab badge (TASK-084).
@@ -44,6 +48,12 @@ final class AppServices {
         let ble = BLEEncounterService()
         ble.forwardingService = mesh
         bleService = ble
+
+        // TASK-186/187: media bodies/thumbnails live under Application Support so they
+        // survive across launches (unlike Caches) while the store's own LRU cap bounds
+        // total size. A failure here is non-fatal — media attach is simply unavailable.
+        let mediaRoot = URL.applicationSupportDirectory.appending(path: "Media", directoryHint: .isDirectory)
+        mediaIngestService = (try? MediaStore(rootDirectory: mediaRoot)).map { MediaIngestService(store: $0) }
 
         // TASK-068: pass cacheRepository so own posts are cached for forwarding.
         let timeline = TimelineViewModel()

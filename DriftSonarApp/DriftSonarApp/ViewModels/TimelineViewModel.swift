@@ -49,7 +49,12 @@ class TimelineViewModel {
     /// instead of dismissing into a hidden alert (TASK-142). Post failures are intentionally
     /// not written to `self.error`, which is reserved for timeline-fetch failures.
     @discardableResult
-    func createPost(content: String, authorPublicKey: Data, isAnonymous: Bool = false) -> AppError? {
+    func createPost(
+        content: String,
+        authorPublicKey: Data,
+        isAnonymous: Bool = false,
+        media: [MediaAttachment] = []
+    ) -> AppError? {
         guard let useCase = createUseCase else { return .postFailed }
         // TASK-110: When anonymous, substitute ephemeral keys so the post is unlinkable.
         // TASK-153: Load the signing key here and abort+report on failure rather than
@@ -67,7 +72,12 @@ class TimelineViewModel {
             }
             pubKey = authorPublicKey
         }
-        let request = CreatePostRequest(content: content, authorPublicKey: pubKey, authorPrivateKey: privKey)
+        let request = CreatePostRequest(
+            content: content,
+            authorPublicKey: pubKey,
+            authorPrivateKey: privKey,
+            media: media
+        )
         do {
             let post = try useCase.execute(request)
             if isAnonymous { anonymousPostIds.insert(post.id) }
@@ -77,6 +87,12 @@ class TimelineViewModel {
             return .message("投稿内容を入力してください。")
         } catch CreatePostError.contentTooLong {
             return .message("\(CreatePostUseCase.maxContentLength)文字以内で入力してください。")
+        } catch CreatePostError.tooManyImages {
+            return .message("画像は\(CreatePostUseCase.maxImages)枚までです。")
+        } catch CreatePostError.tooManyVideos {
+            return .message("動画は\(CreatePostUseCase.maxVideos)本までです。")
+        } catch CreatePostError.invalidMedia {
+            return .message("添付メディアを処理できませんでした。容量や形式をご確認ください。")
         } catch {
             return .postFailed
         }

@@ -13,6 +13,9 @@
 	<false/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>近くにいるユーザーをBluetooth LEで検出し、メッセージをオフグリッドで伝播します。</string>
+	<!-- TASK-187: 投稿に添付する写真・動画の選択に使用。位置情報(EXIF)は保存時に除去します。 -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>投稿に添付する写真・動画を選ぶために写真ライブラリへアクセスします。位置情報などのメタデータは添付時に除去されます。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
