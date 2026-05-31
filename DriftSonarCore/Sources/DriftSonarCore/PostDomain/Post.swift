@@ -4,7 +4,7 @@ import Foundation
 public struct Post: Equatable, Sendable {
     /// Unique post identifier used for deduplication across the mesh.
     public let id: UUID
-    /// Text content of the post.
+    /// Text content of the post. May be empty when the post carries `media` only (TASK-185).
     public let content: String
     /// Author's Curve25519 public key (32 bytes).
     public let authorPublicKey: Data
@@ -16,6 +16,9 @@ public struct Post: Equatable, Sendable {
     public let ttl: Int
     /// Number of relay nodes this post has passed through.
     public let hopCount: Int
+    /// Attached media descriptors (EP-037). Empty for text-only posts, which stay
+    /// wire-compatible with protocolVersion 1. Bound into the signature (TASK-185).
+    public let media: [MediaAttachment]
 
     public init(
         id: UUID = UUID(),
@@ -24,7 +27,8 @@ public struct Post: Equatable, Sendable {
         timestamp: Date = Date(),
         signature: Data = Data(),
         ttl: Int = 7,
-        hopCount: Int = 0
+        hopCount: Int = 0,
+        media: [MediaAttachment] = []
     ) {
         self.id = id
         self.content = content
@@ -33,6 +37,7 @@ public struct Post: Equatable, Sendable {
         self.signature = signature
         self.ttl = ttl
         self.hopCount = hopCount
+        self.media = media
     }
 
     /// Returns a copy with TTL decremented and hopCount incremented for relay.
@@ -44,7 +49,8 @@ public struct Post: Equatable, Sendable {
             timestamp: timestamp,
             signature: signature,
             ttl: max(0, ttl - 1),
-            hopCount: hopCount + 1
+            hopCount: hopCount + 1,
+            media: media
         )
     }
 }

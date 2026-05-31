@@ -8,19 +8,33 @@ public struct CreatePostRequest {
     public let authorPrivateKey: Data
     /// TTL for mesh propagation (default: 7).
     public let ttl: Int
+    /// Media descriptors to attach (EP-037 / TASK-185). Empty = text-only post.
+    public let media: [MediaAttachment]
 
-    public init(content: String, authorPublicKey: Data, authorPrivateKey: Data, ttl: Int = 7) {
+    public init(
+        content: String,
+        authorPublicKey: Data,
+        authorPrivateKey: Data,
+        ttl: Int = 7,
+        media: [MediaAttachment] = []
+    ) {
         self.content = content
         self.authorPublicKey = authorPublicKey
         self.authorPrivateKey = authorPrivateKey
         self.ttl = ttl
+        self.media = media
     }
 }
 
 public enum CreatePostError: Error {
+    /// Text is empty *and* no media is attached — there is nothing to post.
     case emptyContent
     case contentTooLong
     case invalidPublicKey
+    case tooManyImages
+    case tooManyVideos
+    /// A media item is missing/oversized, or has an invalid content hash.
+    case invalidMedia
 }
 
 public final class CreatePostUseCase {
@@ -32,6 +46,17 @@ public final class CreatePostUseCase {
     /// Global TTL cap — matches MeshForwardingService.Config.maxAllowedTTL (TASK-031).
     public static let maxTTL = 7
 
+    // MARK: - Media limits (EP-037 / TASK-185; generation enforced again in TASK-186)
+
+    /// Max images per post — Twitter parity (`docs/media-propagation.md` §3).
+    public static let maxImages = 4
+    /// Max videos per post.
+    public static let maxVideos = 1
+    /// Max compressed image body size (256 KB).
+    public static let maxImageBytes = 256 * 1024
+    /// Max transcoded video body size (2 MB).
+    public static let maxVideoBytes = 2 * 1024 * 1024
+
     public init(repository: PostRepository, cacheRepository: MessageCacheRepository? = nil) {
         self.repository = repository
         self.cacheRepository = cacheRepository
@@ -39,25 +64,61 @@ public final class CreatePostUseCase {
 
     @discardableResult
     public func execute(_ request: CreatePostRequest) throws -> Post {
-        let trimmed = request.content.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { throw CreatePostError.emptyContent }
-        guard trimmed.count <= Self.maxContentLength else { throw CreatePostError.contentTooLong }
         guard request.authorPublicKey.count == 32 else { throw CreatePostError.invalidPublicKey }
+        try validateMedia(request.media)
+
+        let trimmed = request.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasMedia = !request.media.isEmpty
+        // Media-only posts are allowed; text may only be empty when media is present.
+        guard !trimmed.isEmpty || hasMedia else { throw CreatePostError.emptyContent }
+        guard trimmed.count <= Self.maxContentLength else { throw CreatePostError.contentTooLong }
+        // Media descriptors share the 512-byte BLE budget with the text, so the
+        // usable text byte budget shrinks by the descriptor size (TASK-184 §3).
+        let descriptorBytes = request.media.reduce(0) { $0 + $1.canonicalBytes.count }
+        let textBudget = PostSerializer.maxBLEContentBytes - descriptorBytes
+        guard Data(trimmed.utf8).count <= textBudget else { throw CreatePostError.contentTooLong }
 
         let unsigned = Post(
             content: trimmed,
             authorPublicKey: request.authorPublicKey,
-            ttl: min(request.ttl, Self.maxTTL)
+            ttl: min(request.ttl, Self.maxTTL),
+            media: request.media
         )
         let post = (try? PostSigningService.sign(unsigned, signingPrivateKeyData: request.authorPrivateKey)) ?? unsigned
         try repository.save(post)
 
         // TASK-068: cache own post so it propagates to peers via store-and-forward.
-        if let cacheRepository, let payload = try? PostSerializer.encode(post) {
+        // Skip media posts until the v2 wire format exists (TASK-189): the v1
+        // serializer would silently strip media and broadcast a stripped, signature-
+        // mismatched payload. Media propagation is wired up in #225.
+        if !hasMedia, let cacheRepository, let payload = try? PostSerializer.encode(post) {
             let cached = CachedMessage(postId: post.id, data: payload, ttl: post.ttl, hopCount: 0)
             try? cacheRepository.save(cached)
         }
 
         return post
+    }
+
+    /// Enforces per-post media counts, body-size caps, and content-hash validity.
+    private func validateMedia(_ media: [MediaAttachment]) throws {
+        guard !media.isEmpty else { return }
+        var images = 0
+        var videos = 0
+        for item in media {
+            guard item.contentHash.count == MediaAttachment.contentHashByteCount,
+                  item.byteSize > 0 else {
+                throw CreatePostError.invalidMedia
+            }
+            switch item.kind {
+            case .image:
+                images += 1
+                guard item.byteSize <= Self.maxImageBytes else { throw CreatePostError.invalidMedia }
+            case .video:
+                videos += 1
+                guard item.byteSize <= Self.maxVideoBytes else { throw CreatePostError.invalidMedia }
+            }
+        }
+        guard images <= Self.maxImages else { throw CreatePostError.tooManyImages }
+        guard videos <= Self.maxVideos else { throw CreatePostError.tooManyVideos }
     }
 }

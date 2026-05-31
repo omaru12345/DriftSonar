@@ -20,7 +20,8 @@ public class SwiftDataPostRepository: PostRepository {
             timestamp: post.timestamp,
             signature: post.signature,
             ttl: post.ttl,
-            hopCount: post.hopCount
+            hopCount: post.hopCount,
+            mediaData: PostMediaCoder.encode(post.media)
         )
         context.insert(model)
         try context.save()
@@ -66,7 +67,29 @@ private extension Post {
             timestamp: model.timestamp,
             signature: model.signature,
             ttl: model.ttl,
-            hopCount: model.hopCount
+            hopCount: model.hopCount,
+            media: PostMediaCoder.decode(model.mediaData)
         )
+    }
+}
+
+// MARK: - Media (JSON) encoding for the `PostModel.mediaData` blob
+
+@available(macOS 14, iOS 17, *)
+enum PostMediaCoder {
+    /// Encodes domain descriptors to the persisted blob. Empty media → empty `Data`.
+    static func encode(_ media: [MediaAttachment]) -> Data {
+        guard !media.isEmpty else { return Data() }
+        let persisted = media.map { PersistedMediaAttachment(from: $0) }
+        return (try? JSONEncoder().encode(persisted)) ?? Data()
+    }
+
+    /// Decodes the persisted blob back to domain descriptors. Empty/corrupt → `[]`.
+    static func decode(_ data: Data) -> [MediaAttachment] {
+        guard !data.isEmpty,
+              let persisted = try? JSONDecoder().decode([PersistedMediaAttachment].self, from: data) else {
+            return []
+        }
+        return persisted.map(\.attachment)
     }
 }

@@ -9,6 +9,9 @@ import Foundation
 /// - `authorPublicKey` (32 bytes)
 /// - `timestamp` (8 bytes, little-endian Double)
 /// - `content` (UTF-8 bytes)
+/// - `media` descriptors (EP-037 / TASK-185) — appended **only when present** so
+///   text-only posts produce byte-identical canonical bytes to protocolVersion 1.
+///   Binding `media` stops a relay from swapping a `contentHash` reference.
 public enum PostSigningService {
 
     public enum SigningError: Error {
@@ -32,7 +35,8 @@ public enum PostSigningService {
             timestamp: post.timestamp,
             signature: signature,
             ttl: post.ttl,
-            hopCount: post.hopCount
+            hopCount: post.hopCount,
+            media: post.media
         )
     }
 
@@ -58,6 +62,18 @@ public enum PostSigningService {
         var ts = post.timestamp.timeIntervalSince1970.bitPattern.littleEndian
         withUnsafeBytes(of: &ts) { data.append(contentsOf: $0) }
         data.append(Data(post.content.utf8))
+
+        // Media descriptors are appended only when present, so a text-only post's
+        // canonical bytes are identical to a pre-EP-037 (protocolVersion 1) post and
+        // its signature stays interoperable. A UInt16 count prefix keeps the trailing
+        // region self-delimiting.
+        if !post.media.isEmpty {
+            var count = UInt16(clamping: post.media.count).littleEndian
+            withUnsafeBytes(of: &count) { data.append(contentsOf: $0) }
+            for attachment in post.media {
+                data.append(attachment.canonicalBytes)
+            }
+        }
         return data
     }
 }
