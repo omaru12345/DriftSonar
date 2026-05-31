@@ -92,7 +92,6 @@ struct EncounterView: View {
                                 // View no longer reads the Keychain per row.
                                 NavigationLink(destination: SecretMessageView(
                                     otherPublicKey: peer.peerPublicKey,
-                                    myPublicKey: myProfile.publicKey,
                                     peerNickname: peer.nickname
                                 )) {
                                     HStack {

@@ -14,15 +14,13 @@ class SecretMessageViewModel {
     /// Loaded from the Keychain in `setup` (TASK-153). `nil` means the key could
     /// not be retrieved — messages can be neither decrypted nor sent.
     private var myPrivateKey: Data?
-    private let myPublicKey: Data
 
     private var messageRepository: SecretMessageRepository?
     /// Called with encrypted data to enqueue for BLE delivery.
     var onSendEncrypted: ((Data) -> Void)?
 
-    init(otherPublicKey: Data, myPublicKey: Data) {
+    init(otherPublicKey: Data) {
         self.otherPublicKey = otherPublicKey
-        self.myPublicKey = myPublicKey
     }
 
     func setup(repository: SecretMessageRepository) {
@@ -42,10 +40,14 @@ class SecretMessageViewModel {
         guard let repo = messageRepository, let myPrivateKey else { return }
         let stored = (try? repo.fetchMessages(for: otherPublicKey)) ?? []
         messages = stored.compactMap { item in
+            // TASK-183: My own and received messages share the same secret because
+            // ECDH is symmetric — ECDH(myPrivate, otherPublic) equals the secret used
+            // at encryption time. Decrypting my own sent messages with `myPublicKey`
+            // (the previous behaviour) failed and silently dropped them on reload.
             guard let text = try? secretService.decrypt(
                 encryptedMessage: EncryptedMessage(data: item.encryptedData),
-                receiverPrivateKey: item.isMine ? myPrivateKey : myPrivateKey,
-                senderPublicKey: item.isMine ? myPublicKey : otherPublicKey
+                receiverPrivateKey: myPrivateKey,
+                senderPublicKey: otherPublicKey
             ) else { return nil }
             return (isMine: item.isMine, text: text, timestamp: item.timestamp)
         }

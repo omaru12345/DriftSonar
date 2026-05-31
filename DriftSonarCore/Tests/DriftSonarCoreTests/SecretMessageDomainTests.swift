@@ -56,4 +56,42 @@ final class SecretMessageDomainTests: XCTestCase {
             XCTAssertTrue(error is DecryptionError)
         }
     }
+
+    /// Regression for TASK-183: the sender must be able to decrypt their own sent
+    /// message. `loadMessages` decrypts own messages with the *recipient's* public
+    /// key (otherPublicKey) — ECDH is symmetric, so ECDH(myPrivate, otherPublic)
+    /// reproduces the secret used at encryption time. The previous code used the
+    /// sender's own public key, which failed and dropped the message on reload.
+    func testSenderCanDecryptOwnSentMessage() throws {
+        let useCase = CreateProfileUseCase()
+        let me = try useCase.execute(request: CreateProfileRequest(nickname: "Me", bio: ""))
+        let other = try useCase.execute(request: CreateProfileRequest(nickname: "Other", bio: ""))
+
+        let plainText = "自分の送信メッセージ"
+        let service = SecretMessageService()
+
+        // I send to `other` (sendMessage): ECDH(myPrivate, otherPublic).
+        let encrypted = try service.encrypt(
+            plainText: plainText,
+            senderPrivateKey: me.privateKey,
+            receiverPublicKey: other.publicKey
+        )
+
+        // loadMessages (isMine) must decrypt with my private key + the recipient's public key.
+        let decrypted = try service.decrypt(
+            encryptedMessage: encrypted,
+            receiverPrivateKey: me.privateKey,
+            senderPublicKey: other.publicKey
+        )
+        XCTAssertEqual(decrypted, plainText)
+
+        // The previous buggy combination (my own public key as sender) must fail.
+        XCTAssertThrowsError(try service.decrypt(
+            encryptedMessage: encrypted,
+            receiverPrivateKey: me.privateKey,
+            senderPublicKey: me.publicKey
+        )) { error in
+            XCTAssertTrue(error is DecryptionError)
+        }
+    }
 }
