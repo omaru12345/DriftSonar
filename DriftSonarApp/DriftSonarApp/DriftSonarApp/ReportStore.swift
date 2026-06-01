@@ -11,10 +11,12 @@ enum ReportStore {
     private static let idsKey = "reportedPostIDs"
 
     /// Reasons a user can pick when reporting a post. Offline-only; not transmitted.
+    /// Reasons apply to the whole post — text *and* any attached image/video — and
+    /// reporting hides the entire post, media included (TASK-167 / TASK-190).
     enum Reason: String, CaseIterable, Identifiable {
         case spam = "スパム・宣伝"
         case harassment = "嫌がらせ・いじめ"
-        case inappropriate = "不適切・わいせつな内容"
+        case inappropriate = "不適切・わいせつな内容（画像・動画含む）"
         case violenceOrIllegal = "暴力的・違法な内容"
         case other = "その他"
 

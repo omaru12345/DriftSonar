@@ -93,6 +93,8 @@ class TimelineViewModel {
             return .message("動画は\(CreatePostUseCase.maxVideos)本までです。")
         } catch CreatePostError.invalidMedia {
             return .message("添付メディアを処理できませんでした。容量や形式をご確認ください。")
+        } catch CreatePostError.mediaTooLarge {
+            return .message("添付メディアの合計サイズが大きすぎます。枚数を減らすか、短い動画をお試しください。")
         } catch {
             return .postFailed
         }

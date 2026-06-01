@@ -35,6 +35,8 @@ public enum CreatePostError: Error {
     case tooManyVideos
     /// A media item is missing/oversized, or has an invalid content hash.
     case invalidMedia
+    /// The post's combined media body size exceeds the per-post total cap (TASK-190).
+    case mediaTooLarge
 }
 
 public final class CreatePostUseCase {
@@ -56,6 +58,12 @@ public final class CreatePostUseCase {
     public static let maxImageBytes = 256 * 1024
     /// Max transcoded video body size (2 MB).
     public static let maxVideoBytes = 2 * 1024 * 1024
+    /// Max combined media body size per post (TASK-190). A valid post is either images
+    /// (≤ 4 × 256 KB = 1 MB) or one video (≤ 2 MB), so the worst legitimate case is the
+    /// video ceiling. Capping the *total* defends against a post that bundles more bytes
+    /// than any allowed combination — e.g. a payload reconstructed from the mesh — and
+    /// bounds what a single post can ever ask a peer to fetch (`docs/media-propagation.md`).
+    public static let maxTotalMediaBytes = 2 * 1024 * 1024
 
     public init(repository: PostRepository, cacheRepository: MessageCacheRepository? = nil) {
         self.repository = repository
@@ -120,5 +128,9 @@ public final class CreatePostUseCase {
         }
         guard images <= Self.maxImages else { throw CreatePostError.tooManyImages }
         guard videos <= Self.maxVideos else { throw CreatePostError.tooManyVideos }
+        // Per-post total cap (TASK-190): bounds the combined body size a single post can
+        // carry, independent of the per-item caps above.
+        let totalBytes = media.reduce(0) { $0 + $1.byteSize }
+        guard totalBytes <= Self.maxTotalMediaBytes else { throw CreatePostError.mediaTooLarge }
     }
 }

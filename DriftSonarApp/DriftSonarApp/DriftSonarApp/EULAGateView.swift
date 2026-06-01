@@ -25,7 +25,7 @@ struct EULAGateView: View {
                     policyItem(
                         icon: "exclamationmark.shield.fill",
                         title: "不適切なコンテンツの禁止",
-                        body: "嫌がらせ・脅迫・差別・わいせつ・違法な内容など、不快・不適切な投稿は固く禁止します。これらに対して一切の許容はありません。"
+                        body: "嫌がらせ・脅迫・差別・わいせつ・違法な内容など、不快・不適切な投稿は固く禁止します。これはテキストだけでなく、添付する画像・動画にも等しく適用されます。これらに対して一切の許容はありません。"
                     )
                     policyItem(
                         icon: "flag.fill",

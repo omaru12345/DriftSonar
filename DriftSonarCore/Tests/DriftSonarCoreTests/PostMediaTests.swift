@@ -131,6 +131,27 @@ final class PostMediaTests: XCTestCase {
         }
     }
 
+    // MARK: - 1 投稿あたり総メディアサイズ上限（TASK-190）
+
+    func testTotalMediaSizeOverCapThrows() throws {
+        let (useCase, _, _) = makeUseCase()
+        // Each item is within its per-item cap, and counts are within limits, but the
+        // combined body size (2 MB video + 4 × 256 KB images = 3 MB) exceeds the per-post
+        // total. Compose forbids mixing image+video, but Core must still bound the total
+        // (e.g. a payload reconstructed from the mesh).
+        let bigVideo = video(bytes: CreatePostUseCase.maxVideoBytes)
+        let images = (0..<4).map { image(bytes: CreatePostUseCase.maxImageBytes, hash: sha(UInt8($0))) }
+        XCTAssertThrowsError(try useCase.execute(request(content: "", media: [bigVideo] + images))) {
+            XCTAssertEqual($0 as? CreatePostError, .mediaTooLarge)
+        }
+    }
+
+    func testTotalMediaSizeAtCapIsAllowed() throws {
+        let (useCase, _, _) = makeUseCase()
+        let post = try useCase.execute(request(content: "", media: [video(bytes: CreatePostUseCase.maxTotalMediaBytes)]))
+        XCTAssertEqual(post.media.first?.byteSize, CreatePostUseCase.maxTotalMediaBytes)
+    }
+
     // MARK: - 動的テキスト予算（descriptor が text 予算を圧迫する）
 
     func testTextBudgetShrinksWithMedia() throws {
