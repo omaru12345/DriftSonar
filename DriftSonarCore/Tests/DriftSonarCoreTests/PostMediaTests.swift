@@ -138,8 +138,7 @@ final class PostMediaTests: XCTestCase {
         // Four image descriptors push the remaining text byte budget well below the
         // 280-char limit, so the dynamic byte budget — not the char limit — binds.
         let media = (0..<4).map { image(hash: sha(UInt8($0))) }
-        let descriptorBytes = media.reduce(0) { $0 + $1.canonicalBytes.count }
-        let budget = PostSerializer.maxBLEContentBytes - descriptorBytes
+        let budget = PostSerializer.maxBLEContentBytes - PostSerializer.mediaWireOverhead(media)
         XCTAssertLessThan(budget, CreatePostUseCase.maxContentLength, "byte budget must be the binding limit")
         // ascii: 1 byte/char. Exactly at the shrunken budget passes …
         let okText = String(repeating: "a", count: budget)
@@ -151,12 +150,18 @@ final class PostMediaTests: XCTestCase {
         }
     }
 
-    // MARK: - Mesh キャッシュは v1 で表現できないメディア投稿を伝播しない
+    // MARK: - Mesh キャッシュはメディア投稿を v2 descriptor として伝播する（TASK-189）
 
-    func testMediaPostIsNotCachedForV1Propagation() throws {
+    func testMediaPostCachesAsV2ForPropagation() throws {
         let (useCase, _, cache) = makeUseCase()
         try useCase.execute(request(content: "media", media: [image()]))
-        XCTAssertEqual(try cache.count(), 0, "media posts must not enter the v1 store-and-forward cache")
+        XCTAssertEqual(try cache.count(), 1, "media posts now enter the store-and-forward cache as a v2 payload")
+        // The cached payload must round-trip back to a post that still carries the media
+        // descriptor — only the lightweight descriptor travels the mesh (TASK-189).
+        let payload = try XCTUnwrap(try cache.fetchForwardable(limit: 1).first?.data)
+        let decoded = try PostSerializer.decode(payload)
+        XCTAssertEqual(decoded.media.count, 1)
+        XCTAssertEqual(decoded.media.first?.kind, .image)
     }
 
     func testTextOnlyPostStillCaches() throws {

@@ -116,4 +116,85 @@ public struct MediaAttachment: Equatable, Sendable {
         data.append(UInt8(clamping: bytes.count))
         data.append(bytes.prefix(255))
     }
+
+    // MARK: - Descriptor wire decode (TASK-189 / #225)
+
+    public enum DescriptorDecodeError: Error, Equatable {
+        /// The buffer ended before a full descriptor could be read.
+        case truncated
+        /// A length-prefixed string field was not valid UTF-8.
+        case invalidUTF8
+    }
+
+    /// Parses one descriptor — the inverse of `canonicalBytes` — from a 0-based,
+    /// contiguous `data` starting at `offset`. Returns the attachment and the offset
+    /// just past it so callers can read a sequence (used by the v2 wire format).
+    ///
+    /// Every read is bounds-checked against `data.count`, so truncated or malformed
+    /// input throws rather than trapping (TASK-176 robustness). `durationMs` is `nil`
+    /// for images and the decoded value for videos, mirroring `canonicalBytes`.
+    public static func decodeDescriptor(
+        from data: Data,
+        at offset: Int
+    ) throws -> (attachment: MediaAttachment, nextOffset: Int) {
+        var cursor = offset
+
+        func readByte() throws -> UInt8 {
+            guard cursor < data.count else { throw DescriptorDecodeError.truncated }
+            defer { cursor += 1 }
+            return data[cursor]
+        }
+        func readUInt16() throws -> UInt16 {
+            guard cursor + 2 <= data.count else { throw DescriptorDecodeError.truncated }
+            let value = UInt16(data[cursor]) | (UInt16(data[cursor + 1]) << 8)
+            cursor += 2
+            return value
+        }
+        func readUInt32() throws -> UInt32 {
+            guard cursor + 4 <= data.count else { throw DescriptorDecodeError.truncated }
+            var value: UInt32 = 0
+            for i in 0..<4 { value |= UInt32(data[cursor + i]) << (8 * i) }
+            cursor += 4
+            return value
+        }
+        func readBytes(_ count: Int) throws -> Data {
+            guard count >= 0, cursor + count <= data.count else { throw DescriptorDecodeError.truncated }
+            defer { cursor += count }
+            return data[cursor..<cursor + count]
+        }
+        func readLengthPrefixedString() throws -> String {
+            let length = Int(try readByte())
+            let bytes = try readBytes(length)
+            guard let string = String(data: bytes, encoding: .utf8) else {
+                throw DescriptorDecodeError.invalidUTF8
+            }
+            return string
+        }
+
+        let kindByte = try readByte()
+        let kind = Kind(rawValue: kindByte) ?? .image  // forward-compatible default
+
+        let hashLength = Int(try readByte())
+        let contentHash = Data(try readBytes(hashLength))
+
+        let width = Int(try readUInt16())
+        let height = Int(try readUInt16())
+        let byteSize = Int(try readUInt32())
+        let durationRaw = Int(try readUInt16())
+
+        let mimeType = try readLengthPrefixedString()
+        let blurHashString = try readLengthPrefixedString()
+
+        let attachment = MediaAttachment(
+            kind: kind,
+            contentHash: contentHash,
+            width: width,
+            height: height,
+            byteSize: byteSize,
+            mimeType: mimeType,
+            blurHash: blurHashString.isEmpty ? nil : blurHashString,
+            durationMs: kind == .video ? durationRaw : nil
+        )
+        return (attachment, cursor)
+    }
 }

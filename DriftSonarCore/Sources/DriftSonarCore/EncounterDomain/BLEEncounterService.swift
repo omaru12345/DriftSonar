@@ -15,6 +15,11 @@ public enum DriftSonarBLE {
     public nonisolated(unsafe) static let directMessageCharacteristicUUID = CBUUID(string: "4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678C")
     /// Readable characteristic that holds the node's UTF-8 nickname (TASK-076).
     public nonisolated(unsafe) static let nicknameCharacteristicUUID = CBUUID(string: "4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678D")
+    /// On-demand media body transfer (EP-037 / TASK-189). The viewer *writes* a 32-byte
+    /// WANT (content hash) and the holder *notifies* back `MediaChunkFrame`s. Only the
+    /// signed descriptor travels the mesh; the body is fetched point-to-point and never
+    /// flooded (`docs/media-propagation.md` §3). Wire format: `MediaChunkProtocol`.
+    public nonisolated(unsafe) static let mediaCharacteristicUUID = CBUUID(string: "4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678E")
 }
 
 /// Core Bluetooth implementation of `EncounterService`.

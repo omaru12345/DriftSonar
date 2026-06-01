@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Layout (little-endian):
 /// ```
-/// [1]   protocolVersion (UInt8) — current = 1
+/// [1]   protocolVersion (UInt8) — 1 = text-only, 2 = media post (EP-037 / TASK-189)
 /// [16]  id (UUID bytes)
 /// [32]  authorPublicKey
 /// [8]   timestamp (seconds since epoch, Double)
@@ -12,18 +12,24 @@ import Foundation
 /// [1]   hopCount (UInt8)
 /// [64]  signature
 /// [2]   contentLength (UInt16)
-/// [N]   content (UTF-8, N ≤ 387 to fit 512-byte BLE MTU)
+/// [N]   content (UTF-8)
+/// ── version 2 only (media descriptors travel the mesh, bodies on demand) ──
+/// [1]   mediaCount (UInt8, 1…CreatePostUseCase image+video cap)
+/// [ ]   mediaCount × descriptor (MediaAttachment.canonicalBytes, self-delimiting)
 /// ```
-/// Total overhead: 125 bytes. Max content: 387 bytes (= 512 - 125).
+/// Header overhead: 125 bytes. `content + media block ≤ 387` to fit the 512-byte MTU.
 ///
-/// The leading version byte lets future peers detect incompatible wire formats
-/// and reject them explicitly instead of mis-decoding. Bump `protocolVersion`
-/// whenever the layout below changes; keep the policy aligned with
-/// `EncryptedMessage` versioning (EP-024 / TASK-125).
+/// The leading version byte lets peers detect incompatible wire formats and reject
+/// them explicitly instead of mis-decoding. A v1-only build drops a v2 payload via
+/// `unsupportedVersion(2)`; this build understands both. Text-only posts are encoded
+/// as version 1 and stay byte-identical to the pre-EP-037 format. Keep the policy
+/// aligned with `EncryptedMessage` versioning (EP-024 / TASK-125).
 public enum PostSerializer {
 
-    /// Current wire-format version. Written as the first byte of every payload.
+    /// Wire-format version for a text-only post. Written as the first payload byte.
     public static let protocolVersion: UInt8 = 1
+    /// Wire-format version for a post carrying media descriptors (EP-037 / TASK-189).
+    public static let mediaProtocolVersion: UInt8 = 2
 
     public enum SerializationError: Error, Equatable {
         case contentTooLong
@@ -34,6 +40,8 @@ public enum PostSerializer {
         case invalidPublicKeyLength
         /// Decoded payload carries a `protocolVersion` this build does not support.
         case unsupportedVersion(UInt8)
+        /// The version-2 media trailer was truncated or malformed.
+        case malformedMedia
     }
 
     private static let headerSize = 1 + 16 + 32 + 8 + 1 + 1 + 64 + 2  // 125
@@ -42,19 +50,30 @@ public enum PostSerializer {
     /// Anything larger is malformed and rejected before being materialised.
     public static let maxPayloadBytes = headerSize + maxBLEContentBytes  // 512
 
+    /// Bytes the version-2 media trailer adds after the text content: a 1-byte count
+    /// plus each descriptor's `canonicalBytes`. Zero for text-only posts. Single source
+    /// of truth shared by `CreatePostUseCase`'s dynamic text budget and `encode`.
+    public static func mediaWireOverhead(_ media: [MediaAttachment]) -> Int {
+        guard !media.isEmpty else { return 0 }
+        return 1 + media.reduce(0) { $0 + $1.canonicalBytes.count }
+    }
+
     public static func encode(_ post: Post) throws -> Data {
         let contentData = Data(post.content.utf8)
-        guard contentData.count <= maxBLEContentBytes else {
+        let mediaOverhead = mediaWireOverhead(post.media)
+        // Text and the media trailer share the same MTU budget (TASK-184 §3).
+        guard contentData.count + mediaOverhead <= maxBLEContentBytes else {
             throw SerializationError.contentTooLong
         }
         guard post.authorPublicKey.count == 32 else {
             throw SerializationError.invalidPublicKeyLength
         }
 
-        var data = Data(capacity: headerSize + contentData.count)
+        let version = post.media.isEmpty ? protocolVersion : mediaProtocolVersion
+        var data = Data(capacity: headerSize + contentData.count + mediaOverhead)
 
-        // protocolVersion (1 byte)
-        data.append(protocolVersion)
+        // protocolVersion (1 byte): 1 = text-only (unchanged), 2 = media post.
+        data.append(version)
 
         // UUID (16 bytes)
         withUnsafeBytes(of: post.id.uuid) { data.append(contentsOf: $0) }
@@ -84,6 +103,14 @@ public enum PostSerializer {
         // content
         data.append(contentData)
 
+        // version-2 media trailer: count + self-delimiting descriptors (EP-037 / TASK-189).
+        if !post.media.isEmpty {
+            data.append(UInt8(clamping: post.media.count))
+            for attachment in post.media {
+                data.append(attachment.canonicalBytes)
+            }
+        }
+
         return data
     }
 
@@ -99,9 +126,10 @@ public enum PostSerializer {
 
         var offset = 0
 
-        // protocolVersion (1 byte)
+        // protocolVersion (1 byte). This build understands 1 (text-only) and 2 (media).
+        // Any other version is rejected so we never mis-decode a future layout.
         let version = data[offset]
-        guard version == protocolVersion else {
+        guard version == protocolVersion || version == mediaProtocolVersion else {
             throw SerializationError.unsupportedVersion(version)
         }
         offset += 1
@@ -147,6 +175,13 @@ public enum PostSerializer {
         guard let content = String(data: data[offset..<offset + contentLength], encoding: .utf8) else {
             throw SerializationError.invalidUTF8
         }
+        offset += contentLength
+
+        // version-2 media trailer (EP-037 / TASK-189). Absent for version 1.
+        var media: [MediaAttachment] = []
+        if version == mediaProtocolVersion {
+            media = try decodeMediaTrailer(from: data, at: offset)
+        }
 
         return Post(
             id: id,
@@ -155,7 +190,29 @@ public enum PostSerializer {
             timestamp: timestamp,
             signature: Data(signature),
             ttl: ttl,
-            hopCount: hopCount
+            hopCount: hopCount,
+            media: media
         )
+    }
+
+    /// Reads the version-2 media trailer: a 1-byte count followed by that many
+    /// self-delimiting descriptors. Any truncation/garbage surfaces as `malformedMedia`
+    /// so a corrupt trailer drops the whole post instead of crashing (TASK-176 robustness).
+    private static func decodeMediaTrailer(from data: Data, at offset: Int) throws -> [MediaAttachment] {
+        guard offset < data.count else { throw SerializationError.malformedMedia }
+        let count = Int(data[offset])
+        var cursor = offset + 1
+        var media: [MediaAttachment] = []
+        media.reserveCapacity(count)
+        for _ in 0..<count {
+            do {
+                let (attachment, next) = try MediaAttachment.decodeDescriptor(from: data, at: cursor)
+                media.append(attachment)
+                cursor = next
+            } catch {
+                throw SerializationError.malformedMedia
+            }
+        }
+        return media
     }
 }

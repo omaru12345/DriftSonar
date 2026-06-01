@@ -192,7 +192,8 @@ public final class MeshForwardingService {
                 timestamp: post.timestamp,
                 signature: post.signature,
                 ttl: config.maxAllowedTTL,
-                hopCount: post.hopCount
+                hopCount: post.hopCount,
+                media: post.media  // preserve media descriptors on clamp (TASK-189)
             )
         } else {
             clampedPost = post

@@ -7,6 +7,8 @@
 - `publicKeyCharacteristicUUID` = `4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678A`
 - `messageCharacteristicUUID` = `4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678B`
 - `directMessageCharacteristicUUID` = `4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678C`
+- `nicknameCharacteristicUUID` = `4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678D`
+- `mediaCharacteristicUUID` = `4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678E`（オンデマンドメディア本体取得・TASK-189）
 
 **アーキテクチャ**:
 - 各デバイスが Peripheral（公開鍵をGATTで公開）と Central（スキャン→接続→読取→切断）を同時担当

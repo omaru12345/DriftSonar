@@ -73,9 +73,8 @@ public final class CreatePostUseCase {
         guard !trimmed.isEmpty || hasMedia else { throw CreatePostError.emptyContent }
         guard trimmed.count <= Self.maxContentLength else { throw CreatePostError.contentTooLong }
         // Media descriptors share the 512-byte BLE budget with the text, so the
-        // usable text byte budget shrinks by the descriptor size (TASK-184 §3).
-        let descriptorBytes = request.media.reduce(0) { $0 + $1.canonicalBytes.count }
-        let textBudget = PostSerializer.maxBLEContentBytes - descriptorBytes
+        // usable text byte budget shrinks by the v2 media trailer size (TASK-184 §3).
+        let textBudget = PostSerializer.maxBLEContentBytes - PostSerializer.mediaWireOverhead(request.media)
         guard Data(trimmed.utf8).count <= textBudget else { throw CreatePostError.contentTooLong }
 
         let unsigned = Post(
@@ -88,10 +87,11 @@ public final class CreatePostUseCase {
         try repository.save(post)
 
         // TASK-068: cache own post so it propagates to peers via store-and-forward.
-        // Skip media posts until the v2 wire format exists (TASK-189): the v1
-        // serializer would silently strip media and broadcast a stripped, signature-
-        // mismatched payload. Media propagation is wired up in #225.
-        if !hasMedia, let cacheRepository, let payload = try? PostSerializer.encode(post) {
+        // Media posts now propagate too (TASK-189): `encode` emits a v2 payload carrying
+        // the lightweight descriptors (BlurHash + content hash), and the body is fetched
+        // on demand from a nearby peer. Only the descriptors travel the mesh, so the
+        // cache footprint stays comparable to a text post (`docs/media-propagation.md`).
+        if let cacheRepository, let payload = try? PostSerializer.encode(post) {
             let cached = CachedMessage(postId: post.id, data: payload, ttl: post.ttl, hopCount: 0)
             try? cacheRepository.save(cached)
         }
