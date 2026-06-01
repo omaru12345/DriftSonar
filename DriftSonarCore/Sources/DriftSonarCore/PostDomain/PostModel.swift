@@ -11,10 +11,13 @@ public class PostModel {
     public var signature: Data
     public var ttl: Int
     public var hopCount: Int
-    /// JSON-encoded `[PersistedMediaAttachment]` (EP-037 / TASK-185). Empty `Data`
+    /// JSON-encoded `[PersistedMediaAttachment]` (EP-037 / TASK-185). `nil`/empty
     /// means no media. Stored as a blob to keep the SwiftData schema migration
-    /// lightweight; the default lets existing rows migrate without a value.
-    public var mediaData: Data
+    /// lightweight. **Optional on purpose**: a mandatory attribute would fail
+    /// in-place migration for stores created before this field existed
+    /// ("missing attribute values on mandatory destination attribute"); an optional
+    /// one migrates as `nil` for existing rows.
+    public var mediaData: Data?
 
     public init(
         id: UUID,
@@ -24,7 +27,7 @@ public class PostModel {
         signature: Data,
         ttl: Int,
         hopCount: Int,
-        mediaData: Data = Data()
+        mediaData: Data? = nil
     ) {
         self.id = id
         self.content = content

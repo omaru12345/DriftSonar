@@ -215,4 +215,10 @@ final class PostMediaTests: XCTestCase {
     func testCorruptMediaBlobDecodesToEmpty() {
         XCTAssertEqual(PostMediaCoder.decode(Data([0x00, 0x01, 0x02])), [])
     }
+
+    /// `mediaData` is optional so SwiftData can migrate stores created before the
+    /// field existed (rows arrive as `nil`). Decoding `nil` must yield no media.
+    func testNilMediaBlobDecodesToEmpty() {
+        XCTAssertEqual(PostMediaCoder.decode(nil), [])
+    }
 }

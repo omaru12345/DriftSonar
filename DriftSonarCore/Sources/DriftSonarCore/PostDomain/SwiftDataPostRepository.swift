@@ -84,9 +84,9 @@ enum PostMediaCoder {
         return (try? JSONEncoder().encode(persisted)) ?? Data()
     }
 
-    /// Decodes the persisted blob back to domain descriptors. Empty/corrupt → `[]`.
-    static func decode(_ data: Data) -> [MediaAttachment] {
-        guard !data.isEmpty,
+    /// Decodes the persisted blob back to domain descriptors. Nil/empty/corrupt → `[]`.
+    static func decode(_ data: Data?) -> [MediaAttachment] {
+        guard let data, !data.isEmpty,
               let persisted = try? JSONDecoder().decode([PersistedMediaAttachment].self, from: data) else {
             return []
         }
