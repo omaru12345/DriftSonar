@@ -22,6 +22,10 @@ final class AppServices {
     /// `MediaAttachment` descriptors (EP-037 / TASK-186/187). `nil` when the on-disk
     /// media store could not be created — the Compose media button hides in that case.
     let mediaIngestService: MediaIngestService?
+    /// Backing store for media bodies/thumbnails (EP-037 / TASK-186/188). Shared with
+    /// `mediaIngestService` so the Timeline can resolve a descriptor to its on-disk
+    /// thumbnail/full body. `nil` when the store could not be created.
+    let mediaStore: MediaStore?
     /// Shared timeline view model — wired to BLE receive events for auto-refresh (TASK-069).
     let timelineViewModel: TimelineViewModel
     /// Unread post count for tab badge (TASK-084).
@@ -53,7 +57,9 @@ final class AppServices {
         // survive across launches (unlike Caches) while the store's own LRU cap bounds
         // total size. A failure here is non-fatal — media attach is simply unavailable.
         let mediaRoot = URL.applicationSupportDirectory.appending(path: "Media", directoryHint: .isDirectory)
-        mediaIngestService = (try? MediaStore(rootDirectory: mediaRoot)).map { MediaIngestService(store: $0) }
+        let store = try? MediaStore(rootDirectory: mediaRoot)
+        mediaStore = store
+        mediaIngestService = store.map { MediaIngestService(store: $0) }
 
         // TASK-068: pass cacheRepository so own posts are cached for forwarding.
         let timeline = TimelineViewModel()

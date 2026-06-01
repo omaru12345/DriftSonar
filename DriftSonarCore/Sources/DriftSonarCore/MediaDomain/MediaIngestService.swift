@@ -53,7 +53,7 @@ public struct MediaIngestService {
         let thumbnailURL = try store.store(
             processed.thumbnailData,
             contentHash: hashHex,
-            fileExtension: "thumb.jpg"
+            fileExtension: MediaAttachment.thumbnailFileExtension
         )
 
         let attachment = MediaAttachment(
@@ -86,7 +86,7 @@ public struct MediaIngestService {
         let thumbnailURL = try store.store(
             processed.thumbnailData,
             contentHash: hashHex,
-            fileExtension: "thumb.jpg"
+            fileExtension: MediaAttachment.thumbnailFileExtension
         )
 
         let attachment = MediaAttachment(

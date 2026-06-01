@@ -64,6 +64,21 @@ public final class MediaStore {
         storedFiles().reduce(0) { $0 + $1.size }
     }
 
+    // MARK: - descriptor から URL を引く（TASK-188）
+
+    /// descriptor に対応するサムネ URL を返す（無ければ nil）。
+    ///
+    /// 受信した投稿は本体・サムネがまだ手元に無い（オンデマンド取得は TASK-189）。
+    /// その場合 nil を返し、UI 側はプレースホルダを出す。
+    public func thumbnailURL(for attachment: MediaAttachment) -> URL? {
+        url(contentHash: attachment.contentHashHex, fileExtension: MediaAttachment.thumbnailFileExtension)
+    }
+
+    /// descriptor に対応するフル本体 URL を返す（無ければ nil）。kind で拡張子が決まる。
+    public func bodyURL(for attachment: MediaAttachment) -> URL? {
+        url(contentHash: attachment.contentHashHex, fileExtension: attachment.bodyFileExtension)
+    }
+
     // MARK: - 内部処理
 
     private func fileURL(contentHash: String, fileExtension: String) -> URL {

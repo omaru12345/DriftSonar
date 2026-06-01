@@ -226,6 +226,42 @@ final class MediaDomainTests: XCTestCase {
         XCTAssertLessThanOrEqual(result.attachment.byteSize, CreatePostUseCase.maxImageBytes)
     }
 
+    // TASK-188: descriptor から保存済みサムネ/本体 URL を引けること（Timeline 表示の前提）。
+    func test_descriptorURLs_resolveStoredFiles() throws {
+        let (store, dir) = try makeTempStore(maxTotalBytes: 10 * 1024 * 1024)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let service = MediaIngestService(store: store)
+        let result = try service.ingestImage(makeJPEG(width: 800, height: 600, withGPS: false))
+        let attachment = result.attachment
+
+        // hex は contentHash と一致し、ファイル名キーとして使える。
+        XCTAssertEqual(attachment.contentHashHex, hex(attachment.contentHash))
+        XCTAssertEqual(attachment.bodyFileExtension, "jpg")
+        // 保存済みファイルが descriptor から解決できる。
+        XCTAssertEqual(store.bodyURL(for: attachment), result.bodyURL)
+        XCTAssertEqual(store.thumbnailURL(for: attachment), result.thumbnailURL)
+    }
+
+    // TASK-188: 手元に無いメディア（受信投稿）は nil を返し、UI 側がプレースホルダを出す。
+    func test_descriptorURLs_returnNilWhenAbsent() throws {
+        let (store, dir) = try makeTempStore(maxTotalBytes: 10 * 1024 * 1024)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let absent = MediaAttachment(
+            kind: .video,
+            contentHash: Data(repeating: 0xAB, count: MediaAttachment.contentHashByteCount),
+            width: 1280,
+            height: 720,
+            byteSize: 1024,
+            mimeType: "video/mp4",
+            durationMs: 3000
+        )
+        XCTAssertEqual(absent.bodyFileExtension, "mp4")
+        XCTAssertNil(store.bodyURL(for: absent))
+        XCTAssertNil(store.thumbnailURL(for: absent))
+    }
+
     func test_ingestImage_canFeedCreatePostUseCase() throws {
         let (store, dir) = try makeTempStore(maxTotalBytes: 10 * 1024 * 1024)
         defer { try? FileManager.default.removeItem(at: dir) }

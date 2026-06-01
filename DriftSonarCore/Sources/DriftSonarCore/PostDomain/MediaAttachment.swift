@@ -54,6 +54,21 @@ public struct MediaAttachment: Equatable, Sendable {
         self.durationMs = durationMs
     }
 
+    /// Lower-case hex of `contentHash` — the content-addressed media ID used as the
+    /// on-disk file name in `MediaStore` (TASK-186/188). Matches `MediaHashing.sha256Hex`.
+    public var contentHashHex: String {
+        contentHash.map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// File extension `MediaStore` uses for the full body of this kind (TASK-186/188).
+    /// Single source of truth shared by ingest and retrieval so they never drift.
+    public var bodyFileExtension: String {
+        kind == .video ? "mp4" : "jpg"
+    }
+
+    /// File extension `MediaStore` uses for the thumbnail of any kind (TASK-186/188).
+    public static let thumbnailFileExtension = "thumb.jpg"
+
     /// Deterministic byte encoding of this descriptor, used both as the signing
     /// canonical range (TASK-185) and as the basis for the dynamic BLE text budget.
     /// The authoritative *wire* layout for v2 propagation lands in TASK-189 (#225);

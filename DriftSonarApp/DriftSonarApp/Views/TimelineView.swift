@@ -131,7 +131,12 @@ struct PostTimelineView: View {
         let isAnonymous = viewModel.anonymousPostIds.contains(post.id)
         let isMine = post.authorPublicKey == myProfile.signingPublicKey
         let displayName = resolveDisplayName(post: post, isMine: isMine, isAnonymous: isAnonymous)
-        PostRowView(post: post, displayName: displayName, isAnonymous: isAnonymous)
+        PostRowView(
+            post: post,
+            displayName: displayName,
+            isAnonymous: isAnonymous,
+            mediaStore: appServices.mediaStore
+        )
             .contextMenu {
                 Button {
                     // TASK-167: Copy the masked text so prohibited words stay filtered.
@@ -184,6 +189,11 @@ struct PostRowView: View {
     let displayName: String
     /// True when this post was created anonymously this session (TASK-111).
     var isAnonymous: Bool = false
+    /// TASK-188: Media store used to resolve attachment thumbnails/bodies. `nil` hides media.
+    var mediaStore: MediaStore?
+
+    /// TASK-188: Attachment index the full-screen viewer should open at, `nil` = closed.
+    @State private var viewerSelection: MediaViewerSelection?
 
     /// TASK-167: Shared content filter that masks prohibited words on display.
     private static let contentFilter = ContentFilter()
@@ -212,9 +222,20 @@ struct PostRowView: View {
                     .foregroundStyle(.tertiary)
             }
 
-            Text(displayedContent)
-                .font(.body)
-                .fixedSize(horizontal: false, vertical: true)
+            if !displayedContent.isEmpty {
+                Text(displayedContent)
+                    .font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // TASK-188: Media mosaic; tapping a tile opens the full-screen viewer.
+            // Hidden when the post carries no media or the store is unavailable.
+            if !post.media.isEmpty, mediaStore != nil {
+                PostMediaGridView(media: post.media, store: mediaStore) { index in
+                    viewerSelection = MediaViewerSelection(index: index)
+                }
+                .padding(.top, 2)
+            }
 
             HStack(spacing: 12) {
                 hopBadge
@@ -224,6 +245,10 @@ struct PostRowView: View {
             }
         }
         .padding(.vertical, 4)
+        // TASK-188: Full-screen viewer, opened at the tapped attachment.
+        .fullScreenCover(item: $viewerSelection) { selection in
+            MediaViewerView(media: post.media, startIndex: selection.index, store: mediaStore)
+        }
     }
 
     private var hopBadge: some View {
@@ -238,6 +263,13 @@ struct PostRowView: View {
         .font(.caption2)
         .foregroundStyle(color)
     }
+}
+
+/// TASK-188: Identifiable wrapper so `fullScreenCover(item:)` can open the viewer
+/// at a specific attachment index.
+private struct MediaViewerSelection: Identifiable {
+    let id = UUID()
+    let index: Int
 }
 
 // MARK: - SkeletonTimelineView
