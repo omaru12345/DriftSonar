@@ -76,6 +76,8 @@ struct PostTimelineView: View {
                     } label: {
                         Image(systemName: "square.and.pencil")
                     }
+                    // TASK-143: Icon-only button needs an explicit VoiceOver label.
+                    .accessibilityLabel("新規投稿")
                 }
             }
             .sheet(isPresented: $showingCompose) {
@@ -242,6 +244,8 @@ struct PostRowView: View {
                 Label("TTL \(post.ttl)", systemImage: "timer")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                    // TASK-143: Spell out the "TTL" jargon for VoiceOver.
+                    .accessibilityLabel("残り伝播回数 \(post.ttl)")
             }
         }
         .padding(.vertical, 4)
@@ -262,6 +266,11 @@ struct PostRowView: View {
         )
         .font(.caption2)
         .foregroundStyle(color)
+        // TASK-143: hopCount is also colour-coded; give VoiceOver a full sentence
+        // so the meaning does not rely on colour alone.
+        .accessibilityLabel(
+            post.hopCount == 0 ? "あなたに直接届いた投稿" : "\(post.hopCount)人を経由して届いた投稿"
+        )
     }
 }
 
@@ -307,6 +316,7 @@ private struct EmptyTimelineView: View {
                 .scaledToFit()
                 .frame(width: 120, height: 120)
                 .opacity(0.7)
+                .accessibilityHidden(true) // TASK-143: decorative mascot
             Text("まだ投稿がありません")
                 .font(.headline)
                 .foregroundStyle(.secondary)

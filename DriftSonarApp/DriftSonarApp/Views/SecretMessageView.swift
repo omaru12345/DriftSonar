@@ -73,6 +73,8 @@ struct SecretMessageView: View {
                         .foregroundStyle(viewModel.draftMessage.isEmpty ? .gray : .accentColor)
                 }
                 .disabled(viewModel.draftMessage.isEmpty)
+                // TASK-143: Icon-only send button needs an explicit VoiceOver label.
+                .accessibilityLabel("送信")
             }
             .padding()
         }
@@ -113,6 +115,12 @@ private struct MessageBubble: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+            // TASK-143: Sender is conveyed only by colour/alignment visually; state it
+            // explicitly for VoiceOver and read the bubble as a single element.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                "\(isMine ? "自分" : "相手")のメッセージ、\(text)、\(Self.timeLabel(for: timestamp))"
+            )
             if !isMine { Spacer(minLength: 60) }
         }
     }

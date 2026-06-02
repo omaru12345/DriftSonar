@@ -55,6 +55,12 @@ struct ComposeView: View {
                         .font(.caption)
                         .foregroundStyle(remaining < 20 ? (isOverLimit ? .red : .orange) : .secondary)
                         .padding(.leading, 16)
+                        // TASK-143: The low/over-limit warning is colour-only; spell it out.
+                        .accessibilityLabel(
+                            isOverLimit
+                                ? "文字数が\(-remaining)文字超過しています"
+                                : "残り\(remaining)文字"
+                        )
 
                     if mediaIngestService != nil {
                         // TASK-187: up to 4 images OR 1 video; the combination is validated

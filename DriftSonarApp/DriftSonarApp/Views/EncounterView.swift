@@ -99,6 +99,8 @@ struct EncounterView: View {
                                             .resizable()
                                             .frame(width: 40, height: 40)
                                             .foregroundColor(.accentColor)
+                                            // TASK-143: Decorative avatar; the name text is read instead.
+                                            .accessibilityHidden(true)
 
                                         VStack(alignment: .leading) {
                                             // TASK-079: Show nickname if available, fall back to peerId
@@ -194,6 +196,7 @@ private struct EmptyRadarView: View {
                 .scaledToFit()
                 .frame(width: 100, height: 100)
                 .opacity(0.7)
+                .accessibilityHidden(true) // TASK-143: decorative mascot
             Text("近くにユーザーがいません")
                 .font(.headline)
                 .foregroundStyle(.secondary)
