@@ -139,6 +139,10 @@ struct PostTimelineView: View {
             isAnonymous: isAnonymous,
             mediaStore: appServices.mediaStore
         )
+            // TASK-138: Card list — clear row chrome so the row's own card shows through.
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 5, leading: 12, bottom: 5, trailing: 12))
             .contextMenu {
                 Button {
                     // TASK-167: Copy the masked text so prohibited words stay filtered.
@@ -212,12 +216,17 @@ struct PostRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                // TASK-111: Use ghost icon and muted style for anonymous posts.
-                Label(displayName, systemImage: isAnonymous ? "person.fill.questionmark" : "person.circle")
-                    .font(.caption)
-                    .foregroundStyle(isAnonymous ? .tertiary : .secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            // TASK-138: Identity row — avatar + name with the propagation badge as a
+            // subtitle, and the relative time trailing.
+            HStack(alignment: .center, spacing: 10) {
+                avatar
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(displayName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(isAnonymous ? .secondary : .primary)
+                    hopBadge
+                }
                 Spacer()
                 Text(relativeTime)
                     .font(.caption2)
@@ -239,20 +248,49 @@ struct PostRowView: View {
                 .padding(.top, 2)
             }
 
-            HStack(spacing: 12) {
-                hopBadge
-                Label("TTL \(post.ttl)", systemImage: "timer")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    // TASK-143: Spell out the "TTL" jargon for VoiceOver.
-                    .accessibilityLabel("残り伝播回数 \(post.ttl)")
-            }
+            #if DEBUG
+            // TASK-138: "TTL" is a developer-facing propagation counter. It is hidden
+            // from end users (jargon) and shown only in debug builds for diagnostics.
+            Label("TTL \(post.ttl)", systemImage: "timer")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .accessibilityLabel("残り伝播回数 \(post.ttl)")
+            #endif
         }
-        .padding(.vertical, 4)
+        .padding(14)
+        // TASK-138: Light flat card to lift the row off the background and improve
+        // readability while staying in line with the white/flat concept.
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
+        )
         // TASK-188: Full-screen viewer, opened at the tapped attachment.
         .fullScreenCover(item: $viewerSelection) { selection in
             MediaViewerView(media: post.media, startIndex: selection.index, store: mediaStore)
         }
+    }
+
+    // TASK-138: Deterministic public-key avatar (identicon). Anonymous posts keep the
+    // ghost glyph so they stay visually unlinkable to a stable identity.
+    @ViewBuilder
+    private var avatar: some View {
+        if isAnonymous {
+            Image(systemName: "person.fill.questionmark")
+                .font(.system(size: 18))
+                .foregroundStyle(.secondary)
+                .frame(width: 36, height: 36)
+                .background(Color(.systemGray5), in: Circle())
+                .accessibilityHidden(true)
+        } else {
+            IdenticonView(publicKey: post.authorPublicKey, initial: avatarInitial, size: 36)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private var avatarInitial: String {
+        let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "?" : String(trimmed.prefix(1)).uppercased()
     }
 
     private var hopBadge: some View {
@@ -279,6 +317,48 @@ struct PostRowView: View {
 private struct MediaViewerSelection: Identifiable {
     let id = UUID()
     let index: Int
+}
+
+// MARK: - IdenticonView (TASK-138)
+
+/// Deterministic avatar derived from a public key: a hue-stable gradient disc with
+/// the author's initial. Gives each author a recognisable identity without a server
+/// or uploaded image. The hue is derived from the key's SHA-256 fingerprint so the
+/// same author always renders the same colour across devices.
+struct IdenticonView: View {
+    let publicKey: Data
+    let initial: String
+    var size: CGFloat = 36
+
+    var body: some View {
+        let base = Self.hue(for: publicKey)
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color(hue: base, saturation: 0.55, brightness: 0.9),
+                        Color(hue: (base + 0.08).truncatingRemainder(dividingBy: 1),
+                              saturation: 0.7, brightness: 0.7),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: size, height: size)
+            .overlay {
+                Text(initial)
+                    .font(.system(size: size * 0.45, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+    }
+
+    /// Stable 0..<1 hue from the key's fingerprint (SHA-256 based, deterministic).
+    private static func hue(for key: Data) -> Double {
+        let hex = PublicKeyFingerprint.hex(of: key)
+        var hash = 5381
+        for byte in hex.utf8 { hash = ((hash << 5) &+ hash) &+ Int(byte) }
+        return Double(((hash % 360) + 360) % 360) / 360.0
+    }
 }
 
 // MARK: - SkeletonTimelineView
