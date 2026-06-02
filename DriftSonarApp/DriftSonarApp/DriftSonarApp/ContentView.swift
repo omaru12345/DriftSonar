@@ -74,7 +74,7 @@ private struct MainTabView: View {
                     }
                     .tag(1)
 
-                ProfileView(profile: profile)
+                ProfileView(profile: profile, appServices: appServices)
                     .tabItem {
                         Label("Profile", systemImage: "person.crop.circle")
                     }
@@ -184,8 +184,11 @@ private struct ProfileIntegrityErrorView: View {
 /// Displays the user's keys and a QR code for sharing the public key (TASK-049).
 private struct ProfileView: View {
     let profile: UserProfileModel
+    /// Needed so a nickname edit can update the BLE-advertised value immediately (TASK-139).
+    let appServices: AppServices
     @Environment(\.modelContext) private var modelContext
     @State private var showQR = false
+    @State private var showEdit = false
     #if DEBUG
     @State private var showDemoAlert = false
     #endif
@@ -252,8 +255,21 @@ private struct ProfileView: View {
                 .padding(.vertical)
             }
             .navigationTitle("Profile")
+            .toolbar {
+                // TASK-139: Entry point for editing nickname/bio after setup.
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showEdit = true
+                    } label: {
+                        Label("プロフィールを編集", systemImage: "pencil")
+                    }
+                }
+            }
             .sheet(isPresented: $showQR) {
                 PublicKeyQRView(publicKey: profile.publicKey)
+            }
+            .sheet(isPresented: $showEdit) {
+                EditProfileView(profile: profile, appServices: appServices)
             }
             #if DEBUG
             .alert("デモデータを投入しますか？", isPresented: $showDemoAlert) {
@@ -300,6 +316,121 @@ private struct ProfileView: View {
         try? modelContext.save()
     }
     #endif
+}
+
+// MARK: - EditProfileView (TASK-139)
+
+/// Sheet for editing the nickname/bio after initial setup. The public key is
+/// immutable (identity is the key pair), so it is shown read-only with a note.
+/// Validation mirrors InitialSetupView / CreateProfileUseCase (nickname required,
+/// bio ≤ 100 chars) so setup and edit stay consistent.
+private struct EditProfileView: View {
+    let profile: UserProfileModel
+    let appServices: AppServices
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var nickname: String
+    @State private var bio: String
+    @State private var errorMessage: String?
+
+    /// Bio character limit — kept in sync with `CreateProfileUseCase` (TASK-075).
+    private static let maxBioLength = 100
+
+    init(profile: UserProfileModel, appServices: AppServices) {
+        self.profile = profile
+        self.appServices = appServices
+        _nickname = State(initialValue: profile.nickname)
+        _bio = State(initialValue: profile.bio)
+    }
+
+    private var trimmedNickname: String {
+        nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSave: Bool {
+        !trimmedNickname.isEmpty && bio.count <= Self.maxBioLength
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(header: Text("プロフィール")) {
+                    TextField("ニックネーム（必須）", text: $nickname)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+
+                    TextField("自己紹介（任意・100文字まで）", text: $bio, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+
+                Section {
+                    HStack {
+                        Text("自己紹介")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(bio.count) / \(Self.maxBioLength)")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(bio.count > Self.maxBioLength ? .red : .secondary)
+                    }
+                }
+
+                // TASK-139: The public key is the user's identity and cannot change.
+                Section(header: Text("公開鍵"), footer: Text("公開鍵は変更できません。あなたの本人性そのものです。")) {
+                    Text(PublicKeyFingerprint.formatted(of: profile.publicKey))
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+
+                if let errorMessage {
+                    Section {
+                        Text(errorMessage)
+                            .foregroundStyle(.red)
+                    }
+                }
+            }
+            .navigationTitle("プロフィールを編集")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("キャンセル") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") { save() }
+                        .disabled(!canSave)
+                }
+            }
+        }
+    }
+
+    private func save() {
+        guard !trimmedNickname.isEmpty else {
+            errorMessage = "ニックネームを入力してください。"
+            return
+        }
+        guard bio.count <= Self.maxBioLength else {
+            errorMessage = "自己紹介は\(Self.maxBioLength)文字以内で入力してください。"
+            return
+        }
+
+        // SwiftData model mutation persists the public profile; keys stay untouched
+        // in the Keychain. Mirrors the in-place pattern used by resetProfile().
+        profile.nickname = trimmedNickname
+        profile.bio = bio
+        do {
+            try modelContext.save()
+        } catch {
+            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+            return
+        }
+
+        // TASK-076/139: Reflect the new nickname on the BLE characteristic immediately
+        // so nearby peers read the updated value on their next read (the peripheral
+        // returns myNickname dynamically, so no re-advertise is required).
+        appServices.bleService.myNickname = trimmedNickname
+
+        dismiss()
+    }
 }
 
 // MARK: - KeyRow
