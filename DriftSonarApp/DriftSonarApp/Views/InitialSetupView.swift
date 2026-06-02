@@ -8,12 +8,12 @@ struct InitialSetupView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Profile Information")) {
-                    TextField("Nickname (Required)", text: $viewModel.nickname)
+                Section(header: Text("プロフィール情報")) {
+                    TextField("ニックネーム（必須）", text: $viewModel.nickname)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
-                    
-                    TextField("Bio (Optional, max 100 chars)", text: $viewModel.bio, axis: .vertical)
+
+                    TextField("自己紹介（任意・100文字まで）", text: $viewModel.bio, axis: .vertical)
                         .lineLimit(3...6)
                 }
                 
@@ -27,14 +27,14 @@ struct InitialSetupView: View {
                 Button(action: {
                     viewModel.createProfile()
                 }) {
-                    Text("Create Profile & Generate Keys")
+                    Text("プロフィールを作成して鍵を生成")
                         .frame(maxWidth: .infinity)
                         .bold()
                 }
                 .disabled(viewModel.nickname.trimmingCharacters(in: .whitespaces).isEmpty)
                 .buttonStyle(.borderedProminent)
             }
-            .navigationTitle("Welcome to DriftSonar")
+            .navigationTitle("DriftSonar へようこそ")
         }
     }
 }

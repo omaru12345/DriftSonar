@@ -62,7 +62,7 @@ private struct MainTabView: View {
             )) {
                 PostTimelineView(myProfile: profile, appServices: appServices)
                     .tabItem {
-                        Label("Timeline", systemImage: "text.bubble")
+                        Label("タイムライン", systemImage: "text.bubble")
                     }
                     .tag(0)
                     // TASK-084: Show unread count badge on Timeline tab.
@@ -70,13 +70,13 @@ private struct MainTabView: View {
 
                 EncounterView(myProfile: profile, appServices: appServices)
                     .tabItem {
-                        Label("Radar", systemImage: "antenna.radiowaves.left.and.right")
+                        Label("レーダー", systemImage: "antenna.radiowaves.left.and.right")
                     }
                     .tag(1)
 
                 ProfileView(profile: profile, appServices: appServices)
                     .tabItem {
-                        Label("Profile", systemImage: "person.crop.circle")
+                        Label("プロフィール", systemImage: "person.crop.circle")
                     }
                     .tag(2)
             }
@@ -255,7 +255,7 @@ private struct ProfileView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Profile")
+            .navigationTitle("プロフィール")
             .toolbar {
                 // TASK-140: Entry point for the settings screen.
                 ToolbarItem(placement: .topBarLeading) {

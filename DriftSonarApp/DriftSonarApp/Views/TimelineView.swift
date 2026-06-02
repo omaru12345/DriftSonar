@@ -66,7 +66,7 @@ struct PostTimelineView: View {
                     } // end ScrollViewReader
                 }
             }
-            .navigationTitle("Timeline")
+            .navigationTitle("タイムライン")
             // TASK-084: Reset unread badge when user opens the Timeline.
             .onAppear { appServices.unreadPostCount = 0 }
             .toolbar {

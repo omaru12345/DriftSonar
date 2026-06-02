@@ -57,7 +57,7 @@ struct EncounterView: View {
                     animateRipple = viewModel.isDiscovering
                 }
 
-                Text(viewModel.isDiscovering ? "Searching for DriftSonar users nearby..." : "Radar is Off")
+                Text(viewModel.isDiscovering ? "近くの DriftSonar ユーザーを探しています…" : "レーダー停止中")
                     .font(.headline)
                     .foregroundColor(viewModel.isDiscovering ? .accentColor : .gray)
 
@@ -66,7 +66,7 @@ struct EncounterView: View {
                         viewModel.startDiscovery(myPublicKey: myProfile.publicKey)
                     }
                 }) {
-                    Text(viewModel.isDiscovering ? "Discovering..." : "Start Encounter Radar")
+                    Text(viewModel.isDiscovering ? "探索中…" : "レーダーを開始")
                         .bold()
                         .frame(maxWidth: .infinity)
                 }
@@ -78,7 +78,7 @@ struct EncounterView: View {
 
                 // History List
                 List {
-                    Section(header: Text("Encountered Peers")) {
+                    Section(header: Text("すれ違ったユーザー")) {
                         if viewModel.encounteredPeers.isEmpty {
                             // TASK-115: Dolphin mascot illustration in Radar empty state.
                             EmptyRadarView()
@@ -136,7 +136,7 @@ struct EncounterView: View {
                 .padding([.horizontal, .bottom])
                 #endif
             }
-            .navigationTitle("Radar")
+            .navigationTitle("レーダー")
             // TASK-093: Show banner when Bluetooth is unavailable.
             .safeAreaInset(edge: .top) {
                 if appServices.isBluetoothUnavailable {
