@@ -189,6 +189,7 @@ private struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showQR = false
     @State private var showEdit = false
+    @State private var showSettings = false
     #if DEBUG
     @State private var showDemoAlert = false
     #endif
@@ -256,6 +257,14 @@ private struct ProfileView: View {
             }
             .navigationTitle("Profile")
             .toolbar {
+                // TASK-140: Entry point for the settings screen.
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Label("設定", systemImage: "gearshape")
+                    }
+                }
                 // TASK-139: Entry point for editing nickname/bio after setup.
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -270,6 +279,9 @@ private struct ProfileView: View {
             }
             .sheet(isPresented: $showEdit) {
                 EditProfileView(profile: profile, appServices: appServices)
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
             }
             #if DEBUG
             .alert("デモデータを投入しますか？", isPresented: $showDemoAlert) {
