@@ -37,6 +37,21 @@ struct SettingsView: View {
         string: "https://omaru12345.github.io/DriftSonar/privacy-policy.html"
     )!
 
+    /// Developer contact for reporting inappropriate content/abuse (App Store
+    /// Guideline 1.2 requires in-app contact info for UGC). A `mailto:` link so
+    /// the report goes directly to the developer; UGC moderation is otherwise
+    /// device-local (report/block) since there is no server.
+    private static let contactEmail = "bleachonn77@gmail.com"
+    private static let contactURL: URL = {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = contactEmail
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "DriftSonar: 不適切なコンテンツ・行為の報告"),
+        ]
+        return components.url!
+    }()
+
     /// peerPublicKey → nickname for resolving blocked keys to readable names (TASK-078).
     private var nicknameMap: [Data: String] {
         Dictionary(
@@ -53,6 +68,7 @@ struct SettingsView: View {
             Form {
                 notificationSection
                 blockedSection
+                contactSection
                 aboutSection
             }
             .navigationTitle("設定")
@@ -152,6 +168,28 @@ struct SettingsView: View {
     private func unblock(_ model: BlockedKeyModel) {
         modelContext.delete(model)
         try? modelContext.save()
+    }
+
+    // MARK: - Support / report
+
+    @ViewBuilder
+    private var contactSection: some View {
+        Section {
+            Link(destination: Self.contactURL) {
+                Label("不適切なコンテンツ・行為を報告", systemImage: "exclamationmark.bubble.fill")
+            }
+            HStack {
+                Label("連絡先", systemImage: "envelope.fill")
+                Spacer()
+                Text(Self.contactEmail)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+        } header: {
+            Text("サポート・通報")
+        } footer: {
+            Text("アプリ内の通報・ブロックに加えて、不適切なコンテンツや迷惑なユーザーを開発者へ直接メールで報告できます。いただいた報告には24時間以内に対応し、該当コンテンツの削除と違反ユーザーの排除を行います。")
+        }
     }
 
     // MARK: - About
