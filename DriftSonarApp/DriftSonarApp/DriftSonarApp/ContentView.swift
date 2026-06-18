@@ -281,7 +281,7 @@ private struct ProfileView: View {
                 EditProfileView(profile: profile, appServices: appServices)
             }
             .sheet(isPresented: $showSettings) {
-                SettingsView()
+                SettingsView(appServices: appServices)
             }
             #if DEBUG
             .alert("デモデータを投入しますか？", isPresented: $showDemoAlert) {

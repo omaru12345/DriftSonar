@@ -64,6 +64,14 @@ public final class MediaStore {
         storedFiles().reduce(0) { $0 + $1.size }
     }
 
+    /// 保存中のメディアを全削除する（アカウント削除＝App Store GL 5.1.1 で使用）。
+    /// ルートディレクトリ自体は残し、配下のファイルだけ消す（以後の保存に再利用できる）。
+    public func removeAll() {
+        for file in storedFiles() {
+            try? fileManager.removeItem(at: file.url)
+        }
+    }
+
     // MARK: - descriptor から URL を引く（TASK-188）
 
     /// descriptor に対応するサムネ URL を返す（無ければ nil）。

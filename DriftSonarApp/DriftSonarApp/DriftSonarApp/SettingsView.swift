@@ -19,10 +19,19 @@ import DriftSonarCore
 /// Settings screen: notification permission status, blocked-user management,
 /// and an "about" section (version / privacy policy / OSS licenses).
 struct SettingsView: View {
+    /// Needed to wipe locally stored media on account deletion (TASK-151 / GL 5.1.1).
+    let appServices: AppServices
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
+
+    /// Reset on account deletion so the app returns to the first-launch flow.
+    @AppStorage("hasAcceptedEULA") private var hasAcceptedEULA = false
+    @AppStorage("hasSeededWelcomePost") private var hasSeededWelcomePost = false
+
+    @State private var showingDeleteConfirm = false
 
     /// Live list of blocked keys so unblocking reflects immediately in this list
     /// and on the Timeline (shares the @Query mechanism used by TASK-033/087).
@@ -70,6 +79,7 @@ struct SettingsView: View {
                 blockedSection
                 contactSection
                 aboutSection
+                accountSection
             }
             .navigationTitle("設定")
             .navigationBarTitleDisplayMode(.inline)
@@ -224,6 +234,67 @@ struct SettingsView: View {
         let version = info?["CFBundleShortVersionString"] as? String ?? "—"
         let build = info?["CFBundleVersion"] as? String ?? "—"
         return "\(version) (\(build))"
+    }
+
+    // MARK: - Account deletion (App Store GL 5.1.1)
+
+    /// Profile creation counts as "account creation", so the App Store requires an
+    /// in-app way to delete it. This wipes everything stored on-device: the profile,
+    /// the Keychain key pair, all SwiftData (posts / messages / DMs / encounters /
+    /// blocks), cached media, and the local flags — returning the app to first launch.
+    @ViewBuilder
+    private var accountSection: some View {
+        Section {
+            Button(role: .destructive) {
+                showingDeleteConfirm = true
+            } label: {
+                Label("アカウントを削除", systemImage: "trash.fill")
+            }
+        } header: {
+            Text("アカウント")
+        } footer: {
+            Text("プロフィール・暗号鍵・投稿・ダイレクトメッセージ・ブロックリスト・保存メディアなど、この端末内のデータをすべて完全に削除し、初期状態に戻します。サーバーを持たないため、削除は端末内で即時に完結します。この操作は取り消せません。")
+        }
+        .alert("アカウントを削除しますか？", isPresented: $showingDeleteConfirm) {
+            Button("削除する", role: .destructive, action: deleteAccount)
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("プロフィールと暗号鍵、これまでの投稿・メッセージ・ブロックリスト・保存メディアをすべて削除します。新しく始める場合は公開鍵も再発行されます。この操作は取り消せません。")
+        }
+    }
+
+    /// Deletes all on-device data and resets first-launch flags. ContentView observes
+    /// the profile (@Query) and `hasAcceptedEULA`, so clearing them swaps the UI back
+    /// to the EULA/initial-setup flow automatically.
+    private func deleteAccount() {
+        // 1) All SwiftData models.
+        deleteAll(UserProfileModel.self)
+        deleteAll(PostModel.self)
+        deleteAll(CachedMessageModel.self)
+        deleteAll(EncounteredEventModel.self)
+        deleteAll(SecretMessageModel.self)
+        deleteAll(BlockedKeyModel.self)
+        try? modelContext.save()
+
+        // 2) Keychain key pair (encryption + signing private keys).
+        try? KeychainService.delete(account: KeychainService.agreementPrivateKeyAccount)
+        try? KeychainService.delete(account: KeychainService.signingPrivateKeyAccount)
+
+        // 3) Cached media files.
+        appServices.mediaStore?.removeAll()
+
+        // 4) Local flags / report state, then return to first-launch flow.
+        ReportStore.clear()
+        hasSeededWelcomePost = false
+        hasAcceptedEULA = false
+
+        dismiss()
+    }
+
+    private func deleteAll<T: PersistentModel>(_ type: T.Type) {
+        if let models = try? modelContext.fetch(FetchDescriptor<T>()) {
+            for model in models { modelContext.delete(model) }
+        }
     }
 }
 

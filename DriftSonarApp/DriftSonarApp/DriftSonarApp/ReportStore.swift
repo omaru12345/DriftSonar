@@ -37,4 +37,9 @@ enum ReportStore {
         UserDefaults.standard.set(ids.map(\.uuidString), forKey: idsKey)
         return ids
     }
+
+    /// Clears all reported-post state (used by account deletion — App Store GL 5.1.1).
+    static func clear() {
+        UserDefaults.standard.removeObject(forKey: idsKey)
+    }
 }
