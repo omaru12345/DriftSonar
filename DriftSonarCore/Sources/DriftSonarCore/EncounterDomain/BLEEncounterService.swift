@@ -104,6 +104,8 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     // MARK: - EncounterService
 
     public func stop() {
+        regossipTimer?.cancel()
+        regossipTimer = nil
         centralManager?.stopScan()
         peripheralManager?.stopAdvertising()
         peripheralManager?.removeAllServices()
@@ -117,9 +119,54 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
 
     public func execute(command: StartDiscoveryCommand) throws {
         myPublicKey = command.myPublicKey
+        // Idempotent: BLE may already be running because it is auto-started at app
+        // launch (AppServices). A later call from the Radar tab must not create a
+        // second pair of managers — just refresh scanning/advertising instead.
+        guard centralManager == nil || peripheralManager == nil else {
+            restart()
+            return
+        }
         // TASK-052: pass bleQueue so all delegate callbacks run off the main thread.
         centralManager = CBCentralManager(delegate: self, queue: bleQueue)
         peripheralManager = CBPeripheralManager(delegate: self, queue: bleQueue)
+        startRegossipTimer()
+    }
+
+    /// True once the BLE managers have been created (discovery has been started at
+    /// least once). Lets the UI reflect the auto-started state without re-triggering.
+    public var isRunning: Bool {
+        centralManager != nil && peripheralManager != nil
+    }
+
+    /// Periodically re-gossip while discovering: clear the per-session "seen"
+    /// peripheral set and rescan, so peers we already met this session are
+    /// re-discovered and our cached posts (including ones created *after* the first
+    /// encounter) are pushed again. Without this, a post made after two devices first
+    /// met would never reach the other device — the core symptom App Review flagged
+    /// under Guideline 2.1. Re-pushes are content-deduplicated by the receiver
+    /// (MeshForwardingService), so re-gossiping is harmless; the only cost is extra
+    /// connections, kept bounded by `regossipIntervalSeconds`.
+    private let regossipIntervalSeconds = 15
+    private var regossipTimer: DispatchSourceTimer?
+
+    private func startRegossipTimer() {
+        regossipTimer?.cancel()
+        let timer = DispatchSource.makeTimerSource(queue: bleQueue)
+        timer.schedule(
+            deadline: .now() + .seconds(regossipIntervalSeconds),
+            repeating: .seconds(regossipIntervalSeconds)
+        )
+        timer.setEventHandler { [weak self] in
+            guard let self else { return }
+            // Re-allow already-met peripherals to be reconnected. Keep
+            // seenPublicKeyHashes so the Radar UI does not re-list the same peer.
+            self.seenPeerIDs.removeAll()
+            guard self.centralManager?.state == .poweredOn else { return }
+            self.centralManager?.stopScan()
+            self.startScanning()
+        }
+        timer.resume()
+        regossipTimer = timer
     }
 
     /// Restart BLE scanning and advertising (TASK-094). Safe to call on foreground return.
@@ -333,7 +380,11 @@ extension BLEEncounterService: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
-        guard !seenPeerIDs.contains(peripheral.identifier) else { return }
+        // seenPeerIDs gates re-connecting within a gossip cycle; pendingPeripherals
+        // guards against starting a second connect while one is still in flight
+        // (the regossip timer may clear seenPeerIDs mid-connection).
+        guard !seenPeerIDs.contains(peripheral.identifier),
+              pendingPeripherals[peripheral.identifier] == nil else { return }
         seenPeerIDs.insert(peripheral.identifier)
         pendingPeripherals[peripheral.identifier] = peripheral
         peripheral.delegate = self

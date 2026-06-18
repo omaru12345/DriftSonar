@@ -87,18 +87,28 @@ final class AppServices {
         // TASK-155: Verify the persisted profile still matches its Keychain keys.
         // AppServices is only created once a profile exists, so a missing/mismatched
         // key here means the install is in a broken state that the UI must surface.
-        if let profile = try? container.mainContext.fetch(FetchDescriptor<UserProfileModel>()).first {
+        let profile = try? container.mainContext.fetch(FetchDescriptor<UserProfileModel>()).first
+        if let profile {
             integrityStatus = ProfileIntegrity.verify(
                 publicKey: profile.publicKey,
                 signingPublicKey: profile.signingPublicKey
             )
         }
 
-        // TASK-170: Seed a built-in welcome post so a fresh, solo install never shows
-        // a blank Timeline (App Store Guideline 4.2). Skipped if the install is in a
-        // broken state — there is no point seeding into a profile we are about to reset.
         if integrityStatus == .ok {
+            // TASK-170: Seed a built-in welcome post so a fresh, solo install never
+            // shows a blank Timeline (App Store Guideline 4.2).
             seedWelcomePostIfNeeded(container: container)
+
+            // GL 2.1 fix: start BLE scanning/advertising as soon as the app has a
+            // valid profile, so posts propagate automatically when two devices are
+            // nearby. Previously BLE began only when the user opened the Radar tab and
+            // tapped "Start", so a reviewer who stayed on the Timeline never advertised
+            // or scanned and messages never reached the other device.
+            if let profile {
+                ble.myNickname = profile.nickname
+                try? ble.execute(command: StartDiscoveryCommand(myPublicKey: profile.publicKey))
+            }
         }
     }
 
