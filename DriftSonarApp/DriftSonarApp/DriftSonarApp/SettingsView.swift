@@ -14,6 +14,7 @@ import SwiftUI
 import SwiftData
 import UserNotifications
 import UIKit
+import Combine
 import DriftSonarCore
 
 /// Settings screen: notification permission status, blocked-user management,
@@ -78,6 +79,7 @@ struct SettingsView: View {
                 notificationSection
                 blockedSection
                 contactSection
+                diagnosticsSection
                 aboutSection
                 accountSection
             }
@@ -202,6 +204,21 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - BLE diagnostics (TASK-148)
+
+    @ViewBuilder
+    private var diagnosticsSection: some View {
+        Section {
+            NavigationLink {
+                BLEDiagnosticsView(bleService: appServices.bleService)
+            } label: {
+                Label("通信診断（Bluetooth）", systemImage: "stethoscope")
+            }
+        } footer: {
+            Text("近くの端末を検出できないときの診断情報を表示します。")
+        }
+    }
+
     // MARK: - About
 
     @ViewBuilder
@@ -295,6 +312,65 @@ struct SettingsView: View {
         if let models = try? modelContext.fetch(FetchDescriptor<T>()) {
             for model in models { modelContext.delete(model) }
         }
+    }
+}
+
+// MARK: - BLEDiagnosticsView (TASK-148)
+
+/// Live view of the Core Bluetooth state. Lets us debug device-to-device discovery
+/// on real hardware (the Simulator has no BLE radio): it shows whether scanning and
+/// advertising actually started, whether advertising failed, and whether any peer was
+/// discovered/encountered — with a scrolling event log.
+private struct BLEDiagnosticsView: View {
+    let bleService: BLEEncounterService
+
+    @State private var snapshot: BLEDiagnostics?
+    private let refresh = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        List {
+            Section("状態") {
+                row("Bluetooth 権限", snapshot?.authorization ?? "—")
+                row("Central（スキャン側）", snapshot?.centralState ?? "—")
+                row("Peripheral（広告側）", snapshot?.peripheralState ?? "—")
+                row("スキャン中", boolText(snapshot?.isScanning))
+                row("広告中", boolText(snapshot?.isAdvertising))
+                row("検出した端末数", "\(snapshot?.discoveredCount ?? 0)")
+                row("すれ違い成立数", "\(snapshot?.encounterCount ?? 0)")
+            }
+            Section("イベントログ（新しい順）") {
+                let events = (snapshot?.recentEvents ?? []).reversed()
+                if events.isEmpty {
+                    Text("まだイベントがありません")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(events.enumerated()), id: \.offset) { _, line in
+                        Text(line)
+                            .font(.system(.caption2, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+        }
+        .navigationTitle("通信診断")
+        .navigationBarTitleDisplayMode(.inline)
+        .onReceive(refresh) { _ in snapshot = bleService.diagnosticsSnapshot() }
+        .onAppear { snapshot = bleService.diagnosticsSnapshot() }
+    }
+
+    private func row(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(value)
+                .font(.callout.monospaced())
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func boolText(_ value: Bool?) -> String {
+        guard let value else { return "—" }
+        return value ? "はい" : "いいえ"
     }
 }
 

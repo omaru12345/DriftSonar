@@ -1,3 +1,7 @@
+// swiftlint:disable file_length
+// 単一の Core Bluetooth サービス実装（central/peripheral 両役・mesh 転送・診断）を
+// 1ファイルに凝集している。TASK-148 の診断追加で 600 行を超えたが、責務は一体で
+// 分割は access 制御（private 共有状態）を崩すため、このファイルに限り許容する。
 import CoreBluetooth
 import CryptoKit
 import Foundation
@@ -20,6 +24,21 @@ public enum DriftSonarBLE {
     /// signed descriptor travels the mesh; the body is fetched point-to-point and never
     /// flooded (`docs/media-propagation.md` §3). Wire format: `MediaChunkProtocol`.
     public nonisolated(unsafe) static let mediaCharacteristicUUID = CBUUID(string: "4A7D5C3B-1E2F-4A6B-8C9D-E0F12345678E")
+}
+
+/// Snapshot of the live BLE state for the in-app diagnostics screen (TASK-148).
+/// Lets us see, on a real device, whether scanning/advertising actually started and
+/// whether any peer was discovered — the only way to debug device-to-device BLE that
+/// cannot be exercised in the Simulator.
+public struct BLEDiagnostics: Sendable {
+    public let authorization: String
+    public let centralState: String
+    public let peripheralState: String
+    public let isScanning: Bool
+    public let isAdvertising: Bool
+    public let discoveredCount: Int
+    public let encounterCount: Int
+    public let recentEvents: [String]
 }
 
 /// Core Bluetooth implementation of `EncounterService`.
@@ -70,6 +89,68 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     private var myPublicKey: Data = Data()
     /// UTF-8 nickname to broadcast via the nickname Characteristic (TASK-076).
     public var myNickname: String = ""
+
+    // MARK: - Diagnostics (TASK-148)
+
+    /// Ring buffer of recent BLE events (newest last), maintained on `bleQueue`.
+    private var eventLog: [String] = []
+    private var discoveredCount = 0
+    private var encounterCount = 0
+    private let maxEventLog = 60
+
+    /// Append a timestamped diagnostic line. Always called on `bleQueue`.
+    private func log(_ message: String) {
+        let stamp = Self.logTimeFormatter.string(from: Date())
+        eventLog.append("\(stamp) \(message)")
+        if eventLog.count > maxEventLog { eventLog.removeFirst(eventLog.count - maxEventLog) }
+        print("[BLE] \(message)")
+    }
+
+    private static let logTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        return f
+    }()
+
+    /// Live snapshot for the diagnostics UI. Reads Core Bluetooth state synchronously
+    /// on `bleQueue` so it is consistent with the callbacks that mutate the counters.
+    public func diagnosticsSnapshot() -> BLEDiagnostics {
+        bleQueue.sync {
+            BLEDiagnostics(
+                authorization: Self.authorizationString,
+                centralState: Self.stateString(centralManager?.state),
+                peripheralState: Self.stateString(peripheralManager?.state),
+                isScanning: centralManager?.isScanning ?? false,
+                isAdvertising: peripheralManager?.isAdvertising ?? false,
+                discoveredCount: discoveredCount,
+                encounterCount: encounterCount,
+                recentEvents: eventLog
+            )
+        }
+    }
+
+    private static var authorizationString: String {
+        switch CBManager.authorization {
+        case .allowedAlways: return "allowed"
+        case .denied: return "denied"
+        case .restricted: return "restricted"
+        case .notDetermined: return "notDetermined"
+        @unknown default: return "unknown"
+        }
+    }
+
+    private static func stateString(_ state: CBManagerState?) -> String {
+        switch state {
+        case .some(.poweredOn): return "poweredOn"
+        case .some(.poweredOff): return "poweredOff"
+        case .some(.unauthorized): return "unauthorized"
+        case .some(.unsupported): return "unsupported"
+        case .some(.resetting): return "resetting"
+        case .some(.unknown): return "unknown"
+        case .none: return "nil(not started)"
+        @unknown default: return "unknown"
+        }
+    }
 
     /// CBPeripheral UUIDs we have already connected or are connecting this session,
     /// preventing duplicate in-flight connections to the same peripheral UUID.
@@ -223,6 +304,7 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
         peripheralManager.startAdvertising([
             CBAdvertisementDataServiceUUIDsKey: [DriftSonarBLE.serviceUUID]
         ])
+        log("startAdvertising requested")
     }
 
     private func startScanning() {
@@ -230,6 +312,7 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
             withServices: [DriftSonarBLE.serviceUUID],
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
+        log("startScanning requested")
     }
 
     private func cleanUp(peripheral: CBPeripheral) {
@@ -290,8 +373,35 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
 extension BLEEncounterService: CBPeripheralManagerDelegate {
 
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
+        log("peripheral didUpdateState: \(Self.stateString(peripheral.state))")
         if peripheral.state == .poweredOn {
             startAdvertising()
+        }
+    }
+
+    /// TASK-148: Surface advertising failures. Without this delegate a failed
+    /// `startAdvertising` is silent — the device would never be discoverable and we
+    /// would have no signal why.
+    public func peripheralManagerDidStartAdvertising(
+        _ peripheral: CBPeripheralManager,
+        error: Error?
+    ) {
+        if let error {
+            log("ADVERTISING FAILED: \(error.localizedDescription)")
+        } else {
+            log("advertising started OK")
+        }
+    }
+
+    public func peripheralManager(
+        _ peripheral: CBPeripheralManager,
+        didAdd service: CBService,
+        error: Error?
+    ) {
+        if let error {
+            log("addService FAILED: \(error.localizedDescription)")
+        } else {
+            log("service added OK")
         }
     }
 
@@ -366,6 +476,7 @@ extension BLEEncounterService: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         // TASK-093: Notify UI of Bluetooth power state change.
         let state = central.state
+        log("central didUpdateState: \(Self.stateString(state))")
         DispatchQueue.main.async { [weak self] in
             self?.onBluetoothStateChanged?(state)
         }
@@ -380,6 +491,8 @@ extension BLEEncounterService: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        discoveredCount += 1
+        log("didDiscover peer rssi=\(RSSI) id=\(peripheral.identifier.uuidString.prefix(8))")
         // seenPeerIDs gates re-connecting within a gossip cycle; pendingPeripherals
         // guards against starting a second connect while one is still in flight
         // (the regossip timer may clear seenPeerIDs mid-connection).
@@ -389,6 +502,7 @@ extension BLEEncounterService: CBCentralManagerDelegate {
         pendingPeripherals[peripheral.identifier] = peripheral
         peripheral.delegate = self
         central.connect(peripheral, options: nil)
+        log("connecting to \(peripheral.identifier.uuidString.prefix(8))")
     }
 
     public func centralManager(
@@ -404,6 +518,7 @@ extension BLEEncounterService: CBCentralManagerDelegate {
         connectionTimeouts[peripheral.identifier] = workItem
         bleQueue.asyncAfter(deadline: .now() + connectionTimeoutSeconds, execute: workItem)
 
+        log("didConnect \(peripheral.identifier.uuidString.prefix(8)) → discoverServices")
         peripheral.discoverServices([DriftSonarBLE.serviceUUID])
     }
 
@@ -412,6 +527,7 @@ extension BLEEncounterService: CBCentralManagerDelegate {
         didFailToConnect peripheral: CBPeripheral,
         error: Error?
     ) {
+        log("didFailToConnect: \(error?.localizedDescription ?? "unknown")")
         pendingPeripherals.removeValue(forKey: peripheral.identifier)
     }
 }
@@ -559,8 +675,9 @@ extension BLEEncounterService: CBPeripheralDelegate {
         let keyHash = Data(SHA256.hash(data: publicKeyData))
         if !seenPublicKeyHashes.contains(keyHash) {
             seenPublicKeyHashes.insert(keyHash)
+            encounterCount += 1
             let preview = keyHash.prefix(4).map { String(format: "%02x", $0) }.joined()
-            print("[BLE] New peer encountered (key hash: \(preview)…) nickname: \(nickname ?? "(none)")")
+            log("ENCOUNTER fired: \(preview)… nick=\(nickname ?? "(none)")")
             let event = EncounteredEvent(
                 peerId: peripheral.identifier.uuidString,
                 peerPublicKey: publicKeyData,
