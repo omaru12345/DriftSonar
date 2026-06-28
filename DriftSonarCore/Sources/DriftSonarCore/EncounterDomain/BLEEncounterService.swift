@@ -457,8 +457,14 @@ extension BLEEncounterService: CBPeripheralManagerDelegate {
                 // Mesh Post payload
                 let payload = value
                 DispatchQueue.main.async { [weak self] in
-                    self?.forwardingService?.receive(payload: payload)
-                    self?.onMessageReceived?(payload)
+                    // TASK-193 (#229): only surface genuinely new posts. receive()
+                    // returns false for duplicates (already-seen post IDs) and rejected
+                    // payloads, so the same post re-delivered by periodic re-gossip — or
+                    // a post echoed back to its own author — no longer re-fires a
+                    // notification or bumps the unread badge.
+                    if self?.forwardingService?.receive(payload: payload) == true {
+                        self?.onMessageReceived?(payload)
+                    }
                 }
                 peripheral.respond(to: request, withResult: .success)
 
