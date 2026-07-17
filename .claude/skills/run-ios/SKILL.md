@@ -39,6 +39,9 @@ xcrun simctl io "$DEV" screenshot /tmp/ds-launch.png
 
 初回起動は `InitialSetupView`（ニックネーム必須）から始まる。ここを越えないと Timeline 等へ進めない。
 
+## App Store 申請用スクショを撮る場合
+6.9インチ機・DEBUG・状態バー整形・デモ投稿シード（再起動で反映）・撮る/避ける画面 → **[references/appstore-screenshots.md](references/appstore-screenshots.md)**。撮影後の投入は親フロー `app-store-release`（`appstore-metadata`）へ。
+
 ## UI を駆動する（タップ・入力）
 
 タップ・テキスト入力には **OS レベルの工夫が要る**（simctl にタップ機能はない）。
