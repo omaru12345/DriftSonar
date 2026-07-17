@@ -34,7 +34,7 @@ struct EncounterView: View {
                     }
 
                     Circle()
-                        .fill(viewModel.isDiscovering ? Color.accentColor.opacity(0.12) : Color.gray.opacity(0.1))
+                        .fill(viewModel.isDiscovering ? Color.accentColor.opacity(0.12) : Color.seaGlass.opacity(0.12))
                         .frame(width: 150, height: 150)
 
                     if viewModel.isDiscovering {
@@ -59,7 +59,7 @@ struct EncounterView: View {
 
                 Text(viewModel.isDiscovering ? "近くの DriftSonar ユーザーを探しています…" : "レーダー停止中")
                     .font(.headline)
-                    .foregroundColor(viewModel.isDiscovering ? .accentColor : .gray)
+                    .foregroundColor(viewModel.isDiscovering ? .accentColor : .dsTextSecondary)
 
                 Button(action: {
                     if !viewModel.isDiscovering {
@@ -147,7 +147,7 @@ struct EncounterView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(Color.orange.opacity(0.9))
+                    .background(Color.dsWarn)
                     .foregroundStyle(.white)
                 }
             }

@@ -260,10 +260,10 @@ struct PostRowView: View {
         .padding(14)
         // TASK-138: Light flat card to lift the row off the background and improve
         // readability while staying in line with the white/flat concept.
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(Color.dsSurface, in: RoundedRectangle(cornerRadius: DSLayout.Radius.lg))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DSLayout.Radius.lg)
+                .stroke(Color.driftwood.opacity(0.22), lineWidth: 0.5)
         )
         // TASK-188: Full-screen viewer, opened at the tapped attachment.
         .fullScreenCover(item: $viewerSelection) { selection in
@@ -280,7 +280,7 @@ struct PostRowView: View {
                 .font(.system(size: 18))
                 .foregroundStyle(.secondary)
                 .frame(width: 36, height: 36)
-                .background(Color(.systemGray5), in: Circle())
+                .background(Color.dsTextSecondary.opacity(0.18), in: Circle())
                 .accessibilityHidden(true)
         } else {
             IdenticonView(publicKey: post.authorPublicKey, initial: avatarInitial, size: 36)
