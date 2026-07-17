@@ -71,8 +71,7 @@ struct EULAGateView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(Color.accentColor)
             Text("利用規約・コミュニティガイドライン")
-                .font(.title3)
-                .bold()
+                .font(.dsTitle)
         }
     }
 

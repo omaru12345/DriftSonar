@@ -107,7 +107,7 @@ struct EncounterView: View {
                                             Text(peer.nickname ?? peer.peerId)
                                                 .font(.headline)
                                             Text(PublicKeyFingerprint.formatted(of: peer.peerPublicKey))
-                                                .font(.system(.caption, design: .monospaced))
+                                                .font(.dsMono(.caption))
                                                 .foregroundStyle(.secondary)
                                         }
                                     }
@@ -198,7 +198,7 @@ private struct EmptyRadarView: View {
                 .opacity(0.7)
                 .accessibilityHidden(true) // TASK-143: decorative mascot
             Text("近くにユーザーがいません")
-                .font(.headline)
+                .font(.dsTitle)
                 .foregroundStyle(.secondary)
             Text("人が集まる場所へ\n行ってみましょう")
                 .font(.subheadline)

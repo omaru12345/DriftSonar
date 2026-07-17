@@ -35,6 +35,11 @@ struct ContentView: View {
                     }
             }
         }
+        // EP-038 (TASK-196): Reassert the Drift accent. Configuring UINavigationBar
+        // appearance in App.init() resets the window tint to the system default, and
+        // `Color.accentColor` then resolves to that corrupted (blue) environment value.
+        // Reference the asset by name so the tint is pinned to Drift deep-tide.
+        .tint(Color("AccentColor"))
     }
 }
 
@@ -149,8 +154,7 @@ private struct ProfileIntegrityErrorView: View {
                 .foregroundStyle(.secondary)
 
             Text("鍵の不整合を検出しました")
-                .font(.title2)
-                .bold()
+                .font(.dsDisplay(.title2))
                 .multilineTextAlignment(.center)
 
             Text(message)
@@ -203,8 +207,7 @@ private struct ProfileView: View {
                         .foregroundStyle(.secondary)
 
                     Text(profile.nickname)
-                        .font(.title2)
-                        .bold()
+                        .font(.dsDisplay(.title2))
 
                     if !profile.bio.isEmpty {
                         Text(profile.bio)
@@ -390,7 +393,7 @@ private struct EditProfileView: View {
                 // TASK-139: The public key is the user's identity and cannot change.
                 Section(header: Text("公開鍵"), footer: Text("公開鍵は変更できません。あなたの本人性そのものです。")) {
                     Text(PublicKeyFingerprint.formatted(of: profile.publicKey))
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.dsMono(.caption))
                         .foregroundStyle(.secondary)
                 }
 
@@ -458,7 +461,7 @@ private struct KeyRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Text(fingerprint)
-                .font(.system(.caption, design: .monospaced))
+                .font(.dsMono(.caption))
                 .foregroundStyle(.secondary)
         }
     }
@@ -513,7 +516,7 @@ private struct PublicKeyQRView: View {
                     .padding(.horizontal)
 
                 Text(PublicKeyFingerprint.formatted(of: publicKey))
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.dsMono(.caption))
                     .foregroundStyle(.secondary)
             }
             .padding()

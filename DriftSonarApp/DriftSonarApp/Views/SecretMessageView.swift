@@ -145,7 +145,7 @@ private struct EmptyMessagesView: View {
                 .font(.system(size: 52))
                 .foregroundStyle(Color.accentColor.opacity(0.6))
             Text("まだメッセージはありません")
-                .font(.headline)
+                .font(.dsTitle)
                 .foregroundStyle(.secondary)
             Text("ここでのやり取りは端末間で\nエンドツーエンド暗号化され、\n二人の間だけに閉じます。")
                 .font(.subheadline)
