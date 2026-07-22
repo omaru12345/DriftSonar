@@ -177,6 +177,8 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     private var peerPublicKeys: [UUID: Data] = [:]
     /// Maps peripheral UUID → peer's nickname (set after reading nickname characteristic, TASK-076).
     private var peerNicknames: [UUID: String] = [:]
+    /// Maps peripheral UUID → RSSI in dBm at discovery time (TASK-198).
+    private var peerRSSIs: [UUID: Int] = [:]
 
     public override init() {
         super.init()
@@ -196,6 +198,7 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
         directMessageCharacteristics.removeAll()
         nicknameCharacteristics.removeAll()
         peerNicknames.removeAll()
+        peerRSSIs.removeAll()
     }
 
     public func execute(command: StartDiscoveryCommand) throws {
@@ -327,6 +330,7 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
         nicknameCharacteristics.removeValue(forKey: peripheral.identifier)
         peerPublicKeys.removeValue(forKey: peripheral.identifier)
         peerNicknames.removeValue(forKey: peripheral.identifier)
+        peerRSSIs.removeValue(forKey: peripheral.identifier)
         pendingWrites.removeValue(forKey: peripheral.identifier)
     }
 
@@ -504,6 +508,14 @@ extension BLEEncounterService: CBCentralManagerDelegate {
         // (the regossip timer may clear seenPeerIDs mid-connection).
         guard !seenPeerIDs.contains(peripheral.identifier),
               pendingPeripherals[peripheral.identifier] == nil else { return }
+        // TASK-198: Keep the discovery-time RSSI so the Radar can show proximity.
+        // Stored only for peers we actually connect to, so every entry is released
+        // by cleanUp/didFailToConnect and the dictionary cannot grow unboundedly.
+        // Valid readings are negative dBm; this also skips Core Bluetooth's
+        // "value unavailable" sentinel (127).
+        if RSSI.intValue < 0 {
+            peerRSSIs[peripheral.identifier] = RSSI.intValue
+        }
         seenPeerIDs.insert(peripheral.identifier)
         pendingPeripherals[peripheral.identifier] = peripheral
         peripheral.delegate = self
@@ -535,6 +547,8 @@ extension BLEEncounterService: CBCentralManagerDelegate {
     ) {
         log("didFailToConnect: \(error?.localizedDescription ?? "unknown")")
         pendingPeripherals.removeValue(forKey: peripheral.identifier)
+        // TASK-198: cleanUp never runs for failed connections — drop the RSSI here.
+        peerRSSIs.removeValue(forKey: peripheral.identifier)
     }
 }
 
@@ -687,7 +701,8 @@ extension BLEEncounterService: CBPeripheralDelegate {
             let event = EncounteredEvent(
                 peerId: peripheral.identifier.uuidString,
                 peerPublicKey: publicKeyData,
-                nickname: nickname
+                nickname: nickname,
+                rssi: peerRSSIs[peripheral.identifier]
             )
             DispatchQueue.main.async { [weak self] in
                 self?.onEncounter?(event)
