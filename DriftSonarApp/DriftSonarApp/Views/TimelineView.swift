@@ -201,6 +201,22 @@ struct PostRowView: View {
     /// TASK-188: Attachment index the full-screen viewer should open at, `nil` = closed.
     @State private var viewerSelection: MediaViewerSelection?
 
+    /// TASK-197: One-shot "washed ashore" drift-in for the row. Reduced-motion → instant.
+    @State private var landed = false
+    /// TASK-197: Posts that already played their drift-in this session. Row `@State` is
+    /// discarded when a List row scrolls far off screen, so without this a post would
+    /// wash ashore again every time it scrolls back into view.
+    private static var driftedInIds = Set<UUID>()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// True when the row should be visible immediately instead of drifting in.
+    private var skipsDriftIn: Bool {
+        reduceMotion || Self.driftedInIds.contains(post.id)
+    }
+    /// TASK-197: Tide-mark tints adapt so both modes stay legible (driftwood brown is
+    /// too dark on the abyss surface).
+    @Environment(\.colorScheme) private var colorScheme
+
     /// TASK-167: Shared content filter that masks prohibited words on display.
     private static let contentFilter = ContentFilter()
 
@@ -257,14 +273,35 @@ struct PostRowView: View {
                 .accessibilityLabel("残り伝播回数 \(post.ttl)")
             #endif
         }
-        .padding(14)
-        // TASK-138: Light flat card to lift the row off the background and improve
-        // readability while staying in line with the white/flat concept.
+        .padding(DSLayout.Spacing.lg)
+        // TASK-197: The foam surface the post has washed up onto, with a soft tide
+        // line at its base — the waterline it drifted in to.
         .background(Color.dsSurface, in: RoundedRectangle(cornerRadius: DSLayout.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: DSLayout.Radius.lg)
-                .stroke(Color.driftwood.opacity(0.22), lineWidth: 0.5)
+                .stroke(Color.driftwood.opacity(0.18), lineWidth: 0.5)
         )
+        .overlay(alignment: .bottom) {
+            LinearGradient(
+                colors: [.clear, .seaGlass.opacity(0.4), .clear],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(height: 1.5)
+            .padding(.horizontal, DSLayout.Spacing.lg)
+            .accessibilityHidden(true)
+        }
+        // TASK-197: Drift-in — the row eases in from the trailing edge and fades up,
+        // as if drifting ashore. `skipsDriftIn` keeps the row visible from its very
+        // first frame under Reduce Motion and when the row re-enters after scrolling
+        // (List recreates row state, so `landed` alone cannot make this one-shot).
+        .opacity(landed || skipsDriftIn ? 1 : 0)
+        .offset(x: landed || skipsDriftIn ? 0 : 10)
+        .animation(.easeOut(duration: 0.45), value: landed)
+        .onAppear {
+            if !skipsDriftIn { Self.driftedInIds.insert(post.id) }
+            landed = true
+        }
         // TASK-188: Full-screen viewer, opened at the tapped attachment.
         .fullScreenCover(item: $viewerSelection) { selection in
             MediaViewerView(media: post.media, startIndex: selection.index, store: mediaStore)
@@ -293,22 +330,37 @@ struct PostRowView: View {
         return trimmed.isEmpty ? "?" : String(trimmed.prefix(1)).uppercased()
     }
 
+    // TASK-197: Tide mark — the hop count as "Nつの岸を漂って届いた", weathering from
+    // fresh deep-tide (arrived directly) to driftwood brown (drifted far). No red/green
+    // status colours; distance reads through the drift palette and the wording.
     private var hopBadge: some View {
-        let color: Color = post.hopCount == 0 ? .accentColor
-            : post.hopCount <= 2 ? .green
-            : post.hopCount <= 5 ? .orange
-            : .red
-        return Label(
-            post.hopCount == 0 ? "直接" : "\(post.hopCount)人経由",
-            systemImage: "point.3.connected.trianglepath.dotted"
-        )
-        .font(.caption2)
-        .foregroundStyle(color)
-        // TASK-143: hopCount is also colour-coded; give VoiceOver a full sentence
-        // so the meaning does not rely on colour alone.
+        Label {
+            Text(hopLabel).font(.dsCaption)
+        } icon: {
+            Image(systemName: post.hopCount == 0 ? "drop.fill" : "water.waves")
+                .font(.caption2)
+        }
+        .foregroundStyle(weatheredTint)
+        // TASK-143: distance also reads through colour; give VoiceOver the full sentence.
         .accessibilityLabel(
-            post.hopCount == 0 ? "あなたに直接届いた投稿" : "\(post.hopCount)人を経由して届いた投稿"
+            post.hopCount == 0 ? "あなたにまっすぐ届いた投稿" : "\(post.hopCount)つの岸を漂って届いた投稿"
         )
+    }
+
+    /// Non-jargon distance label — "岸" (shores) instead of hops/relays.
+    private var hopLabel: String {
+        post.hopCount == 0 ? "まっすぐ届いた" : "\(post.hopCount)つの岸を漂って"
+    }
+
+    /// Weathered tint: crisp sea up close, driftwood brown far away. Lightened in dark
+    /// mode so the weathered tones keep AA contrast on the abyss surface. No further
+    /// opacity fade with distance — a dimmed tier drops below AA on the foam surface,
+    /// so past the first hop the extra distance reads through the wording alone.
+    private var weatheredTint: Color {
+        let dark = colorScheme == .dark
+        let near: Color = dark ? .seaGlass : .deepTide
+        let weathered = dark ? Color(hue: 0.09, saturation: 0.20, brightness: 0.70) : .driftwood
+        return post.hopCount == 0 ? near : weathered
     }
 }
 
@@ -330,34 +382,51 @@ struct IdenticonView: View {
     let initial: String
     var size: CGFloat = 36
 
+    // TASK-197: Deterministic avatar drawn from the drift palette instead of the full
+    // hue wheel, so every author reads as part of the same sea. A faint ripple motif
+    // behind the initial evokes a drifting piece of flotsam. Same key → same disc.
+    private static let gradients: [(Color, Color)] = [
+        (.seaGlass, .deepTide),
+        (Color(hue: 0.50, saturation: 0.42, brightness: 0.72), .deepTide),
+        (Color(hue: 0.55, saturation: 0.48, brightness: 0.58), Color(hue: 0.57, saturation: 0.55, brightness: 0.40)),
+        (.driftwood, Color(hue: 0.08, saturation: 0.38, brightness: 0.30)),
+        (.buoy, .driftwood),
+        (Color(hue: 0.11, saturation: 0.30, brightness: 0.66), .deepTide),
+    ]
+
     var body: some View {
-        let base = Self.hue(for: publicKey)
+        let (top, bottom) = Self.gradient(for: publicKey)
         Circle()
             .fill(
                 LinearGradient(
-                    colors: [
-                        Color(hue: base, saturation: 0.55, brightness: 0.9),
-                        Color(hue: (base + 0.08).truncatingRemainder(dividingBy: 1),
-                              saturation: 0.7, brightness: 0.7),
-                    ],
+                    colors: [top, bottom],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
             .frame(width: size, height: size)
+            // Concentric ripple rings — the disc as a spot on the water.
+            .overlay {
+                ZStack {
+                    Circle().stroke(.white.opacity(0.14), lineWidth: 1).scaleEffect(0.72)
+                    Circle().stroke(.white.opacity(0.10), lineWidth: 1).scaleEffect(0.46)
+                }
+            }
             .overlay {
                 Text(initial)
                     .font(.system(size: size * 0.45, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.25), radius: 1, y: 0.5)
             }
     }
 
-    /// Stable 0..<1 hue from the key's fingerprint (SHA-256 based, deterministic).
-    private static func hue(for key: Data) -> Double {
+    /// Stable drift-palette gradient from the key's fingerprint (deterministic).
+    private static func gradient(for key: Data) -> (Color, Color) {
         let hex = PublicKeyFingerprint.hex(of: key)
         var hash = 5381
         for byte in hex.utf8 { hash = ((hash << 5) &+ hash) &+ Int(byte) }
-        return Double(((hash % 360) + 360) % 360) / 360.0
+        let index = ((hash % gradients.count) + gradients.count) % gradients.count
+        return gradients[index]
     }
 }
 
@@ -397,11 +466,11 @@ private struct EmptyTimelineView: View {
                 .frame(width: 120, height: 120)
                 .opacity(0.7)
                 .accessibilityHidden(true) // TASK-143: decorative mascot
-            Text("まだ投稿がありません")
-                .font(.headline)
+            Text("まだ何も流れ着いていません")
+                .font(.dsTitle)
                 .foregroundStyle(.secondary)
-            Text("BLE 圏内に誰かがいると\nメッセージが流れてきます")
-                .font(.subheadline)
+            Text("近くで誰かが DriftSonar を開くと\nその投稿が波に乗って流れ着きます")
+                .font(.dsBody)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
         }
