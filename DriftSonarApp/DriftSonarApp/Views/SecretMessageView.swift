@@ -5,6 +5,7 @@ import DriftSonarCore
 struct SecretMessageView: View {
     @State private var viewModel: SecretMessageViewModel
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Optional nickname received via BLE (TASK-080). Falls back to fingerprint.
     private let peerNickname: String?
@@ -20,16 +21,33 @@ struct SecretMessageView: View {
         peerNickname ?? PublicKeyFingerprint.formatted(of: viewModel.otherPublicKey)
     }
 
+    // TASK-200: The E2E badge as the mouth of the cove — a quiet sea-glass band
+    // saying this conversation is closed to the two of you.
     private var encryptionBadge: some View {
         HStack(spacing: 6) {
             Image(systemName: "lock.fill")
-            Text("端末間でエンドツーエンド暗号化されています")
+            Text("この会話は二人の入江に閉じています（端末間 E2E 暗号化）")
         }
-        .font(.caption)
-        .foregroundStyle(.secondary)
+        .font(.dsCaption)
+        .foregroundStyle(Color.dsTextSecondary)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
-        .background(Color.accentColor.opacity(0.08))
+        .background(Color.seaGlass.opacity(0.14))
+    }
+
+    /// TASK-200: Send disc — deep tide on foam, sea glass on the abyss (the
+    /// near-tint rule from TASK-197). Muted while the draft is empty.
+    private var sendDiscColor: Color {
+        guard !viewModel.draftMessage.isEmpty else {
+            return Color.dsTextSecondary.opacity(0.25)
+        }
+        return colorScheme == .dark ? .seaGlass : .deepTide
+    }
+
+    private var sendIconColor: Color {
+        guard !viewModel.draftMessage.isEmpty else { return Color.dsTextSecondary }
+        // Foam ink on deep tide (6.68:1), abyss on sea glass (7.57:1).
+        return colorScheme == .dark ? .abyss : .foam
     }
 
     var body: some View {
@@ -61,16 +79,36 @@ struct SecretMessageView: View {
 
             Divider()
 
-            HStack(spacing: 12) {
-                TextField("E2E 暗号化メッセージ...", text: $viewModel.draftMessage, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(1...4)
+            // TASK-200: Composer on Drift tokens — foam pill field + tide send disc.
+            HStack(spacing: DSLayout.Spacing.md) {
+                TextField(
+                    "",
+                    text: $viewModel.draftMessage,
+                    prompt: Text("二人だけに届く言葉を…")
+                        // TASK-199 の letterCard と同じく AA を満たす placeholder。
+                        .foregroundStyle(Color.dsTextSecondary),
+                    axis: .vertical
+                )
+                .lineLimit(1...4)
+                    .padding(.horizontal, DSLayout.Spacing.md)
+                    .padding(.vertical, DSLayout.Spacing.sm)
+                    .background(Color.dsSurface, in: RoundedRectangle(cornerRadius: DSLayout.Radius.pill))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DSLayout.Radius.pill)
+                            .stroke(Color.driftwood.opacity(0.18), lineWidth: 0.5)
+                    )
 
                 Button {
                     viewModel.sendMessage()
                 } label: {
                     Image(systemName: "paperplane.fill")
-                        .foregroundStyle(viewModel.draftMessage.isEmpty ? Color.dsTextSecondary : .accentColor)
+                        .font(.subheadline)
+                        .foregroundStyle(sendIconColor)
+                        .frame(width: 36, height: 36)
+                        .background(sendDiscColor, in: Circle())
+                        // HIG 44pt minimum hit target around the 36pt disc.
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .disabled(viewModel.draftMessage.isEmpty)
                 // TASK-143: Icon-only send button needs an explicit VoiceOver label.
@@ -78,6 +116,7 @@ struct SecretMessageView: View {
             }
             .padding()
         }
+        .background(Color.dsBackground)
         .navigationTitle(peerTitle)
         .navigationBarTitleDisplayMode(.inline)
         // TASK-154: Unified error alert (key unavailable / encryption failed).
@@ -104,16 +143,29 @@ private struct MessageBubble: View {
         HStack {
             if isMine { Spacer(minLength: 60) }
             VStack(alignment: isMine ? .trailing : .leading, spacing: 2) {
+                // TASK-200: Mine = deep tide with foam ink (6.68:1 AA — both are
+                // fixed colours across modes); theirs = the foam surface with a
+                // driftwood hairline, matching the timeline's washed-ashore cards.
                 Text(text)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(isMine ? Color.accentColor : Color.seaGlass.opacity(0.22))
-                    .foregroundStyle(isMine ? .white : Color.dsTextPrimary)
-                    .clipShape(RoundedRectangle(cornerRadius: DSLayout.Radius.pill))
-                // TASK-141: Per-message send time below the bubble.
+                    .padding(.horizontal, DSLayout.Spacing.md)
+                    .padding(.vertical, DSLayout.Spacing.sm)
+                    .background(
+                        isMine ? Color.deepTide : Color.dsSurface,
+                        in: RoundedRectangle(cornerRadius: DSLayout.Radius.pill)
+                    )
+                    .foregroundStyle(isMine ? Color.foam : Color.dsTextPrimary)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DSLayout.Radius.pill)
+                            .stroke(
+                                isMine ? Color.clear : Color.driftwood.opacity(0.18),
+                                lineWidth: 0.5
+                            )
+                    )
+                // TASK-141/200: Per-message send time — mono data role (TASK-196).
+                // dsTextSecondary: system .secondary is 3.1:1 on the sand ground.
                 Text(Self.timeLabel(for: timestamp))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.dsMono(.caption2))
+                    .foregroundStyle(Color.dsTextSecondary)
             }
             // TASK-143: Sender is conveyed only by colour/alignment visually; state it
             // explicitly for VoiceOver and read the bubble as a single element.
@@ -136,20 +188,33 @@ private struct MessageBubble: View {
 
 // MARK: - EmptyMessagesView
 
-// TASK-141: Shown when no messages exist yet — reinforces the E2E "closed" positioning.
+// TASK-141/200: Shown when no messages exist yet — the still cove before the
+// first word: calm sea-glass rings around a lock, closed to the two of you.
 private struct EmptyMessagesView: View {
     var body: some View {
         VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "lock.shield")
-                .font(.system(size: 52))
-                .foregroundStyle(Color.accentColor.opacity(0.6))
-            Text("まだメッセージはありません")
+            ZStack {
+                // Calm rings on the cove's surface (static — no motion needed).
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .stroke(Color.seaGlass.opacity(0.30 - Double(i) * 0.09), lineWidth: 1)
+                        .frame(width: CGFloat(72 + i * 34), height: CGFloat(72 + i * 34))
+                }
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(Color.seaGlass)
+            }
+            .frame(height: 150)
+            .accessibilityHidden(true)
+            Text("ここは二人だけの入江")
                 .font(.dsTitle)
                 .foregroundStyle(.secondary)
-            Text("ここでのやり取りは端末間で\nエンドツーエンド暗号化され、\n二人の間だけに閉じます。")
-                .font(.subheadline)
-                .foregroundStyle(.tertiary)
+            // dsTextSecondary: this is the app's core trust message — system
+            // .tertiary reads 1.7:1 on the sand ground.
+            Text("やり取りは端末間で\nエンドツーエンド暗号化され、\nほかの誰にも流れ着きません。")
+                .font(.dsBody)
+                .foregroundStyle(Color.dsTextSecondary)
                 .multilineTextAlignment(.center)
             Spacer()
         }
