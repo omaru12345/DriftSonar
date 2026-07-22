@@ -65,3 +65,7 @@ xcodebuild \
 - **SKILL.md も同様**：スキル発火時に必要な手順のみ本文に、詳細は同フォルダ内の別ファイルへ（`[[wikilink]]` で参照）
 - 新しい情報を CLAUDE.md / SKILL.md に追加する前に「毎回のセッションで本当に必要か」を確認する
 - 参考: `~/.claude/notes/progressive-disclosure.md`
+
+## 引き継ぎ書
+
+- このプロジェクトの文脈・構成・現在地・次の一手は [docs/handoff.md](docs/handoff.md) に集約（Fable5 作成）。

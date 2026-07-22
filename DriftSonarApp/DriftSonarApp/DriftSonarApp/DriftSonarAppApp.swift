@@ -51,6 +51,11 @@ private final class NotificationTapDelegate: NSObject, UNUserNotificationCenterD
 struct DriftSonarAppApp: App {
     private let notificationDelegate = NotificationTapDelegate()
 
+    init() {
+        // EP-038 (TASK-196): serif display face for navigation titles.
+        DSAppearance.apply()
+    }
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             UserProfileModel.self,

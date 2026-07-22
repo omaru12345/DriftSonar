@@ -70,7 +70,7 @@ struct SecretMessageView: View {
                     viewModel.sendMessage()
                 } label: {
                     Image(systemName: "paperplane.fill")
-                        .foregroundStyle(viewModel.draftMessage.isEmpty ? .gray : .accentColor)
+                        .foregroundStyle(viewModel.draftMessage.isEmpty ? Color.dsTextSecondary : .accentColor)
                 }
                 .disabled(viewModel.draftMessage.isEmpty)
                 // TASK-143: Icon-only send button needs an explicit VoiceOver label.
@@ -107,9 +107,9 @@ private struct MessageBubble: View {
                 Text(text)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(isMine ? Color.accentColor : Color(.systemGray5))
-                    .foregroundStyle(isMine ? .white : .primary)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .background(isMine ? Color.accentColor : Color.seaGlass.opacity(0.22))
+                    .foregroundStyle(isMine ? .white : Color.dsTextPrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: DSLayout.Radius.pill))
                 // TASK-141: Per-message send time below the bubble.
                 Text(Self.timeLabel(for: timestamp))
                     .font(.caption2)
@@ -145,7 +145,7 @@ private struct EmptyMessagesView: View {
                 .font(.system(size: 52))
                 .foregroundStyle(Color.accentColor.opacity(0.6))
             Text("まだメッセージはありません")
-                .font(.headline)
+                .font(.dsTitle)
                 .foregroundStyle(.secondary)
             Text("ここでのやり取りは端末間で\nエンドツーエンド暗号化され、\n二人の間だけに閉じます。")
                 .font(.subheadline)

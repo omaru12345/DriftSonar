@@ -34,7 +34,7 @@ struct EncounterView: View {
                     }
 
                     Circle()
-                        .fill(viewModel.isDiscovering ? Color.accentColor.opacity(0.12) : Color.gray.opacity(0.1))
+                        .fill(viewModel.isDiscovering ? Color.accentColor.opacity(0.12) : Color.seaGlass.opacity(0.12))
                         .frame(width: 150, height: 150)
 
                     if viewModel.isDiscovering {
@@ -59,7 +59,7 @@ struct EncounterView: View {
 
                 Text(viewModel.isDiscovering ? "近くの DriftSonar ユーザーを探しています…" : "レーダー停止中")
                     .font(.headline)
-                    .foregroundColor(viewModel.isDiscovering ? .accentColor : .gray)
+                    .foregroundColor(viewModel.isDiscovering ? .accentColor : .dsTextSecondary)
 
                 Button(action: {
                     if !viewModel.isDiscovering {
@@ -107,7 +107,7 @@ struct EncounterView: View {
                                             Text(peer.nickname ?? peer.peerId)
                                                 .font(.headline)
                                             Text(PublicKeyFingerprint.formatted(of: peer.peerPublicKey))
-                                                .font(.system(.caption, design: .monospaced))
+                                                .font(.dsMono(.caption))
                                                 .foregroundStyle(.secondary)
                                         }
                                     }
@@ -147,7 +147,7 @@ struct EncounterView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(Color.orange.opacity(0.9))
+                    .background(Color.dsWarn)
                     .foregroundStyle(.white)
                 }
             }
@@ -198,7 +198,7 @@ private struct EmptyRadarView: View {
                 .opacity(0.7)
                 .accessibilityHidden(true) // TASK-143: decorative mascot
             Text("近くにユーザーがいません")
-                .font(.headline)
+                .font(.dsTitle)
                 .foregroundStyle(.secondary)
             Text("人が集まる場所へ\n行ってみましょう")
                 .font(.subheadline)
