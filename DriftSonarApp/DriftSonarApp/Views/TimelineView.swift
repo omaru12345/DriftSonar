@@ -203,7 +203,16 @@ struct PostRowView: View {
 
     /// TASK-197: One-shot "washed ashore" drift-in for the row. Reduced-motion → instant.
     @State private var landed = false
+    /// TASK-197: Posts that already played their drift-in this session. Row `@State` is
+    /// discarded when a List row scrolls far off screen, so without this a post would
+    /// wash ashore again every time it scrolls back into view.
+    private static var driftedInIds = Set<UUID>()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// True when the row should be visible immediately instead of drifting in.
+    private var skipsDriftIn: Bool {
+        reduceMotion || Self.driftedInIds.contains(post.id)
+    }
     /// TASK-197: Tide-mark tints adapt so both modes stay legible (driftwood brown is
     /// too dark on the abyss surface).
     @Environment(\.colorScheme) private var colorScheme
@@ -283,15 +292,15 @@ struct PostRowView: View {
             .accessibilityHidden(true)
         }
         // TASK-197: Drift-in — the row eases in from the trailing edge and fades up,
-        // as if drifting ashore. Honours Reduce Motion by landing instantly.
-        .opacity(landed ? 1 : 0)
-        .offset(x: landed ? 0 : 10)
+        // as if drifting ashore. `skipsDriftIn` keeps the row visible from its very
+        // first frame under Reduce Motion and when the row re-enters after scrolling
+        // (List recreates row state, so `landed` alone cannot make this one-shot).
+        .opacity(landed || skipsDriftIn ? 1 : 0)
+        .offset(x: landed || skipsDriftIn ? 0 : 10)
+        .animation(.easeOut(duration: 0.45), value: landed)
         .onAppear {
-            if reduceMotion {
-                landed = true
-            } else {
-                withAnimation(.easeOut(duration: 0.45)) { landed = true }
-            }
+            if !skipsDriftIn { Self.driftedInIds.insert(post.id) }
+            landed = true
         }
         // TASK-188: Full-screen viewer, opened at the tapped attachment.
         .fullScreenCover(item: $viewerSelection) { selection in
@@ -321,7 +330,7 @@ struct PostRowView: View {
         return trimmed.isEmpty ? "?" : String(trimmed.prefix(1)).uppercased()
     }
 
-    // TASK-197: Tide mark — the hop count as "N の岸を漂って届いた", weathering from
+    // TASK-197: Tide mark — the hop count as "Nつの岸を漂って届いた", weathering from
     // fresh deep-tide (arrived directly) to driftwood brown (drifted far). No red/green
     // status colours; distance reads through the drift palette and the wording.
     private var hopBadge: some View {
@@ -334,26 +343,24 @@ struct PostRowView: View {
         .foregroundStyle(weatheredTint)
         // TASK-143: distance also reads through colour; give VoiceOver the full sentence.
         .accessibilityLabel(
-            post.hopCount == 0 ? "あなたにまっすぐ届いた投稿" : "\(post.hopCount) 個の岸を漂って届いた投稿"
+            post.hopCount == 0 ? "あなたにまっすぐ届いた投稿" : "\(post.hopCount)つの岸を漂って届いた投稿"
         )
     }
 
     /// Non-jargon distance label — "岸" (shores) instead of hops/relays.
     private var hopLabel: String {
-        post.hopCount == 0 ? "まっすぐ届いた" : "\(post.hopCount) の岸を漂って"
+        post.hopCount == 0 ? "まっすぐ届いた" : "\(post.hopCount)つの岸を漂って"
     }
 
     /// Weathered tint: crisp sea up close, driftwood brown far away. Lightened in dark
-    /// mode so the weathered tones keep AA contrast on the abyss surface.
+    /// mode so the weathered tones keep AA contrast on the abyss surface. No further
+    /// opacity fade with distance — a dimmed tier drops below AA on the foam surface,
+    /// so past the first hop the extra distance reads through the wording alone.
     private var weatheredTint: Color {
         let dark = colorScheme == .dark
         let near: Color = dark ? .seaGlass : .deepTide
         let weathered = dark ? Color(hue: 0.09, saturation: 0.20, brightness: 0.70) : .driftwood
-        switch post.hopCount {
-        case 0: return near
-        case 1...4: return weathered
-        default: return weathered.opacity(0.82)
-        }
+        return post.hopCount == 0 ? near : weathered
     }
 }
 
