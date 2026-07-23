@@ -6,16 +6,9 @@ import DriftSonarCore
 // words drift from person to person) before asking for anything.
 struct InitialSetupView: View {
     @Bindable var viewModel: InitialSetupViewModel
-    @Environment(\.colorScheme) private var colorScheme
 
     private var canCreate: Bool {
         !viewModel.nickname.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
-    /// Warn text with AA on the light sand ground (same rule as ComposeView;
-    /// literal pending tokenisation — #245 / TASK-206).
-    private var warnTextColor: Color {
-        colorScheme == .dark ? .dsWarn : Color(hue: 0.06, saturation: 0.72, brightness: 0.48)
     }
 
     var body: some View {
@@ -28,7 +21,7 @@ struct InitialSetupView: View {
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
                         .font(.dsCaption)
-                        .foregroundStyle(warnTextColor)
+                        .foregroundStyle(Color.dsWarnText)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, DSLayout.Spacing.sm)
                 }

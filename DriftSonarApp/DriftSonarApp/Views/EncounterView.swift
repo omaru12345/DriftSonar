@@ -293,14 +293,13 @@ private struct ContactRowView: View {
     /// RSSI at or above this reads as "nearby" (roughly same room).
     private static let nearRSSIThreshold = -60
 
-    /// Strong signal = crisp sea close by; weak signal = weathered driftwood far
-    /// off. Same weathering rule as the timeline's tide marks (TASK-197).
+    /// Strong signal = crisp sea close by; weak signal = weathered ink far off.
+    /// Same weathering rule as the timeline's tide marks (TASK-197/206).
     private func signalTint(rssi: Int) -> Color {
-        let dark = colorScheme == .dark
         if rssi >= Self.nearRSSIThreshold {
-            return dark ? .seaGlass : .deepTide
+            return colorScheme == .dark ? .seaGlass : .deepTide
         }
-        return dark ? Color(hue: 0.09, saturation: 0.20, brightness: 0.70) : .driftwood
+        return .dsWeatheredInk
     }
 }
 

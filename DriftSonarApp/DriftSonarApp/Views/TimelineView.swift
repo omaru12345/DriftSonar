@@ -213,6 +213,11 @@ struct PostRowView: View {
     private var skipsDriftIn: Bool {
         reduceMotion || Self.driftedInIds.contains(post.id)
     }
+    /// TASK-205: Drift in from the trailing edge — mirror the offset under RTL.
+    @Environment(\.layoutDirection) private var layoutDirection
+    private var driftInOffset: CGFloat {
+        layoutDirection == .rightToLeft ? -10 : 10
+    }
     /// TASK-197: Tide-mark tints adapt so both modes stay legible (driftwood brown is
     /// too dark on the abyss surface).
     @Environment(\.colorScheme) private var colorScheme
@@ -244,14 +249,15 @@ struct PostRowView: View {
                     hopBadge
                 }
                 Spacer()
+                // TASK-204: time is data — mono role (TASK-196).
                 Text(relativeTime)
-                    .font(.caption2)
+                    .font(.dsMono(.caption2))
                     .foregroundStyle(.tertiary)
             }
 
             if !displayedContent.isEmpty {
                 Text(displayedContent)
-                    .font(.body)
+                    .font(.dsBody)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -268,7 +274,7 @@ struct PostRowView: View {
             // TASK-138: "TTL" is a developer-facing propagation counter. It is hidden
             // from end users (jargon) and shown only in debug builds for diagnostics.
             Label("TTL \(post.ttl)", systemImage: "timer")
-                .font(.caption2)
+                .font(.dsMono(.caption2))
                 .foregroundStyle(.tertiary)
                 .accessibilityLabel("残り伝播回数 \(post.ttl)")
             #endif
@@ -296,7 +302,7 @@ struct PostRowView: View {
         // first frame under Reduce Motion and when the row re-enters after scrolling
         // (List recreates row state, so `landed` alone cannot make this one-shot).
         .opacity(landed || skipsDriftIn ? 1 : 0)
-        .offset(x: landed || skipsDriftIn ? 0 : 10)
+        .offset(x: landed || skipsDriftIn ? 0 : driftInOffset)
         .animation(.easeOut(duration: 0.45), value: landed)
         .onAppear {
             if !skipsDriftIn { Self.driftedInIds.insert(post.id) }
@@ -337,8 +343,9 @@ struct PostRowView: View {
         Label {
             Text(hopLabel).font(.dsCaption)
         } icon: {
+            // TASK-204: same text style as the label so sizes/baselines align.
             Image(systemName: post.hopCount == 0 ? "drop.fill" : "water.waves")
-                .font(.caption2)
+                .font(.caption)
         }
         .foregroundStyle(weatheredTint)
         // TASK-143: distance also reads through colour; give VoiceOver the full sentence.
@@ -352,15 +359,13 @@ struct PostRowView: View {
         post.hopCount == 0 ? "まっすぐ届いた" : "\(post.hopCount)つの岸を漂って"
     }
 
-    /// Weathered tint: crisp sea up close, driftwood brown far away. Lightened in dark
-    /// mode so the weathered tones keep AA contrast on the abyss surface. No further
-    /// opacity fade with distance — a dimmed tier drops below AA on the foam surface,
-    /// so past the first hop the extra distance reads through the wording alone.
+    /// Weathered tint: crisp sea up close, weathered ink far away (TASK-206 token —
+    /// Light/Dark handled inside `dsWeatheredInk`). No further opacity fade with
+    /// distance — a dimmed tier drops below AA on the foam surface, so past the
+    /// first hop the extra distance reads through the wording alone.
     private var weatheredTint: Color {
-        let dark = colorScheme == .dark
-        let near: Color = dark ? .seaGlass : .deepTide
-        let weathered = dark ? Color(hue: 0.09, saturation: 0.20, brightness: 0.70) : .driftwood
-        return post.hopCount == 0 ? near : weathered
+        let near: Color = colorScheme == .dark ? .seaGlass : .deepTide
+        return post.hopCount == 0 ? near : .dsWeatheredInk
     }
 }
 
@@ -371,47 +376,34 @@ private struct MediaViewerSelection: Identifiable {
     let index: Int
 }
 
-// MARK: - IdenticonView (TASK-138)
+// MARK: - IdenticonView (TASK-138 / TASK-197 / TASK-203)
 
-/// Deterministic avatar derived from a public key: a hue-stable gradient disc with
-/// the author's initial. Gives each author a recognisable identity without a server
-/// or uploaded image. The hue is derived from the key's SHA-256 fingerprint so the
-/// same author always renders the same colour across devices.
+/// Deterministic avatar derived from a public key: a drift-palette gradient disc
+/// with a ripple motif and the author's initial. Gives each author a recognisable
+/// identity without a server or uploaded image. Three visual axes — gradient
+/// (`DSIdenticonPalette`, 8), ripple motif (4) and gradient direction (2) — are
+/// each derived from separate bytes of the key's SHA-256 fingerprint, giving 64
+/// distinct discs while staying within the drift palette. Same key → same disc
+/// on every device.
 struct IdenticonView: View {
     let publicKey: Data
     let initial: String
     var size: CGFloat = 36
 
-    // TASK-197: Deterministic avatar drawn from the drift palette instead of the full
-    // hue wheel, so every author reads as part of the same sea. A faint ripple motif
-    // behind the initial evokes a drifting piece of flotsam. Same key → same disc.
-    private static let gradients: [(Color, Color)] = [
-        (.seaGlass, .deepTide),
-        (Color(hue: 0.50, saturation: 0.42, brightness: 0.72), .deepTide),
-        (Color(hue: 0.55, saturation: 0.48, brightness: 0.58), Color(hue: 0.57, saturation: 0.55, brightness: 0.40)),
-        (.driftwood, Color(hue: 0.08, saturation: 0.38, brightness: 0.30)),
-        (.buoy, .driftwood),
-        (Color(hue: 0.11, saturation: 0.30, brightness: 0.66), .deepTide),
-    ]
-
     var body: some View {
-        let (top, bottom) = Self.gradient(for: publicKey)
+        let traits = Self.traits(for: publicKey)
         Circle()
             .fill(
                 LinearGradient(
-                    colors: [top, bottom],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    colors: [traits.gradient.top, traits.gradient.bottom],
+                    startPoint: traits.flipped ? .bottomLeading : .topLeading,
+                    endPoint: traits.flipped ? .topTrailing : .bottomTrailing
                 )
             )
             .frame(width: size, height: size)
-            // Concentric ripple rings — the disc as a spot on the water.
-            .overlay {
-                ZStack {
-                    Circle().stroke(.white.opacity(0.14), lineWidth: 1).scaleEffect(0.72)
-                    Circle().stroke(.white.opacity(0.10), lineWidth: 1).scaleEffect(0.46)
-                }
-            }
+            // Concentric ripple rings — the disc as a spot on the water. The
+            // ring pattern is one of the identity axes (TASK-203).
+            .overlay { rippleMotif(traits.motif) }
             .overlay {
                 Text(initial)
                     .font(.system(size: size * 0.45, weight: .bold, design: .rounded))
@@ -420,25 +412,83 @@ struct IdenticonView: View {
             }
     }
 
-    /// Stable drift-palette gradient from the key's fingerprint (deterministic).
-    private static func gradient(for key: Data) -> (Color, Color) {
+    @ViewBuilder
+    private func rippleMotif(_ motif: Int) -> some View {
+        switch motif {
+        case 0:
+            ZStack {
+                Circle().stroke(.white.opacity(0.14), lineWidth: 1).scaleEffect(0.72)
+                Circle().stroke(.white.opacity(0.10), lineWidth: 1).scaleEffect(0.46)
+            }
+        case 1:
+            ZStack {
+                Circle().stroke(.white.opacity(0.12), lineWidth: 1).scaleEffect(0.84)
+                Circle().stroke(.white.opacity(0.10), lineWidth: 1).scaleEffect(0.60)
+                Circle().stroke(.white.opacity(0.08), lineWidth: 1).scaleEffect(0.36)
+            }
+        case 2:
+            Circle().stroke(.white.opacity(0.16), lineWidth: 1.5).scaleEffect(0.62)
+        default:
+            ZStack {
+                Circle().stroke(.white.opacity(0.12), lineWidth: 1).scaleEffect(0.90)
+                Circle().stroke(.white.opacity(0.12), lineWidth: 1).scaleEffect(0.52)
+            }
+        }
+    }
+
+    /// Stable visual traits from the key's fingerprint (deterministic). Each axis
+    /// reads a different fingerprint byte so the axes vary independently.
+    private static func traits(
+        for key: Data
+    ) -> (gradient: (top: Color, bottom: Color), motif: Int, flipped: Bool) {
         let hex = PublicKeyFingerprint.hex(of: key)
-        var hash = 5381
-        for byte in hex.utf8 { hash = ((hash << 5) &+ hash) &+ Int(byte) }
-        let index = ((hash % gradients.count) + gradients.count) % gradients.count
-        return gradients[index]
+        let bytes = Self.bytes(fromHex: hex, count: 3)
+        let gradients = DSIdenticonPalette.gradients
+        return (
+            gradient: gradients[bytes[0] % gradients.count],
+            motif: bytes[1] % 4,
+            flipped: bytes[2] % 2 == 1
+        )
+    }
+
+    /// Parses the first `count` bytes out of a hex fingerprint string. Falls back
+    /// to 0 for malformed input (fingerprint hex is always well-formed in practice).
+    private static func bytes(fromHex hex: String, count: Int) -> [Int] {
+        var result: [Int] = []
+        var index = hex.startIndex
+        for _ in 0..<count {
+            // UInt8 (not Int) so a stray sign character can never yield a
+            // negative index downstream.
+            guard let next = hex.index(index, offsetBy: 2, limitedBy: hex.endIndex),
+                  let value = UInt8(hex[index..<next], radix: 16).map(Int.init) else {
+                // Defensive: stop re-evaluating the same position on malformed input.
+                result.append(0)
+                index = hex.endIndex
+                continue
+            }
+            result.append(value)
+            index = next
+        }
+        return result
     }
 }
 
 // MARK: - SkeletonTimelineView
 
+// TASK-204: Skeleton rows mirror the washed-ashore card shape (TASK-197) so the
+// loading state doesn't flash a different layout than the loaded one.
 private struct SkeletonTimelineView: View {
     var body: some View {
         List(0..<6, id: \.self) { _ in
             VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 120, height: 12)
+                HStack(spacing: 10) {
+                    Circle()
+                        .fill(Color.secondary.opacity(0.2))
+                        .frame(width: 36, height: 36)
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.secondary.opacity(0.2))
+                        .frame(width: 120, height: 12)
+                }
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.secondary.opacity(0.2))
                     .frame(maxWidth: .infinity)
@@ -447,7 +497,15 @@ private struct SkeletonTimelineView: View {
                     .fill(Color.secondary.opacity(0.2))
                     .frame(width: 200, height: 16)
             }
-            .padding(.vertical, 4)
+            .padding(DSLayout.Spacing.lg)
+            .background(Color.dsSurface, in: RoundedRectangle(cornerRadius: DSLayout.Radius.lg))
+            .overlay(
+                RoundedRectangle(cornerRadius: DSLayout.Radius.lg)
+                    .stroke(Color.driftwood.opacity(0.18), lineWidth: 0.5)
+            )
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 5, leading: 12, bottom: 5, trailing: 12))
         }
         .listStyle(.plain)
         .redacted(reason: .placeholder)

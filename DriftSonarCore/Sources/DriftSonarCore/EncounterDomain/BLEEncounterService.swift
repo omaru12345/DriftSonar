@@ -186,40 +186,69 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
 
     // MARK: - EncounterService
 
+    // TASK-207 (#246): stop()/execute() are called from the main thread (ViewModels)
+    // but every dictionary they touch is owned by bleQueue's delegate callbacks, so
+    // both hop onto bleQueue instead of mutating shared state directly. async (not
+    // sync) also keeps diagnosticsSnapshot()'s `bleQueue.sync` deadlock-free.
     public func stop() {
-        regossipTimer?.cancel()
-        regossipTimer = nil
-        centralManager?.stopScan()
-        peripheralManager?.stopAdvertising()
-        peripheralManager?.removeAllServices()
-        pendingPeripherals.values.forEach { centralManager?.cancelPeripheralConnection($0) }
-        pendingPeripherals.removeAll()
-        messageCharacteristics.removeAll()
-        directMessageCharacteristics.removeAll()
-        nicknameCharacteristics.removeAll()
-        peerNicknames.removeAll()
-        peerRSSIs.removeAll()
+        startedLock.lock()
+        hasStarted = false
+        startedLock.unlock()
+        bleQueue.async { [weak self] in
+            guard let self else { return }
+            self.regossipTimer?.cancel()
+            self.regossipTimer = nil
+            self.centralManager?.stopScan()
+            self.peripheralManager?.stopAdvertising()
+            self.peripheralManager?.removeAllServices()
+            self.pendingPeripherals.values.forEach { self.centralManager?.cancelPeripheralConnection($0) }
+            self.pendingPeripherals.removeAll()
+            self.messageCharacteristics.removeAll()
+            self.directMessageCharacteristics.removeAll()
+            self.nicknameCharacteristics.removeAll()
+            self.peerNicknames.removeAll()
+            self.peerRSSIs.removeAll()
+        }
     }
 
     public func execute(command: StartDiscoveryCommand) throws {
-        myPublicKey = command.myPublicKey
-        // Idempotent: BLE may already be running because it is auto-started at app
-        // launch (AppServices). A later call from the Radar tab must not create a
-        // second pair of managers — just refresh scanning/advertising instead.
-        guard centralManager == nil || peripheralManager == nil else {
-            restart()
-            return
+        // Mark started synchronously so the UI sees "running" the moment
+        // discovery is requested (TASK-198 relies on this for its first frame).
+        startedLock.lock()
+        hasStarted = true
+        startedLock.unlock()
+        // Note: the body runs async on bleQueue, so errors inside it can no
+        // longer propagate through this `throws` signature (kept for the
+        // EncounterService protocol).
+        bleQueue.async { [weak self] in
+            guard let self else { return }
+            self.myPublicKey = command.myPublicKey
+            // Idempotent: BLE may already be running because it is auto-started at app
+            // launch (AppServices). A later call from the Radar tab must not create a
+            // second pair of managers — just refresh scanning/advertising instead.
+            guard self.centralManager == nil || self.peripheralManager == nil else {
+                self.restart()
+                return
+            }
+            // TASK-052: pass bleQueue so all delegate callbacks run off the main thread.
+            self.centralManager = CBCentralManager(delegate: self, queue: self.bleQueue)
+            self.peripheralManager = CBPeripheralManager(delegate: self, queue: self.bleQueue)
+            self.startRegossipTimer()
         }
-        // TASK-052: pass bleQueue so all delegate callbacks run off the main thread.
-        centralManager = CBCentralManager(delegate: self, queue: bleQueue)
-        peripheralManager = CBPeripheralManager(delegate: self, queue: bleQueue)
-        startRegossipTimer()
     }
 
-    /// True once the BLE managers have been created (discovery has been started at
-    /// least once). Lets the UI reflect the auto-started state without re-triggering.
+    /// TASK-207: `isRunning` is read from the main thread on every Radar render
+    /// while the managers are owned by bleQueue, so the started state lives
+    /// behind its own lock instead of peeking at the manager vars.
+    private let startedLock = NSLock()
+    private var hasStarted = false
+
+    /// True while discovery has been requested and not stopped. Lets the UI
+    /// reflect the auto-started state without re-triggering.
     public var isRunning: Bool {
-        centralManager != nil && peripheralManager != nil
+        startedLock.lock()
+        defer { startedLock.unlock() }
+        return hasStarted
     }
 
     /// Periodically re-gossip while discovering: clear the per-session "seen"
@@ -261,6 +290,11 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
             self.peripheralManager?.stopAdvertising()
             if self.centralManager?.state == .poweredOn { self.startScanning() }
             if self.peripheralManager?.state == .poweredOn { self.startAdvertising() }
+            // TASK-207 review: stop() cancels the regossip timer but keeps the
+            // managers, so a later execute() lands here — recreate the timer or
+            // periodic re-gossip (the GL 2.1 fix) would stay dead. Recreating it
+            // on foreground-return restarts is harmless (cancel + new schedule).
+            self.startRegossipTimer()
         }
     }
 

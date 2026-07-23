@@ -35,14 +35,6 @@ struct ComposeView: View {
 
     private var remaining: Int { maxLength - content.count }
     private var isOverLimit: Bool { remaining < 0 }
-    /// TASK-199: Warn *text* colour. dsWarn (buoy) is a fill tone — as caption text
-    /// on the light sand ground it is only 2.2:1, so light mode uses a burnt,
-    /// darker terracotta (~6.5:1). Dark mode's dsWarn already reads 7.4:1.
-    /// HSB literal pending tokenisation with the others (#245 / TASK-206).
-    private var warnTextColor: Color {
-        colorScheme == .dark ? .dsWarn : Color(hue: 0.06, saturation: 0.72, brightness: 0.48)
-    }
-
     /// Text *or* media is enough to post; block while a pick is still processing.
     private var canPost: Bool {
         let hasText = !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -66,7 +58,7 @@ struct ComposeView: View {
                 if isOverLimit {
                     Text("ボトルに入りきらないようです。あと\(-remaining)文字だけ短くしてみましょう。")
                         .font(.dsCaption)
-                        .foregroundStyle(warnTextColor)
+                        .foregroundStyle(Color.dsWarnText)
                         .padding(.horizontal, DSLayout.Spacing.lg)
                         .padding(.top, DSLayout.Spacing.sm)
                 }
@@ -76,7 +68,7 @@ struct ComposeView: View {
                     Text("\(remaining)")
                         .font(.dsMono(.caption))
                         .fontWeight(isOverLimit ? .bold : .regular)
-                        .foregroundStyle(remaining < 20 ? warnTextColor : Color.dsTextSecondary)
+                        .foregroundStyle(remaining < 20 ? Color.dsWarnText : Color.dsTextSecondary)
                         .padding(.leading, DSLayout.Spacing.lg)
                         // TASK-143: The low/over-limit warning is colour-only; spell it out.
                         .accessibilityLabel(
