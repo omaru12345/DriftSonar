@@ -49,26 +49,64 @@ public struct BLEDiagnostics: Sendable {
 ///   public key, then disconnects.  Each unique peer fires `onEncounter` exactly once.
 ///
 /// ## Thread safety
-/// All Core Bluetooth delegate callbacks are dispatched to `bleQueue` (TASK-052).
+/// All Core Bluetooth delegate callbacks are dispatched to `bleQueue` (TASK-052), which
+/// owns every per-peer dictionary (`pendingPeripherals`, `outboundQueue`, caches, …).
+/// Public entry points called from the main thread (`stop()` / `execute` /
+/// `enqueueDirectMessage`) hop onto bleQueue instead of touching that state directly
+/// (TASK-207/208). The main-assigned configuration surface (callbacks,
+/// `forwardingService`, `myNickname`) is guarded by `configLock`, and the
+/// started flag by `startedLock` — both plain NSLocks so they are safe from any
+/// thread without deadlocking `diagnosticsSnapshot()`'s `bleQueue.sync`.
 /// Public-key hashes deduplicate `onEncounter` events even when `peripheral.identifier`
 /// rotates across scans (TASK-053).
 public final class BLEEncounterService: NSObject, EncounterService, @unchecked Sendable {
 
-    public var onEncounter: ((EncounteredEvent) -> Void)?
+    // TASK-208 (#247): the configuration surface (callbacks / forwardingService /
+    // myNickname) is assigned from the main thread while bleQueue reads it, so
+    // every var below is a computed property whose backing storage is guarded by
+    // `configLock`. A plain NSLock (not bleQueue.sync) keeps the getters safe to
+    // call from bleQueue itself without deadlocking against diagnosticsSnapshot().
+    private let configLock = NSLock()
+
+    public var onEncounter: ((EncounteredEvent) -> Void)? {
+        get { configLock.lock(); defer { configLock.unlock() }; return _onEncounter }
+        set { configLock.lock(); defer { configLock.unlock() }; _onEncounter = newValue }
+    }
+    private var _onEncounter: ((EncounteredEvent) -> Void)?
+
     /// Called on the main queue when a `Post` payload is received via BLE Write.
-    public var onMessageReceived: ((Data) -> Void)?
+    public var onMessageReceived: ((Data) -> Void)? {
+        get { configLock.lock(); defer { configLock.unlock() }; return _onMessageReceived }
+        set { configLock.lock(); defer { configLock.unlock() }; _onMessageReceived = newValue }
+    }
+    private var _onMessageReceived: ((Data) -> Void)?
+
     /// Called on the main queue when Bluetooth power state changes (TASK-093).
-    public var onBluetoothStateChanged: ((CBManagerState) -> Void)?
+    public var onBluetoothStateChanged: ((CBManagerState) -> Void)? {
+        get { configLock.lock(); defer { configLock.unlock() }; return _onBluetoothStateChanged }
+        set { configLock.lock(); defer { configLock.unlock() }; _onBluetoothStateChanged = newValue }
+    }
+    private var _onBluetoothStateChanged: ((CBManagerState) -> Void)?
 
     /// Optional store-and-forward service. When set, incoming payloads are
     /// routed through it and cached messages are pushed to every new peer.
-    public var forwardingService: MeshForwardingService?
+    public var forwardingService: MeshForwardingService? {
+        get { configLock.lock(); defer { configLock.unlock() }; return _forwardingService }
+        set { configLock.lock(); defer { configLock.unlock() }; _forwardingService = newValue }
+    }
+    private var _forwardingService: MeshForwardingService?
 
     /// Called on the main queue with (senderPublicKey, encryptedData) when a
     /// direct E2E message is received via `directMessageCharacteristicUUID`.
-    public var onDirectMessageReceived: ((Data, Data) -> Void)?
+    public var onDirectMessageReceived: ((Data, Data) -> Void)? {
+        get { configLock.lock(); defer { configLock.unlock() }; return _onDirectMessageReceived }
+        set { configLock.lock(); defer { configLock.unlock() }; _onDirectMessageReceived = newValue }
+    }
+    private var _onDirectMessageReceived: ((Data, Data) -> Void)?
 
     /// Queued outbound direct messages: key = recipient X25519 public key.
+    /// Owned by `bleQueue` (TASK-208): mutated only via `enqueueDirectMessage`'s
+    /// bleQueue hop and read by `deliverDirectMessages` on bleQueue.
     private var outboundQueue: [Data: [Data]] = [:]
 
     // MARK: - TASK-091: Write retry state
@@ -88,7 +126,13 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
 
     private var myPublicKey: Data = Data()
     /// UTF-8 nickname to broadcast via the nickname Characteristic (TASK-076).
-    public var myNickname: String = ""
+    /// Assigned from the main thread (AppServices / profile edit) and read by
+    /// `didReceiveRead` on bleQueue, so it lives behind `configLock` (TASK-208).
+    public var myNickname: String {
+        get { configLock.lock(); defer { configLock.unlock() }; return _myNickname }
+        set { configLock.lock(); defer { configLock.unlock() }; _myNickname = newValue }
+    }
+    private var _myNickname: String = ""
 
     // MARK: - Diagnostics (TASK-148)
 
@@ -401,8 +445,13 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     }
 
     /// Enqueue an encrypted direct message for delivery on next encounter with the peer.
+    /// TASK-208: called from the main thread (SecretMessage flow) while
+    /// `deliverDirectMessages` reads the queue on bleQueue, so the mutation hops
+    /// onto bleQueue to keep `outboundQueue` single-owner.
     public func enqueueDirectMessage(_ encryptedData: Data, for peerPublicKey: Data) {
-        outboundQueue[peerPublicKey, default: []].append(encryptedData)
+        bleQueue.async { [weak self] in
+            self?.outboundQueue[peerPublicKey, default: []].append(encryptedData)
+        }
     }
 }
 
