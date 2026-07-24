@@ -81,6 +81,17 @@ public struct ScanDutyCycleConfig: Sendable, Equatable {
         background: ScanDutyCycle(onSeconds: 15, offSeconds: 0)
     )
 
+    /// Aggressive cadence used under Low Power Mode or a low battery (TASK-146):
+    /// a ~1/6 foreground scan duty cycle (10 s ON / 50 s OFF) to minimise radio time
+    /// when the user is trying to conserve power. Background stays continuous for the
+    /// same suspend-safety reason as `.default` (a paused background scan can't be
+    /// reliably resumed while iOS suspends the app); iOS itself further throttles BLE
+    /// under Low Power Mode.
+    public static let powerSaving = ScanDutyCycleConfig(
+        foreground: ScanDutyCycle(onSeconds: 10, offSeconds: 50),
+        background: ScanDutyCycle(onSeconds: 15, offSeconds: 0)
+    )
+
     /// The cycle to use for the given app state.
     public func cycle(isBackground: Bool) -> ScanDutyCycle {
         isBackground ? background : foreground
