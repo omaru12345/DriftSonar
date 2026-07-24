@@ -20,6 +20,7 @@
 		3DBC26022F4CBD2400D66431 /* MediaThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26012F4CBD2400D66431 /* MediaThumbnailView.swift */; };
 		3DBC26042F4CBD2400D66431 /* PostMediaGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26032F4CBD2400D66431 /* PostMediaGridView.swift */; };
 		3DBC26062F4CBD2400D66431 /* MediaViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26052F4CBD2400D66431 /* MediaViewerView.swift */; };
+		3DBC26AA2F4CBD2400D66431 /* EncounterHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26AB2F4CBD2400D66431 /* EncounterHistoryView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		3DBC26012F4CBD2400D66431 /* MediaThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaThumbnailView.swift; sourceTree = "<group>"; };
 		3DBC26032F4CBD2400D66431 /* PostMediaGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostMediaGridView.swift; sourceTree = "<group>"; };
 		3DBC26052F4CBD2400D66431 /* MediaViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaViewerView.swift; sourceTree = "<group>"; };
+		3DBC26AB2F4CBD2400D66431 /* EncounterHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterHistoryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -121,6 +123,7 @@
 				3DBC26012F4CBD2400D66431 /* MediaThumbnailView.swift */,
 				3DBC26032F4CBD2400D66431 /* PostMediaGridView.swift */,
 				3DBC26052F4CBD2400D66431 /* MediaViewerView.swift */,
+				3DBC26AB2F4CBD2400D66431 /* EncounterHistoryView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -215,6 +218,7 @@
 				3DBC26022F4CBD2400D66431 /* MediaThumbnailView.swift in Sources */,
 				3DBC26042F4CBD2400D66431 /* PostMediaGridView.swift in Sources */,
 				3DBC26062F4CBD2400D66431 /* MediaViewerView.swift in Sources */,
+				3DBC26AA2F4CBD2400D66431 /* EncounterHistoryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

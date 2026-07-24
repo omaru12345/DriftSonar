@@ -18,6 +18,8 @@ final class AppServices {
     let meshService: MeshForwardingService
     let postRepository: SwiftDataPostRepository
     let cacheRepository: SwiftDataMessageCacheRepository
+    /// Persisted すれ違い履歴 store (TASK-120). Backs the encounter-history timeline.
+    let encounterHistoryRepository: SwiftDataEncounterHistoryRepository
     /// Ingests picked photos/videos into the local media store and produces signed
     /// `MediaAttachment` descriptors (EP-037 / TASK-186/187). `nil` when the on-disk
     /// media store could not be created — the Compose media button hides in that case.
@@ -36,6 +38,10 @@ final class AppServices {
     var selectedTab: Int = 0
     /// Result of the startup profile/key integrity check (TASK-155).
     var integrityStatus: ProfileIntegrity.Status = .ok
+    /// Radar view model's live-encounter sink (TASK-120). Set by `EncounterViewModel`
+    /// so `onEncounter` can both persist history and feed the live list without either
+    /// overwriting the single `onEncounter` closure.
+    var liveEncounterHandler: ((EncounteredEvent) -> Void)?
 
     // MARK: - Init
 
@@ -44,6 +50,8 @@ final class AppServices {
         let cacheRepo = SwiftDataMessageCacheRepository(container: container)
         postRepository = postRepo
         cacheRepository = cacheRepo
+        // TASK-120: expose the persisted encounter history for the すれ違い履歴 timeline.
+        encounterHistoryRepository = SwiftDataEncounterHistoryRepository(container: container)
 
         // TASK-067: wire forwardingService so cached posts are pushed on every encounter.
         let mesh = MeshForwardingService(postRepository: postRepo, cacheRepository: cacheRepo)
@@ -69,6 +77,17 @@ final class AppServices {
         // TASK-093: Track Bluetooth state for UI banner.
         ble.onBluetoothStateChanged = { [weak self] state in
             self?.isBluetoothUnavailable = (state != .poweredOn && state != .unknown && state != .resetting)
+        }
+
+        // TASK-120: Persist every encounter to history so the すれ違い履歴 timeline has
+        // data regardless of which tab is open — onEncounter fires only for the Radar
+        // tab's live list otherwise. BLEEncounterService dispatches this on the main
+        // queue, so the main-context repository write is safe. `liveEncounterHandler`
+        // forwards to the Radar view model without either side clobbering onEncounter.
+        ble.onEncounter = { [weak self] event in
+            guard let self else { return }
+            try? self.encounterHistoryRepository.saveEncounter(event)
+            self.liveEncounterHandler?(event)
         }
 
         // TASK-069: BLE received post → timeline refresh.
@@ -115,6 +134,10 @@ final class AppServices {
     // MARK: - Welcome post (TASK-170)
 
     private static let welcomeSeededKey = "hasSeededWelcomePost"
+    /// Sentinel `peerId` for the welcome author's `EncounteredEventModel`. It exists only so
+    /// TimelineView can resolve the welcome post's author name — it is NOT a real すれ違い, so
+    /// the encounter-history timeline (TASK-120) filters it out.
+    static let welcomeEncounterPeerId = "driftsonar-welcome"
     /// Stable ID so the welcome post is upserted (never duplicated) even if the
     /// UserDefaults flag is somehow lost.
     private static let welcomePostID = UUID(uuidString: "D71F7500-0000-0000-0000-000000000001")!
@@ -145,7 +168,7 @@ final class AppServices {
         // than a raw key fingerprint.
         let context = container.mainContext
         context.insert(EncounteredEventModel(
-            peerId: "driftsonar-welcome",
+            peerId: Self.welcomeEncounterPeerId,
             peerPublicKey: WelcomePost.authorKey,
             encounteredAt: Date(),
             nickname: WelcomePost.authorName

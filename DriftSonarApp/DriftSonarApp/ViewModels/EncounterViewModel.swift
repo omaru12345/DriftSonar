@@ -15,18 +15,20 @@ class EncounterViewModel {
     var onDirectMessageReceived: ((Data, Data) -> Void)?
 
     /// Safe to call multiple times — initialises the service only once (TASK-059).
-    /// Pass the shared `BLEEncounterService` from `AppServices` so that
-    /// `MeshForwardingService` (already wired in `AppServices.init`) forwards
-    /// cached posts to every new peer (TASK-067).
-    func setupService(myPublicKey: Data, bleService: BLEEncounterService) {
+    /// Pass the shared `AppServices` so the live list is fed via `liveEncounterHandler`
+    /// (TASK-120) rather than replacing `onEncounter` — `AppServices` owns that closure so
+    /// every encounter is persisted to history, and `MeshForwardingService` (wired in
+    /// `AppServices.init`) forwards cached posts to every new peer (TASK-067).
+    func setupService(myPublicKey: Data, appServices: AppServices) {
         guard !isSetup else { return }
         isSetup = true
 
-        bleService.onEncounter = { [weak self] event in
-            Task { @MainActor in
-                if !(self?.encounteredPeers.contains(where: { $0.peerPublicKey == event.peerPublicKey }) ?? true) {
-                    self?.encounteredPeers.insert(event, at: 0)
-                }
+        let bleService = appServices.bleService
+        // onEncounter is dispatched on the main queue, so this handler runs on main.
+        appServices.liveEncounterHandler = { [weak self] event in
+            guard let self else { return }
+            if !self.encounteredPeers.contains(where: { $0.peerPublicKey == event.peerPublicKey }) {
+                self.encounteredPeers.insert(event, at: 0)
             }
         }
         bleService.onDirectMessageReceived = { [weak self] senderKey, ciphertext in

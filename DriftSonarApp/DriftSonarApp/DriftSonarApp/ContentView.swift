@@ -244,6 +244,16 @@ private struct ProfileView: View {
                     .buttonStyle(.bordered)
                     .padding(.horizontal)
 
+                    // TASK-120: すれ違い履歴のタイムラインへの導線。
+                    NavigationLink {
+                        EncounterHistoryView(appServices: appServices)
+                    } label: {
+                        Label("すれ違いの記録", systemImage: "clock.arrow.circlepath")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .padding(.horizontal)
+
                     #if DEBUG
                     // TASK-107: Demo data seed button for App Store screenshots.
                     Button(role: .destructive) {

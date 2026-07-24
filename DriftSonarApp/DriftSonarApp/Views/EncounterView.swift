@@ -110,7 +110,7 @@ struct EncounterView: View {
             .onAppear {
                 // TASK-076: Set nickname so peers can read it via BLE Characteristic.
                 appServices.bleService.myNickname = myProfile.nickname
-                viewModel.setupService(myPublicKey: myProfile.publicKey, bleService: appServices.bleService)
+                viewModel.setupService(myPublicKey: myProfile.publicKey, appServices: appServices)
             }
         }
     }
