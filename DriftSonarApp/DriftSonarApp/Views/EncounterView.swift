@@ -1,3 +1,4 @@
+import Combine
 import SwiftData
 import SwiftUI
 import DriftSonarCore
@@ -8,6 +9,13 @@ struct EncounterView: View {
     @State private var viewModel = EncounterViewModel()
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+
+    /// TASK-122: persisted encounter history (survives launches), used to surface the
+    /// last time the user crossed paths with anyone in the empty state. The live
+    /// `viewModel.encounteredPeers` list starts empty every launch, so this is the
+    /// only source that can say "your last encounter was N ago".
+    @Query(sort: \EncounteredEventModel.encounteredAt, order: .reverse)
+    private var encounterHistory: [EncounteredEventModel]
 
     /// TASK-198: BLE auto-starts at launch, but `viewModel.isDiscovering` only flips
     /// in `onAppear` — one frame later. Folding in `bleService.isRunning` keeps the
@@ -32,8 +40,12 @@ struct EncounterView: View {
                 List {
                     Section {
                         if viewModel.encounteredPeers.isEmpty {
-                            // TASK-115: Dolphin mascot illustration in Radar empty state.
-                            EmptyRadarView()
+                            // TASK-115/122: mascot + active guidance (last encounter,
+                            // rotating hints, invite導線) when no peer is in range.
+                            EmptyRadarView(
+                                lastEncounterAt: encounterHistory.first?.encounteredAt,
+                                onInvite: { appServices.selectedTab = 2 }
+                            )
                                 .frame(maxWidth: .infinity)
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
@@ -305,8 +317,26 @@ private struct ContactRowView: View {
 
 // MARK: - EmptyRadarView
 
-// TASK-115: Dolphin mascot illustration shown when no peers have been found yet.
+/// TASK-115/122: shown when no peer is currently in range. Beyond the mascot, it
+/// actively guides the user: when they last crossed paths, rotating actionable
+/// hints, and a direct導線 to the invite QR so they can seed a first encounter.
 private struct EmptyRadarView: View {
+    /// Most recent persisted encounter, or nil if the user has never met anyone.
+    let lastEncounterAt: Date?
+    /// TASK-122: jump to the Profile tab, where the public-key invite QR (TASK-049) lives.
+    let onInvite: () -> Void
+
+    /// TASK-122: concrete, actionable hints rotated on a timer so the empty state
+    /// nudges the user toward a first encounter rather than just informing them.
+    private static let hints = [
+        "人が多い場所（カフェ・駅・イベント）で開くと届きやすくなります。",
+        "Bluetooth をオンにして、画面を開いたままにしておきましょう。",
+        "友だちを誘って同時に開くと、最初のすれ違いが生まれます。",
+        "電波は数十メートル届きます。近くに誰かいれば自然とつながります。",
+    ]
+    @State private var hintIndex = 0
+    private let hintTimer = Timer.publish(every: 6, on: .main, in: .common).autoconnect()
+
     var body: some View {
         VStack(spacing: 16) {
             Image("DriftSonarLogo")
@@ -318,10 +348,39 @@ private struct EmptyRadarView: View {
             Text("まだ誰も波間に見えません")
                 .font(.dsTitle)
                 .foregroundStyle(.secondary)
-            Text("人の集まる岸辺へ\n出かけてみましょう")
+
+            // TASK-122: last time the user crossed paths with anyone (from history).
+            if let lastEncounterAt {
+                Label {
+                    Text("前回のすれ違い: ")
+                        + Text(lastEncounterAt, format: .relative(presentation: .named))
+                } icon: {
+                    Image(systemName: "clock.arrow.circlepath")
+                }
+                .font(.dsCaption)
+                .foregroundStyle(Color.dsTextSecondary)
+            }
+
+            // TASK-122: rotating actionable hint.
+            Text(Self.hints[hintIndex])
                 .font(.dsBody)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
+                .id(hintIndex)
+                .transition(.opacity)
+                .frame(minHeight: 44)
+                .onReceive(hintTimer) { _ in
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        hintIndex = (hintIndex + 1) % Self.hints.count
+                    }
+                }
+
+            // TASK-122: explicit導線 to the invite QR (lives on the Profile tab).
+            Button(action: onInvite) {
+                Label("友だちを招待（QRコード）", systemImage: "qrcode")
+            }
+            .buttonStyle(.bordered)
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
