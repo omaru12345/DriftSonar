@@ -143,6 +143,15 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     }
     private var _proximityConnectionFilter = ProximityConnectionFilter()
 
+    /// TASK-145: scan ON/OFF duty cycle. Debug-tunable from one place; guarded by
+    /// `configLock` like the other config surface and read on `bleQueue` when a
+    /// scan phase is scheduled.
+    public var scanDutyCycle: ScanDutyCycleConfig {
+        get { configLock.lock(); defer { configLock.unlock() }; return _scanDutyCycle }
+        set { configLock.lock(); defer { configLock.unlock() }; _scanDutyCycle = newValue }
+    }
+    private var _scanDutyCycle = ScanDutyCycleConfig.default
+
     // MARK: - Diagnostics (TASK-148)
 
     /// Ring buffer of recent BLE events (newest last), maintained on `bleQueue`.
@@ -251,8 +260,8 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
         startedLock.unlock()
         bleQueue.async { [weak self] in
             guard let self else { return }
-            self.regossipTimer?.cancel()
-            self.regossipTimer = nil
+            self.scanPhaseWork?.cancel()
+            self.scanPhaseWork = nil
             self.centralManager?.stopScan()
             self.peripheralManager?.stopAdvertising()
             self.peripheralManager?.removeAllServices()
@@ -288,7 +297,7 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
             // TASK-052: pass bleQueue so all delegate callbacks run off the main thread.
             self.centralManager = CBCentralManager(delegate: self, queue: self.bleQueue)
             self.peripheralManager = CBPeripheralManager(delegate: self, queue: self.bleQueue)
-            self.startRegossipTimer()
+            self.startScanScheduler()
         }
     }
 
@@ -306,50 +315,95 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
         return hasStarted
     }
 
-    /// Periodically re-gossip while discovering: clear the per-session "seen"
-    /// peripheral set and rescan, so peers we already met this session are
-    /// re-discovered and our cached posts (including ones created *after* the first
-    /// encounter) are pushed again. Without this, a post made after two devices first
-    /// met would never reach the other device — the core symptom App Review flagged
-    /// under Guideline 2.1. Re-pushes are content-deduplicated by the receiver
-    /// (MeshForwardingService), so re-gossiping is harmless; the only cost is extra
-    /// connections, kept bounded by `regossipIntervalSeconds`.
-    private let regossipIntervalSeconds = 15
-    private var regossipTimer: DispatchSourceTimer?
+    // TASK-145: the scan runs on a duty cycle instead of a fixed re-gossip timer.
+    //
+    // Each ON phase both (a) re-gossips — clears the per-session "seen" peripheral
+    // set and rescans, so peers we already met are re-discovered and our cached
+    // posts (including ones created *after* the first encounter) are re-pushed;
+    // without this a post made after two devices first met would never reach the
+    // other device, the symptom App Review flagged under Guideline 2.1 — and (b)
+    // starts scanning. Each OFF phase stops scanning to save power. Advertising is
+    // never touched, so the node stays passively discoverable throughout.
+    //
+    // Re-pushes are content-deduplicated by the receiver (MeshForwardingService),
+    // so re-gossiping is harmless; the only cost is extra connections, bounded by
+    // the ON-phase cadence. Only the *foreground* cycle actually pauses scanning
+    // (dispatch timers fire reliably while the app is active); the background cycle
+    // is continuous so a suspended app is never stranded in an OFF window — see
+    // `ScanDutyCycleConfig`.
+    //
+    // Owned by `bleQueue`: `scanPhaseWork` (the pending transition), `scanPhaseIsOn`
+    // and `scanIsBackground` are read/written only from bleQueue callbacks and hops.
+    private var scanPhaseWork: DispatchWorkItem?
+    private var scanPhaseIsOn = false
+    private var scanIsBackground = false
 
-    private func startRegossipTimer() {
-        regossipTimer?.cancel()
-        let timer = DispatchSource.makeTimerSource(queue: bleQueue)
-        timer.schedule(
-            deadline: .now() + .seconds(regossipIntervalSeconds),
-            repeating: .seconds(regossipIntervalSeconds)
-        )
-        timer.setEventHandler { [weak self] in
-            guard let self else { return }
+    /// (Re)start the duty-cycle scheduler from a clean OFF baseline so the first
+    /// transition turns scanning ON. Always called on `bleQueue`.
+    private func startScanScheduler() {
+        scanPhaseWork?.cancel()
+        scanPhaseIsOn = false
+        scheduleNextScanPhase()
+    }
+
+    /// Apply the next scan phase and schedule the transition after it. Runs on `bleQueue`.
+    private func scheduleNextScanPhase() {
+        let cycle = scanDutyCycle.cycle(isBackground: scanIsBackground)
+        let (shouldScan, seconds) = cycle.nextPhase(currentlyScanning: scanPhaseIsOn)
+        scanPhaseIsOn = shouldScan
+
+        if shouldScan {
             // Re-allow already-met peripherals to be reconnected. Keep
             // seenPublicKeyHashes so the Radar UI does not re-list the same peer.
             self.seenPeerIDs.removeAll()
-            guard self.centralManager?.state == .poweredOn else { return }
-            self.centralManager?.stopScan()
-            self.startScanning()
+            if centralManager?.state == .poweredOn {
+                centralManager?.stopScan()
+                startScanning()
+            }
+        } else {
+            centralManager?.stopScan()
+            log("scan duty-cycle OFF for \(seconds)s")
         }
-        timer.resume()
-        regossipTimer = timer
+
+        let work = DispatchWorkItem { [weak self] in self?.scheduleNextScanPhase() }
+        scanPhaseWork = work
+        bleQueue.asyncAfter(deadline: .now() + .seconds(seconds), execute: work)
+    }
+
+    /// TASK-145: switch the scan cadence between the foreground (duty-cycled) and
+    /// background (continuous) cycles. Called from the app's scenePhase handler.
+    /// Re-plans from a clean baseline so the new cadence takes effect immediately —
+    /// in particular, moving to background turns scanning back ON (continuous) even
+    /// if we were mid-OFF-phase in the foreground, so a suspended app keeps scanning.
+    public func setScanningInBackground(_ background: Bool) {
+        bleQueue.async { [weak self] in
+            guard let self else { return }
+            self.scanIsBackground = background
+            // Only re-plan if discovery is live (managers created). Before execute()
+            // there is nothing to schedule; execute()/restart() will start it.
+            guard self.centralManager != nil else { return }
+            self.startScanScheduler()
+        }
     }
 
     /// Restart BLE scanning and advertising (TASK-094). Safe to call on foreground return.
     public func restart() {
         bleQueue.async { [weak self] in
             guard let self else { return }
+            // Nothing to restart before execute() created the managers; bail so we
+            // don't spin the scan scheduler on bleQueue while the service is idle.
+            guard self.centralManager != nil || self.peripheralManager != nil else { return }
+            // Foreground return: back to the foreground (duty-cycled) scan cadence.
+            self.scanIsBackground = false
             self.centralManager?.stopScan()
             self.peripheralManager?.stopAdvertising()
-            if self.centralManager?.state == .poweredOn { self.startScanning() }
             if self.peripheralManager?.state == .poweredOn { self.startAdvertising() }
-            // TASK-207 review: stop() cancels the regossip timer but keeps the
-            // managers, so a later execute() lands here — recreate the timer or
-            // periodic re-gossip (the GL 2.1 fix) would stay dead. Recreating it
-            // on foreground-return restarts is harmless (cancel + new schedule).
-            self.startRegossipTimer()
+            // TASK-207 review: stop() cancels the scan scheduler but keeps the
+            // managers, so a later execute() lands here — restart the scheduler or
+            // periodic re-gossip (the GL 2.1 fix) would stay dead. Restarting it on
+            // foreground-return is harmless (cancel + fresh schedule). The scheduler's
+            // first ON phase issues startScanning(), so we no longer call it directly.
+            self.startScanScheduler()
         }
     }
 

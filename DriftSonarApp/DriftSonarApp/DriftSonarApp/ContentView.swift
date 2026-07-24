@@ -107,12 +107,23 @@ private struct MainTabView: View {
     }
     // Extension-style modifier at the body scope so onChange runs regardless of tab selection.
     private func onScenePhaseChange(_ newPhase: ScenePhase) {
-        if newPhase == .active {
+        switch newPhase {
+        case .active:
             // TASK-094: Restart BLE on foreground return to recover stale scan state.
+            // restart() also switches the scan back to the foreground (continuous) cadence.
             appServices?.bleService.restart()
             // TASK-149: Purge content past the retention window on every foreground return
             // so long-running sessions still honour "記録に残らない" without a relaunch.
             appServices?.purgeExpiredContent()
+        case .background:
+            // TASK-145: switch to the background scan cadence (continuous — iOS manages
+            // background scan power; a userland OFF window can't be resumed while the
+            // app is suspended). Foreground duty-cycling resumes on the next .active.
+            appServices?.bleService.setScanningInBackground(true)
+        case .inactive:
+            break
+        @unknown default:
+            break
         }
     }
 
