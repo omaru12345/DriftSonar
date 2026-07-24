@@ -6,6 +6,7 @@ struct SecretMessageView: View {
     @State private var viewModel: SecretMessageViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Optional nickname received via BLE (TASK-080). Falls back to fingerprint.
     private let peerNickname: String?
@@ -35,6 +36,46 @@ struct SecretMessageView: View {
         .background(Color.seaGlass.opacity(0.14))
     }
 
+    // TASK-150: 消えるメッセージ — quiet band under the badge when this conversation
+    // auto-deletes, so the disappearing behaviour is never a silent surprise.
+    @ViewBuilder
+    private var ephemeralHint: some View {
+        if viewModel.ephemeralDuration != .off {
+            HStack(spacing: 6) {
+                Image(systemName: "timer")
+                Text("このあと送受信するメッセージは\(Self.durationLabel(viewModel.ephemeralDuration))で消えます")
+            }
+            .font(.dsCaption)
+            .foregroundStyle(Color.dsWeatheredInk)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(Color.dsWeatheredInk.opacity(0.10))
+        }
+    }
+
+    // TASK-150: menu to choose the auto-delete window for this conversation.
+    private var ephemeralMenu: some View {
+        Menu {
+            Picker("消えるメッセージ", selection: $viewModel.ephemeralDuration) {
+                ForEach(EphemeralDMDuration.allCases, id: \.self) { duration in
+                    Text(Self.durationLabel(duration)).tag(duration)
+                }
+            }
+        } label: {
+            Image(systemName: viewModel.ephemeralDuration == .off ? "timer" : "timer.circle.fill")
+        }
+        .accessibilityLabel("消えるメッセージの設定")
+    }
+
+    private static func durationLabel(_ duration: EphemeralDMDuration) -> String {
+        switch duration {
+        case .off: return "オフ"
+        case .oneHour: return "1時間"
+        case .oneDay: return "24時間"
+        case .oneWeek: return "1週間"
+        }
+    }
+
     /// TASK-200: Send disc — deep tide on foam, sea glass on the abyss (the
     /// near-tint rule from TASK-197). Muted while the draft is empty.
     private var sendDiscColor: Color {
@@ -54,6 +95,8 @@ struct SecretMessageView: View {
         VStack(spacing: 0) {
             // TASK-141: E2E encryption reassurance badge (aligns with EP-025 verified badge).
             encryptionBadge
+            // TASK-150: disappearing-messages status band.
+            ephemeralHint
 
             if viewModel.messages.isEmpty {
                 EmptyMessagesView()
@@ -119,6 +162,11 @@ struct SecretMessageView: View {
         .background(Color.dsBackground)
         .navigationTitle(peerTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ephemeralMenu
+            }
+        }
         // TASK-154: Unified error alert (key unavailable / encryption failed).
         .errorAlert(Binding(
             get: { viewModel.error },
@@ -128,6 +176,11 @@ struct SecretMessageView: View {
             viewModel.setup(
                 repository: SwiftDataSecretMessageRepository(container: modelContext.container)
             )
+        }
+        // TASK-150: on foreground return, re-purge and re-filter so messages that expired
+        // while backgrounded disappear from an already-open conversation, not just on reopen.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { viewModel.loadMessages() }
         }
     }
 }
