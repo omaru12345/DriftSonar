@@ -25,8 +25,9 @@
 	<!-- 輸出コンプライアンス: 標準暗号(CryptoKit)のみ使用で適用除外と申告。アップロード毎の質問を回避 -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- TASK-172: 近接オフライン通信のみに使用。位置情報は追跡しないことを明記（GL 5.1 審査対策・CoreLocation は不使用） -->
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>近くにいるユーザーをBluetooth LEで検出し、メッセージをオフグリッドで伝播します。</string>
+	<string>近くのユーザーをBluetooth LEで検出し、メッセージをオフグリッドで直接伝播するためだけに使用します。位置情報の追跡には一切使用しません。 / Used only to discover nearby users over Bluetooth LE and relay messages off-grid. Location is NOT tracked.</string>
 	<!-- TASK-187: 投稿に添付する写真・動画の選択に使用。位置情報(EXIF)は保存時に除去します。 -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>投稿に添付する写真・動画を選ぶために写真ライブラリへアクセスします。位置情報などのメタデータは添付時に除去されます。</string>
