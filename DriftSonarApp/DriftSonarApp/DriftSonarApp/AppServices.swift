@@ -20,6 +20,9 @@ final class AppServices {
     let cacheRepository: SwiftDataMessageCacheRepository
     /// Persisted すれ違い履歴 store (TASK-120). Backs the encounter-history timeline.
     let encounterHistoryRepository: SwiftDataEncounterHistoryRepository
+    /// Encrypted DM store (TASK-150). Held here so expired 消えるメッセージ are purged at
+    /// launch/foreground even for conversations the user never reopens.
+    let secretMessageRepository: SwiftDataSecretMessageRepository
     /// Ingests picked photos/videos into the local media store and produces signed
     /// `MediaAttachment` descriptors (EP-037 / TASK-186/187). `nil` when the on-disk
     /// media store could not be created — the Compose media button hides in that case.
@@ -52,6 +55,8 @@ final class AppServices {
         cacheRepository = cacheRepo
         // TASK-120: expose the persisted encounter history for the すれ違い履歴 timeline.
         encounterHistoryRepository = SwiftDataEncounterHistoryRepository(container: container)
+        // TASK-150: DM store for launch/foreground purge of expired 消えるメッセージ.
+        secretMessageRepository = SwiftDataSecretMessageRepository(container: container)
 
         // TASK-067: wire forwardingService so cached posts are pushed on every encounter.
         let mesh = MeshForwardingService(postRepository: postRepo, cacheRepository: cacheRepo)
@@ -146,6 +151,8 @@ final class AppServices {
         if deleted > 0 {
             timelineViewModel.refresh()
         }
+        // TASK-150: sweep expired 消えるメッセージ across all conversations.
+        try? secretMessageRepository.deleteExpired(before: Date())
     }
 
     // MARK: - Welcome post (TASK-170)

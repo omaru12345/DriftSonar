@@ -307,7 +307,12 @@ struct SettingsView: View {
         // identity, breaking the "start fresh" guarantee.
         appServices.meshService.clearSeenIDs()
 
-        // 5) Local flags / report state, then return to first-launch flow.
+        // 5) Per-conversation 消えるメッセージ settings (TASK-150/151). These live in
+        // UserDefaults keyed by the peer's public key, so without this a wiped install
+        // would still reveal every peer the user ever DM'd.
+        SecretMessageViewModel.clearAllEphemeralSettings()
+
+        // 6) Local flags / report state, then return to first-launch flow.
         ReportStore.clear()
         hasSeededWelcomePost = false
         hasAcceptedEULA = false
