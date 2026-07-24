@@ -69,7 +69,8 @@ public final class MeshSimulator {
 
     public let nodes: [Node]
     /// 無向隣接リスト（`adjacency[i]` = ノード i の隣接ノード番号）。
-    private let adjacency: [[Int]]
+    /// `updateTopology` で差し替え可能（分断・再結合シナリオ＝TASK-181 のため）。
+    private var adjacency: [[Int]]
 
     /// - Parameters:
     ///   - nodeCount: ノード数。
@@ -82,14 +83,28 @@ public final class MeshSimulator {
     ) {
         precondition(nodeCount > 0, "nodeCount must be positive")
         self.nodes = (0..<nodeCount).map { Node(index: $0, config: config) }
+        self.adjacency = Self.buildAdjacency(nodeCount: nodeCount, edges: edges)
+    }
 
+    /// 無向辺の列から隣接リストを組む（重複・自己ループ・範囲外は無視）。
+    private static func buildAdjacency(nodeCount: Int, edges: [(Int, Int)]) -> [[Int]] {
         var adj: [Set<Int>] = Array(repeating: [], count: nodeCount)
         for (u, v) in edges {
             guard u != v, (0..<nodeCount).contains(u), (0..<nodeCount).contains(v) else { continue }
             adj[u].insert(v)
             adj[v].insert(u)
         }
-        self.adjacency = adj.map { $0.sorted() }
+        return adj.map { $0.sorted() }
+    }
+
+    /// トポロジを差し替える（TASK-181: 分断・再結合シナリオ）。
+    ///
+    /// ノードの内部状態（受理済み post・seenIDs・転送キャッシュ）は保持したまま辺だけを
+    /// 更新するので、「分断中に各群で `run` → 橋渡し辺を追加して再度 `run`」で再結合時の
+    /// 同期・伝播を検証できる。橋渡しノードの転送キャッシュに TTL>0 の payload が残っていれば
+    /// 再結合で相手群へ伝播し、残っていなければ（TTL 枯渇）伝播しない。
+    public func updateTopology(edges: [(Int, Int)]) {
+        self.adjacency = Self.buildAdjacency(nodeCount: nodes.count, edges: edges)
     }
 
     /// 起点ノードに post を投入する（起点が自身から受信した扱い）。
