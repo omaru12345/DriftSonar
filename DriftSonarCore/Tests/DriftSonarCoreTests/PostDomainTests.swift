@@ -197,6 +197,12 @@ final class InMemoryPostRepo: PostRepository {
     }
     func exists(id: UUID) throws -> Bool { posts[id] != nil }
     func delete(id: UUID) throws { posts.removeValue(forKey: id) }
+    @discardableResult
+    func deleteExpired(before cutoff: Date, protectedIDs: Set<UUID>) throws -> Int {
+        let doomed = posts.values.filter { $0.timestamp < cutoff && !protectedIDs.contains($0.id) }
+        doomed.forEach { posts.removeValue(forKey: $0.id) }
+        return doomed.count
+    }
 }
 
 final class InMemoryMsgCacheRepo: MessageCacheRepository {

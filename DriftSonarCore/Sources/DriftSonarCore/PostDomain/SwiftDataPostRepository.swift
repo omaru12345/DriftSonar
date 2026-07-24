@@ -53,6 +53,24 @@ public class SwiftDataPostRepository: PostRepository {
         context.delete(model)
         try context.save()
     }
+
+    @discardableResult
+    public func deleteExpired(before cutoff: Date, protectedIDs: Set<UUID>) throws -> Int {
+        // Fetch only the expired rows, then filter protected IDs in memory. `protectedIDs`
+        // is a small set (the welcome sentinel), so an in-#Predicate `contains` — which
+        // SwiftData's predicate compiler handles poorly for captured collections — is avoided.
+        let descriptor = FetchDescriptor<PostModel>(
+            predicate: #Predicate { $0.timestamp < cutoff }
+        )
+        let expired = try context.fetch(descriptor)
+        var deleted = 0
+        for model in expired where !protectedIDs.contains(model.id) {
+            context.delete(model)
+            deleted += 1
+        }
+        if deleted > 0 { try context.save() }
+        return deleted
+    }
 }
 
 // MARK: - Post + PostModel conversion
