@@ -55,7 +55,7 @@ public final class MeshForwardingService {
         public var forwardPriority: ForwardPriority
 
         public init(
-            cacheTTLInterval: TimeInterval = 24 * 60 * 60,
+            cacheTTLInterval: TimeInterval = RetentionPolicy.defaultInterval,
             maxSeenIDs: Int = 10_000,
             forwardBatchSize: Int = 20,
             maxCacheSize: Int = 100,
@@ -65,7 +65,7 @@ public final class MeshForwardingService {
             rateLimitPerSender: Int = 10,
             rateLimitWindow: TimeInterval = 60,
             maxClockSkew: TimeInterval = 5 * 60,
-            maxTimestampAge: TimeInterval = 24 * 60 * 60,
+            maxTimestampAge: TimeInterval = RetentionPolicy.defaultInterval,
             forwardPriority: ForwardPriority = .latestFirst
         ) {
             self.cacheTTLInterval = cacheTTLInterval
@@ -267,10 +267,18 @@ public final class MeshForwardingService {
         try? cacheRepository.incrementForwardCount(postId: postId)
     }
 
-    /// Prune entries older than `cacheTTLInterval`. Call from a background task.
-    public func purgeExpired() {
+    /// Purge expired content so nothing lingers past the retention window (TASK-149).
+    /// Prunes both the forward cache (by `receivedAt`) and the timeline post store
+    /// (by post `timestamp`) older than `cacheTTLInterval`. Call at launch and when the
+    /// app returns to the foreground.
+    /// - Parameter protectedPostIDs: Timeline posts never purged regardless of age —
+    ///   used to pin the welcome seed so a solo timeline never goes blank (App Store GL 4.2).
+    /// - Returns: The number of timeline posts deleted.
+    @discardableResult
+    public func purgeExpired(protectedPostIDs: Set<UUID> = []) -> Int {
         let cutoff = Date(timeIntervalSinceNow: -config.cacheTTLInterval)
         try? cacheRepository.deleteExpired(before: cutoff)
+        return (try? postRepository.deleteExpired(before: cutoff, protectedIDs: protectedPostIDs)) ?? 0
     }
 
     // MARK: - Private helpers (TASK-006 / TASK-032)

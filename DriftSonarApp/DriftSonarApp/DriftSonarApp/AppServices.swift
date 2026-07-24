@@ -100,6 +100,11 @@ final class AppServices {
             // shows a blank Timeline (App Store Guideline 4.2).
             seedWelcomePostIfNeeded(container: container)
 
+            // TASK-149: Enforce the "記録に残らない" retention window at launch — purge
+            // cache/timeline content older than the policy. The welcome seed is pinned so a
+            // solo timeline never goes blank. Also runs on foreground return (ContentView).
+            purgeExpiredContent()
+
             // GL 2.1 fix: start BLE scanning/advertising as soon as the app has a
             // valid profile, so posts propagate automatically when two devices are
             // nearby. Previously BLE began only when the user opened the Radar tab and
@@ -109,6 +114,18 @@ final class AppServices {
                 ble.myNickname = profile.nickname
                 try? ble.execute(command: StartDiscoveryCommand(myPublicKey: profile.publicKey))
             }
+        }
+    }
+
+    // MARK: - Retention purge (TASK-149)
+
+    /// Purge cache/timeline content past the retention window, pinning the welcome seed.
+    /// Refreshes the timeline when posts were actually removed so the UI reflects the purge.
+    /// Best-effort and non-fatal — safe to call at launch and on every foreground return.
+    func purgeExpiredContent() {
+        let deleted = meshService.purgeExpired(protectedPostIDs: [Self.welcomePostID])
+        if deleted > 0 {
+            timelineViewModel.refresh()
         }
     }
 

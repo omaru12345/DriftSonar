@@ -110,6 +110,9 @@ private struct MainTabView: View {
         if newPhase == .active {
             // TASK-094: Restart BLE on foreground return to recover stale scan state.
             appServices?.bleService.restart()
+            // TASK-149: Purge content past the retention window on every foreground return
+            // so long-running sessions still honour "記録に残らない" without a relaunch.
+            appServices?.purgeExpiredContent()
         }
     }
 

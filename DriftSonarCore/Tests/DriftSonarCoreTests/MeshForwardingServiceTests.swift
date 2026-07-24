@@ -22,6 +22,12 @@ private final class InMemoryPostRepository: PostRepository {
 
     func exists(id: UUID) throws -> Bool { posts[id] != nil }
     func delete(id: UUID) throws { posts.removeValue(forKey: id) }
+    @discardableResult
+    func deleteExpired(before cutoff: Date, protectedIDs: Set<UUID>) throws -> Int {
+        let doomed = posts.values.filter { $0.timestamp < cutoff && !protectedIDs.contains($0.id) }
+        doomed.forEach { posts.removeValue(forKey: $0.id) }
+        return doomed.count
+    }
 }
 
 private final class InMemoryMessageCacheRepository: MessageCacheRepository {
@@ -97,6 +103,34 @@ final class MeshForwardingServiceTests: XCTestCase {
         XCTAssertTrue(service.receive(payload: payload))
         XCTAssertFalse(service.receive(payload: payload), "Duplicate should be rejected")
         XCTAssertEqual(try cacheRepo.count(), 1)
+    }
+
+    // MARK: - purgeExpired() (TASK-149)
+
+    func testPurgeExpiredRemovesOldTimelinePostsAndReportsCount() throws {
+        let (service, postRepo, _) = makeService()
+        let key = Data(repeating: 0x02, count: 32)
+        let fresh = Post(content: "fresh", authorPublicKey: key, timestamp: Date())
+        let stale = Post(content: "stale", authorPublicKey: key, timestamp: Date().addingTimeInterval(-48 * 60 * 60))
+        try postRepo.save(fresh)
+        try postRepo.save(stale)
+
+        let deleted = service.purgeExpired()
+
+        XCTAssertEqual(deleted, 1)
+        XCTAssertEqual(try postRepo.fetchTimeline(limit: 10, offset: 0).map(\.id), [fresh.id])
+    }
+
+    func testPurgeExpiredPinsProtectedPostIDs() throws {
+        let (service, postRepo, _) = makeService()
+        let key = Data(repeating: 0x03, count: 32)
+        let pinned = Post(content: "welcome", authorPublicKey: key, timestamp: Date().addingTimeInterval(-72 * 60 * 60))
+        try postRepo.save(pinned)
+
+        let deleted = service.purgeExpired(protectedPostIDs: [pinned.id])
+
+        XCTAssertEqual(deleted, 0)
+        XCTAssertTrue(try postRepo.exists(id: pinned.id), "Protected post must survive purge")
     }
 
     func testClearSeenIDsAllowsPreviouslySeenPostAgain() throws {
