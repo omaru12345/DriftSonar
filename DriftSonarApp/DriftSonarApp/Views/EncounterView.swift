@@ -278,20 +278,19 @@ private struct ContactRowView: View {
 
             if let rssi = peer.rssi {
                 // TASK-198: Signal strength as a lighthouse seen across the water.
+                // TASK-147: bucket the smoothed RSSI into 近い/普通/遠い so the row
+                // says how close the peer is, not just a raw dBm number.
+                let level = ProximityLevel(rssi: rssi)
                 Label {
-                    Text("\(rssi) dBm")
+                    Text("\(Self.proximityWord(level)) · \(rssi) dBm")
                         .font(.dsMono(.caption))
                 } icon: {
                     Image(systemName: "light.beacon.max")
                         .font(.caption2)
                 }
-                .foregroundStyle(signalTint(rssi: rssi))
+                .foregroundStyle(signalTint(level))
                 // TASK-143: colour carries near/far visually — say it in words too.
-                .accessibilityLabel(
-                    rssi >= Self.nearRSSIThreshold
-                        ? "電波の強さ \(rssi) dBm、近くにいます"
-                        : "電波の強さ \(rssi) dBm、離れています"
-                )
+                .accessibilityLabel("電波の強さ \(rssi) dBm、\(Self.proximityDescription(level))")
             }
         }
         .padding(.vertical, DSLayout.Spacing.xs)
@@ -302,16 +301,36 @@ private struct ContactRowView: View {
         return name.isEmpty ? "?" : String(name.prefix(1)).uppercased()
     }
 
-    /// RSSI at or above this reads as "nearby" (roughly same room).
-    private static let nearRSSIThreshold = -60
+    /// TASK-147: short word for the proximity bucket shown on the row.
+    private static func proximityWord(_ level: ProximityLevel) -> String {
+        switch level {
+        case .near: return "近い"
+        case .normal: return "普通"
+        case .far: return "遠い"
+        }
+    }
+
+    /// TASK-143/147: spoken description of the proximity bucket for VoiceOver.
+    private static func proximityDescription(_ level: ProximityLevel) -> String {
+        switch level {
+        case .near: return "近くにいます"
+        case .normal: return "同じ部屋くらいの距離です"
+        case .far: return "離れています"
+        }
+    }
 
     /// Strong signal = crisp sea close by; weak signal = weathered ink far off.
-    /// Same weathering rule as the timeline's tide marks (TASK-197/206).
-    private func signalTint(rssi: Int) -> Color {
-        if rssi >= Self.nearRSSIThreshold {
+    /// Same weathering rule as the timeline's tide marks (TASK-197/206), now with a
+    /// middle band for "普通" (TASK-147).
+    private func signalTint(_ level: ProximityLevel) -> Color {
+        switch level {
+        case .near:
             return colorScheme == .dark ? .seaGlass : .deepTide
+        case .normal:
+            return (colorScheme == .dark ? Color.seaGlass : .deepTide).opacity(0.6)
+        case .far:
+            return .dsWeatheredInk
         }
-        return .dsWeatheredInk
     }
 }
 
