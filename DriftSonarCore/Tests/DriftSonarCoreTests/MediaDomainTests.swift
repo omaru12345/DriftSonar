@@ -200,6 +200,59 @@ final class MediaDomainTests: XCTestCase {
         XCTAssertNil(store.data(contentHash: h1, fileExtension: "jpg"))
     }
 
+    // MARK: - MediaStore.purgeOrphans (TASK-195)
+
+    func test_purgeOrphans_removesUnreferencedBodyAndThumbnail() throws {
+        let (store, dir) = try makeTempStore(maxTotalBytes: 10 * 1024 * 1024)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let thumbExt = MediaAttachment.thumbnailFileExtension // "thumb.jpg"
+        func blob() -> Data { Data((0..<64).map { _ in UInt8.random(in: 0...255) }) }
+        let live = String(repeating: "a", count: 64)  // 生存投稿が参照
+        let orphan = String(repeating: "b", count: 64) // どの投稿も参照しない
+        for hash in [live, orphan] {
+            try store.store(blob(), contentHash: hash, fileExtension: "jpg")
+            try store.store(blob(), contentHash: hash, fileExtension: thumbExt)
+        }
+
+        let removed = store.purgeOrphans(keepingContentHashes: [live])
+
+        // 孤立 hash の本体・サムネ 2 ファイルが消える。
+        XCTAssertEqual(removed, 2)
+        XCTAssertNil(store.data(contentHash: orphan, fileExtension: "jpg"))
+        XCTAssertNil(store.data(contentHash: orphan, fileExtension: thumbExt))
+        // 生存 hash の本体・サムネはどちらも残る（多段拡張子 .thumb.jpg も contentHash で保持）。
+        XCTAssertNotNil(store.data(contentHash: live, fileExtension: "jpg"))
+        XCTAssertNotNil(store.data(contentHash: live, fileExtension: thumbExt))
+    }
+
+    func test_purgeOrphans_emptyKeepSetRemovesEverything() throws {
+        let (store, dir) = try makeTempStore(maxTotalBytes: 10 * 1024 * 1024)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let h = String(repeating: "c", count: 64)
+        try store.store(Data([1, 2, 3]), contentHash: h, fileExtension: "jpg")
+
+        // 生存投稿が 1 件も無ければ全メディアが孤立。
+        XCTAssertEqual(store.purgeOrphans(keepingContentHashes: []), 1)
+        XCTAssertEqual(store.totalBytes(), 0)
+    }
+
+    func test_purgeOrphans_noOpWhenAllReferenced() throws {
+        let (store, dir) = try makeTempStore(maxTotalBytes: 10 * 1024 * 1024)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let h1 = String(repeating: "d", count: 64)
+        let h2 = String(repeating: "e", count: 64)
+        try store.store(Data([1]), contentHash: h1, fileExtension: "jpg")
+        try store.store(Data([2]), contentHash: h2, fileExtension: "jpg")
+
+        // すべて参照されていれば 1 件も消えない。
+        XCTAssertEqual(store.purgeOrphans(keepingContentHashes: [h1, h2]), 0)
+        XCTAssertNotNil(store.data(contentHash: h1, fileExtension: "jpg"))
+        XCTAssertNotNil(store.data(contentHash: h2, fileExtension: "jpg"))
+    }
+
     // MARK: - MediaIngestService
 
     func test_ingestImage_producesAttachmentAndStores() throws {
