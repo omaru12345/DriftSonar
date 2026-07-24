@@ -99,6 +99,24 @@ final class MeshForwardingServiceTests: XCTestCase {
         XCTAssertEqual(try cacheRepo.count(), 1)
     }
 
+    func testClearSeenIDsAllowsPreviouslySeenPostAgain() throws {
+        // TASK-151: a panic wipe / account deletion must forget cross-session dedup
+        // state, otherwise a fresh install would silently reject posts it saw under
+        // the old identity.
+        let (service, _, _) = makeService()
+        let payload = try makePayload()
+
+        XCTAssertTrue(service.receive(payload: payload))
+        XCTAssertFalse(service.receive(payload: payload), "Duplicate should be rejected before wipe")
+
+        service.clearSeenIDs()
+
+        XCTAssertTrue(
+            service.receive(payload: payload),
+            "After clearSeenIDs the same post must be treated as new again"
+        )
+    }
+
     func testReceiveTTLZeroIsRejected() throws {
         let (service, _, cacheRepo) = makeService()
         let payload = try makePayload(ttl: 0)

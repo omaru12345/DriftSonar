@@ -126,6 +126,22 @@ public final class MeshForwardingService {
         UserDefaults.standard.set(strings, forKey: Self.seenIDsKey)
     }
 
+    /// TASK-151: Panic-wipe support. Forgets all cross-session dedup and rate-limit
+    /// state tied to the (now deleted) identity so the app returns to a truly fresh
+    /// state. Clears both the persisted `seenIDs` key and the live in-memory sets —
+    /// the running instance would otherwise re-persist them on the next `receive`,
+    /// leaving previously seen posts permanently un-re-acceptable after a wipe.
+    ///
+    /// Main-thread confined like the rest of this type's mutable state: `receive` is
+    /// invoked via `DispatchQueue.main.async` in `BLEEncounterService`, and the wipe
+    /// is triggered from the `@MainActor` settings screen.
+    public func clearSeenIDs() {
+        seenMessageIDs.removeAll()
+        seenOrder.removeAll()
+        senderTimestamps.removeAll()
+        UserDefaults.standard.removeObject(forKey: Self.seenIDsKey)
+    }
+
     // MARK: - Public API
 
     /// Handle a raw payload arriving over BLE.

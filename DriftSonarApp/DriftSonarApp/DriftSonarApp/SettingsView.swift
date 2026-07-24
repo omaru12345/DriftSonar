@@ -258,7 +258,8 @@ struct SettingsView: View {
     /// Profile creation counts as "account creation", so the App Store requires an
     /// in-app way to delete it. This wipes everything stored on-device: the profile,
     /// the Keychain key pair, all SwiftData (posts / messages / DMs / encounters /
-    /// blocks), cached media, and the local flags — returning the app to first launch.
+    /// blocks), cached media, the mesh seen-ID / rate-limit state (TASK-151), and the
+    /// local flags — returning the app to first launch.
     @ViewBuilder
     private var accountSection: some View {
         Section {
@@ -300,7 +301,13 @@ struct SettingsView: View {
         // 3) Cached media files.
         appServices.mediaStore?.removeAll()
 
-        // 4) Local flags / report state, then return to first-launch flow.
+        // 4) Mesh dedup / rate-limit state (TASK-151). SwiftData holds the messages,
+        // but the seen-ID set lives in UserDefaults + the live mesh instance; without
+        // this, a wiped install would silently reject posts it saw under the old
+        // identity, breaking the "start fresh" guarantee.
+        appServices.meshService.clearSeenIDs()
+
+        // 5) Local flags / report state, then return to first-launch flow.
         ReportStore.clear()
         hasSeededWelcomePost = false
         hasAcceptedEULA = false
