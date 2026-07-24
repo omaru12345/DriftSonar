@@ -134,6 +134,15 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     }
     private var _myNickname: String = ""
 
+    /// #262: 平滑化 RSSI で遠すぎるピアへの接続試行を間引く近接度フィルタ。
+    /// 到達性への影響が実機チューニング前提なので外から差し替え・無効化できるよう
+    /// 公開し、他の設定面と同じく `configLock` で保護して bleQueue から読む。
+    public var proximityConnectionFilter: ProximityConnectionFilter {
+        get { configLock.lock(); defer { configLock.unlock() }; return _proximityConnectionFilter }
+        set { configLock.lock(); defer { configLock.unlock() }; _proximityConnectionFilter = newValue }
+    }
+    private var _proximityConnectionFilter = ProximityConnectionFilter()
+
     // MARK: - Diagnostics (TASK-148)
 
     /// Ring buffer of recent BLE events (newest last), maintained on `bleQueue`.
@@ -410,7 +419,11 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
         nicknameCharacteristics.removeValue(forKey: peripheral.identifier)
         peerPublicKeys.removeValue(forKey: peripheral.identifier)
         peerNicknames.removeValue(forKey: peripheral.identifier)
-        peerRSSIs.remove(peripheral.identifier)
+        // #262: intentionally keep peerRSSIs across disconnects. The connection
+        // suppression needs smoothed history to accumulate over several gossip cycles;
+        // wiping it here would reset sampleCount every cycle so a chronically-far peer
+        // could never reach minimumSamples and would reconnect forever. Growth is
+        // bounded by PeerRSSITracker's LRU cap and cleared on stop() via removeAll().
         pendingWrites.removeValue(forKey: peripheral.identifier)
     }
 
@@ -594,14 +607,30 @@ extension BLEEncounterService: CBCentralManagerDelegate {
         guard !seenPeerIDs.contains(peripheral.identifier),
               pendingPeripherals[peripheral.identifier] == nil else { return }
         // TASK-198: Keep the discovery-time RSSI so the Radar can show proximity.
-        // Stored only for peers we actually connect to, so every entry is released
-        // by cleanUp/didFailToConnect and the dictionary cannot grow unboundedly.
+        // #262: also used to gate connections below, so we retain RSSI even for
+        // far peers we never connect to. PeerRSSITracker is LRU-bounded so those
+        // entries (and iOS's rotating peripheral UUIDs) can't grow without limit.
         // Valid readings are negative dBm; this also skips Core Bluetooth's
         // "value unavailable" sentinel (127).
         if RSSI.intValue < 0 {
             peerRSSIs.record(RSSI.intValue, for: peripheral.identifier)
         }
+        // Mark seen up front so we evaluate each peer at most once per gossip cycle,
+        // even when the connection is suppressed below (avoids re-logging / duplicate
+        // RSSI samples within a cycle). seenPeerIDs clears each regossip, so a peer
+        // that drifts back into range is re-evaluated next cycle.
         seenPeerIDs.insert(peripheral.identifier)
+        // #262: skip connecting to peers that stay far away across several
+        // cycles. Unknown/first-contact peers always connect (smoothedValue nil or too
+        // few samples), so a lone far relay still exchanges data before it is throttled.
+        guard proximityConnectionFilter.shouldAttemptConnection(
+            smoothedRSSI: peerRSSIs.smoothedValue(for: peripheral.identifier),
+            sampleCount: peerRSSIs.sampleCount(for: peripheral.identifier)
+        ) else {
+            log("suppress connect (far) \(peripheral.identifier.uuidString.prefix(8)) "
+                + "rssi=\(peerRSSIs.smoothedValue(for: peripheral.identifier).map(String.init) ?? "?")")
+            return
+        }
         pendingPeripherals[peripheral.identifier] = peripheral
         peripheral.delegate = self
         central.connect(peripheral, options: nil)
@@ -632,8 +661,8 @@ extension BLEEncounterService: CBCentralManagerDelegate {
     ) {
         log("didFailToConnect: \(error?.localizedDescription ?? "unknown")")
         pendingPeripherals.removeValue(forKey: peripheral.identifier)
-        // TASK-198: cleanUp never runs for failed connections — drop the RSSI here.
-        peerRSSIs.remove(peripheral.identifier)
+        // #262: keep peerRSSIs (see cleanUp) — the suppression logic relies on
+        // smoothed history persisting across cycles; the LRU cap bounds its growth.
     }
 }
 
