@@ -32,12 +32,18 @@ public class SwiftDataEncounterHistoryRepository: EncounterHistoryRepository {
         try context.save()
     }
 
-    public func getHistory() throws -> [EncounteredEvent] {
-        let descriptor = FetchDescriptor<EncounteredEventModel>(
+    public func getHistory(limit: Int) throws -> [EncounteredEvent] {
+        var descriptor = FetchDescriptor<EncounteredEventModel>(
             sortBy: [SortDescriptor(\.encounteredAt, order: .reverse)]
         )
+        if limit != Int.max { descriptor.fetchLimit = limit }
         return try context.fetch(descriptor).map {
-            EncounteredEvent(peerId: $0.peerId, peerPublicKey: $0.peerPublicKey, nickname: $0.nickname)
+            EncounteredEvent(
+                peerId: $0.peerId,
+                peerPublicKey: $0.peerPublicKey,
+                nickname: $0.nickname,
+                encounteredAt: $0.encounteredAt
+            )
         }
     }
 }
