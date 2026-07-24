@@ -38,6 +38,8 @@ public struct BLEDiagnostics: Sendable {
     public let isAdvertising: Bool
     public let discoveredCount: Int
     public let encounterCount: Int
+    /// TASK-148: peripherals we are currently connecting to / reading from.
+    public let connectingPeerCount: Int
     /// TASK-146: whether the power-saving scan cadence is currently engaged.
     public let isPowerSaving: Bool
     public let recentEvents: [String]
@@ -196,6 +198,7 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
                 isAdvertising: peripheralManager?.isAdvertising ?? false,
                 discoveredCount: discoveredCount,
                 encounterCount: encounterCount,
+                connectingPeerCount: pendingPeripherals.count,
                 isPowerSaving: scanPowerSaveActive,
                 recentEvents: eventLog
             )

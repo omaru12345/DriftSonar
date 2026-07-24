@@ -210,7 +210,10 @@ struct SettingsView: View {
     private var diagnosticsSection: some View {
         Section {
             NavigationLink {
-                BLEDiagnosticsView(bleService: appServices.bleService)
+                BLEDiagnosticsView(
+                    bleService: appServices.bleService,
+                    meshService: appServices.meshService
+                )
             } label: {
                 Label("通信診断（Bluetooth）", systemImage: "stethoscope")
             }
@@ -335,8 +338,10 @@ struct SettingsView: View {
 /// discovered/encountered — with a scrolling event log.
 private struct BLEDiagnosticsView: View {
     let bleService: BLEEncounterService
+    let meshService: MeshForwardingService
 
     @State private var snapshot: BLEDiagnostics?
+    @State private var mesh: MeshStats?
     private let refresh = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -347,9 +352,27 @@ private struct BLEDiagnosticsView: View {
                 row("Peripheral（広告側）", snapshot?.peripheralState ?? "—")
                 row("スキャン中", boolText(snapshot?.isScanning))
                 row("広告中", boolText(snapshot?.isAdvertising))
+                row("省電力モード", boolText(snapshot?.isPowerSaving))
                 row("検出した端末数", "\(snapshot?.discoveredCount ?? 0)")
+                row("接続中のピア数", "\(snapshot?.connectingPeerCount ?? 0)")
                 row("すれ違い成立数", "\(snapshot?.encounterCount ?? 0)")
             }
+            // TASK-148: mesh propagation summary — shown in every build so users can
+            // confirm posts are flowing (受信・転送・棄却).
+            Section {
+                row("受信した投稿数", "\(mesh?.receivedCount ?? 0)")
+                row("うち新規受理", "\(mesh?.acceptedCount ?? 0)")
+                row("うち棄却（重複・無効等）", "\(mesh?.rejectedCount ?? 0)")
+                row("ピアへ送出した数（再送含む）", "\(mesh?.forwardedCount ?? 0)")
+            } header: {
+                Text("メッシュ伝播")
+            } footer: {
+                Text("受信数 = 新規受理数 + 棄却数。棄却には重複・期限切れ・署名不正・レート超過が含まれます。送出数は定期再ゴシップによる再送も数えます。")
+            }
+
+            // TASK-148: detailed per-event log is developer-oriented and noisy, so it is
+            // DEBUG-only; release builds show just the summaries above.
+            #if DEBUG
             Section("イベントログ（新しい順）") {
                 let events = (snapshot?.recentEvents ?? []).reversed()
                 if events.isEmpty {
@@ -363,11 +386,18 @@ private struct BLEDiagnosticsView: View {
                     }
                 }
             }
+            #endif
         }
         .navigationTitle("通信診断")
         .navigationBarTitleDisplayMode(.inline)
-        .onReceive(refresh) { _ in snapshot = bleService.diagnosticsSnapshot() }
-        .onAppear { snapshot = bleService.diagnosticsSnapshot() }
+        .onReceive(refresh) { _ in
+            snapshot = bleService.diagnosticsSnapshot()
+            mesh = meshService.stats()
+        }
+        .onAppear {
+            snapshot = bleService.diagnosticsSnapshot()
+            mesh = meshService.stats()
+        }
     }
 
     private func row(_ label: String, _ value: String) -> some View {
