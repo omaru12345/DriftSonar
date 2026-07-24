@@ -1,5 +1,25 @@
 import Foundation
 
+/// Aggregate store-and-forward propagation counters for the diagnostics screen (TASK-148).
+public struct MeshStats: Sendable, Equatable {
+    /// Total payloads handed to `receive` over BLE this session.
+    public let receivedCount: Int
+    /// New, valid posts that were stored and queued for forwarding.
+    public let acceptedCount: Int
+    /// Payloads dropped (duplicate / undecodable / rate-limited / expired / bad signature).
+    public let rejectedCount: Int
+    /// Cached posts pushed to peers via `payloadsToForward`. A push/offer count that
+    /// includes periodic re-gossip re-sends, not unique confirmed deliveries.
+    public let forwardedCount: Int
+
+    public init(receivedCount: Int, acceptedCount: Int, rejectedCount: Int, forwardedCount: Int) {
+        self.receivedCount = receivedCount
+        self.acceptedCount = acceptedCount
+        self.rejectedCount = rejectedCount
+        self.forwardedCount = forwardedCount
+    }
+}
+
 /// Orchestrates store-and-forward logic for the BLE mesh.
 ///
 /// Responsibilities:
@@ -98,6 +118,19 @@ public final class MeshForwardingService {
     /// Per-sender receive timestamps within the current rate-limit window (TASK-032).
     private var senderTimestamps: [Data: [Date]] = [:]
 
+    // MARK: - Diagnostics counters (TASK-148)
+    // Unlike the rest of this type's state, these straddle threads: `receive` runs on
+    // the main queue (dispatched from BLEEncounterService) while `payloadsToForward`
+    // runs on `bleQueue` (the CB delegate callback pushes cached posts to a new peer),
+    // and `stats()` reads all four from the @MainActor diagnostics screen. A small lock
+    // keeps the reads/writes race-free without touching the hot receive path's other
+    // (main-confined) state.
+    private let statsLock = NSLock()
+    private var receivedCount = 0
+    private var acceptedCount = 0
+    private var rejectedCount = 0
+    private var forwardedCount = 0
+
     // MARK: - Init
 
     public init(
@@ -148,6 +181,20 @@ public final class MeshForwardingService {
     /// - Returns: `true` if the message was new and should be stored/forwarded.
     @discardableResult
     public func receive(payload: Data) -> Bool {
+        // TASK-148: tally every payload as received, then accepted vs rejected so the
+        // diagnostics screen can show whether propagation is actually working.
+        statsLock.lock(); receivedCount += 1; statsLock.unlock()
+        let accepted = process(payload: payload)
+        statsLock.lock()
+        if accepted { acceptedCount += 1 } else { rejectedCount += 1 }
+        statsLock.unlock()
+        return accepted
+    }
+
+    /// The receive pipeline. Returns `true` if the post was new, valid, and stored for
+    /// forwarding; `false` for any drop (undecodable / duplicate / implausible timestamp
+    /// / rate-limited / bad signature / out-of-bounds / expired TTL).
+    private func process(payload: Data) -> Bool {
         guard let post = try? PostSerializer.decode(payload) else { return false }
 
         // Deduplication (TASK-006)
@@ -259,12 +306,30 @@ public final class MeshForwardingService {
                 return lhs.receivedAt > rhs.receivedAt
             }
         }
-        return sorted.prefix(config.forwardBatchSize).map(\.data)
+        let batch = sorted.prefix(config.forwardBatchSize).map(\.data)
+        // TASK-148: count cached posts pushed to peers so the diagnostics screen can
+        // show forwarding activity, not just receipts. This is a push/offer count — the
+        // periodic re-gossip re-pushes cached posts to each peer, so it deliberately
+        // includes re-sends rather than counting unique deliveries.
+        statsLock.lock(); forwardedCount += batch.count; statsLock.unlock()
+        return batch
     }
 
     /// Record that forwarding succeeded so forwardedCount stays accurate.
     public func didForward(postId: UUID) {
         try? cacheRepository.incrementForwardCount(postId: postId)
+    }
+
+    /// Aggregate propagation counters for the diagnostics screen (TASK-148).
+    /// `receivedCount == acceptedCount + rejectedCount`.
+    public func stats() -> MeshStats {
+        statsLock.lock(); defer { statsLock.unlock() }
+        return MeshStats(
+            receivedCount: receivedCount,
+            acceptedCount: acceptedCount,
+            rejectedCount: rejectedCount,
+            forwardedCount: forwardedCount
+        )
     }
 
     /// Purge expired content so nothing lingers past the retention window (TASK-149).

@@ -151,6 +151,35 @@ final class MeshForwardingServiceTests: XCTestCase {
         )
     }
 
+    // MARK: - Diagnostics counters (TASK-148)
+
+    func testStatsCountReceivedAcceptedRejected() throws {
+        let (service, _, _) = makeService()
+        let payload = try makePayload()
+
+        XCTAssertTrue(service.receive(payload: payload), "first is new")
+        XCTAssertFalse(service.receive(payload: payload), "second is a duplicate")
+        service.receive(payload: Data([0x00, 0x01, 0x02]))  // garbage → rejected
+
+        let stats = service.stats()
+        XCTAssertEqual(stats.receivedCount, 3)
+        XCTAssertEqual(stats.acceptedCount, 1)
+        XCTAssertEqual(stats.rejectedCount, 2)
+        XCTAssertEqual(stats.receivedCount, stats.acceptedCount + stats.rejectedCount)
+    }
+
+    func testStatsForwardedCountIncrementsWhenPushingToPeers() throws {
+        let (service, _, _) = makeService()
+        XCTAssertEqual(service.stats().forwardedCount, 0)
+
+        XCTAssertTrue(service.receive(payload: try makePayload(content: "a")))
+        XCTAssertTrue(service.receive(payload: try makePayload(content: "b")))
+
+        let batch = service.payloadsToForward()
+        XCTAssertEqual(service.stats().forwardedCount, batch.count)
+        XCTAssertEqual(batch.count, 2)
+    }
+
     func testReceiveTTLZeroIsRejected() throws {
         let (service, _, cacheRepo) = makeService()
         let payload = try makePayload(ttl: 0)
