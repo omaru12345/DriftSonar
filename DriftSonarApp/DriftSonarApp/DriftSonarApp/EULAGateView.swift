@@ -13,6 +13,17 @@ struct EULAGateView: View {
     let onAccept: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
+    /// TASK-168: minimum age to use the app. An anonymous, unmoderated SNS is held
+    /// to child-safety scrutiny, so the first-launch gate requires an explicit age
+    /// affirmation before any profile is created. Kept as a single constant so the
+    /// value stays in sync between the toggle label and the notes below, and can be
+    /// changed in one place if the App Store age rating is adjusted.
+    private static let minimumAge = 18
+
+    /// TASK-168: the user must affirm they meet the age requirement before the
+    /// "agree and start" action becomes available.
+    @State private var confirmedAge = false
+
     /// TASK-201: the near tint — deep tide on foam, sea glass on the abyss.
     private var accentTint: Color {
         colorScheme == .dark ? .seaGlass : .deepTide
@@ -59,7 +70,12 @@ struct EULAGateView: View {
                             .stroke(Color.driftwood.opacity(0.18), lineWidth: 0.5)
                     )
 
-                    Text("「同意して始める」を押すと、上記の利用規約と禁止事項に同意したものとみなされます。違反した場合、当該コンテンツの非表示やブロックの対象となります。")
+                    // TASK-168: explicit age affirmation. This app has no central
+                    // moderation, so an age gate is required before use. The accept
+                    // button stays disabled until this is turned on.
+                    ageConfirmationCard
+
+                    Text("「同意して始める」を押すと、上記の利用規約と禁止事項、および\(Self.minimumAge)歳以上であることの確認に同意したものとみなされます。違反した場合、当該コンテンツの非表示やブロックの対象となります。")
                         .font(.footnote)
                         .foregroundStyle(Color.dsTextSecondary)
                         .padding(.top, 4)
@@ -76,10 +92,36 @@ struct EULAGateView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                // TASK-168: cannot start until the age requirement is affirmed.
+                .disabled(!confirmedAge)
                 .padding()
                 .background(.bar)
             }
         }
+    }
+
+    /// TASK-168: age affirmation on a foam card matching the policy card styling.
+    private var ageConfirmationCard: some View {
+        Toggle(isOn: $confirmedAge) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "person.crop.circle.badge.checkmark")
+                    .font(.title3)
+                    .foregroundStyle(accentTint)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(Self.minimumAge)歳以上です").font(.subheadline).bold()
+                    Text("本アプリは\(Self.minimumAge)歳以上の方のみご利用いただけます。\(Self.minimumAge)歳以上であることを確認します。")
+                        .font(.footnote).foregroundStyle(Color.dsTextSecondary)
+                }
+            }
+        }
+        .tint(accentTint)
+        .padding(DSLayout.Spacing.lg)
+        .background(Color.dsSurface, in: RoundedRectangle(cornerRadius: DSLayout.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: DSLayout.Radius.lg)
+                .stroke(Color.driftwood.opacity(0.18), lineWidth: 0.5)
+        )
     }
 
     private var header: some View {
