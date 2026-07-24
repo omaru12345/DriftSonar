@@ -236,6 +236,20 @@ struct PostRowView: View {
         return formatter.localizedString(for: post.timestamp, relativeTo: Date())
     }
 
+    /// TASK-149: "あと N 時間で消えます" — surfaces the retention window so the
+    /// "記録に残らない" behaviour is felt, not hidden. `nil` (hidden) for the pinned
+    /// welcome post (never purged) and for anything already past its window.
+    private var lifetimeText: String? {
+        guard post.authorPublicKey != WelcomePost.authorKey else { return nil }
+        let remaining = RetentionPolicy.remainingLifetime(forTimestamp: post.timestamp)
+        guard remaining > 0 else { return nil }
+        let hours = Int(remaining / 3_600)
+        if hours >= 1 { return "あと約\(hours)時間で消えます" }
+        let minutes = Int(remaining / 60)
+        if minutes >= 1 { return "あと約\(minutes)分で消えます" }
+        return "まもなく消えます"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // TASK-138: Identity row — avatar + name with the propagation badge as a
@@ -268,6 +282,14 @@ struct PostRowView: View {
                     viewerSelection = MediaViewerSelection(index: index)
                 }
                 .padding(.top, 2)
+            }
+
+            // TASK-149: Remaining lifetime before the post is purged ("記録に残らない").
+            if let lifetimeText {
+                Label(lifetimeText, systemImage: "hourglass")
+                    .font(.dsMono(.caption2))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityLabel(lifetimeText)
             }
 
             #if DEBUG
