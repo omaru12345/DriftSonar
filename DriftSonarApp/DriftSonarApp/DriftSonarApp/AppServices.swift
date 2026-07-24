@@ -1,6 +1,7 @@
 import CoreBluetooth
 import Foundation
 import SwiftData
+import UIKit
 import UserNotifications
 import DriftSonarCore
 
@@ -45,6 +46,16 @@ final class AppServices {
     /// so `onEncounter` can both persist history and feed the live list without either
     /// overwriting the single `onEncounter` closure.
     var liveEncounterHandler: ((EncounteredEvent) -> Void)?
+    /// TASK-146: true while BLE scanning is in the power-saving cadence (Low Power Mode
+    /// or low battery). Drives the subtle Radar indicator.
+    var isScanPowerSaving: Bool = false
+
+    /// TASK-146: maps the device power state to a scan-reduction decision.
+    private let scanPowerPolicy = ScanPowerPolicy()
+    /// Retained NotificationCenter tokens for the power-state observers. Assigned once
+    /// on the main actor in `init`; `nonisolated(unsafe)` so the nonisolated `deinit`
+    /// can remove them (the array is effectively immutable after `init`).
+    nonisolated(unsafe) private var powerStateObservers: [NSObjectProtocol] = []
 
     // MARK: - Init
 
@@ -139,6 +150,46 @@ final class AppServices {
                 try? ble.execute(command: StartDiscoveryCommand(myPublicKey: profile.publicKey))
             }
         }
+
+        // TASK-146: watch Low Power Mode + battery level and drop BLE scanning to the
+        // power-saving cadence when the user is conserving power. Nil-safe if BLE never
+        // started (integrity failure), and cheap enough to always run.
+        startPowerStateMonitoring()
+    }
+
+    // MARK: - Power-aware scanning (TASK-146)
+
+    /// Begin observing Low Power Mode and battery level, and apply the current state.
+    private func startPowerStateMonitoring() {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let center = NotificationCenter.default
+        let handler: @Sendable (Notification) -> Void = { [weak self] _ in
+            Task { @MainActor in self?.refreshScanPowerSaving() }
+        }
+        powerStateObservers = [
+            center.addObserver(forName: .NSProcessInfoPowerStateDidChange, object: nil, queue: .main, using: handler),
+            center.addObserver(forName: UIDevice.batteryLevelDidChangeNotification, object: nil, queue: .main, using: handler),
+            center.addObserver(forName: UIDevice.batteryStateDidChangeNotification, object: nil, queue: .main, using: handler)
+        ]
+        refreshScanPowerSaving()
+    }
+
+    deinit {
+        // Session-lived, but remove the block observers so a recreated AppServices
+        // (e.g. after a profile reset) never leaves stale registrations behind.
+        powerStateObservers.forEach { NotificationCenter.default.removeObserver($0) }
+    }
+
+    /// Re-evaluate the power policy and push the result to the BLE scanner + UI.
+    private func refreshScanPowerSaving() {
+        let level = UIDevice.current.batteryLevel  // -1 when unknown (monitoring off / Simulator)
+        let shouldReduce = scanPowerPolicy.shouldReduceScanning(
+            lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled,
+            batteryLevel: level < 0 ? nil : level
+        )
+        guard shouldReduce != isScanPowerSaving else { return }
+        isScanPowerSaving = shouldReduce
+        bleService.setScanPowerSaving(shouldReduce)
     }
 
     // MARK: - Retention purge (TASK-149)

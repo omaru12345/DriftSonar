@@ -132,6 +132,15 @@ struct EncounterView: View {
             .font(.dsCaption)
             .foregroundStyle(Color.dsTextSecondary)
 
+            // TASK-146: quietly note when scanning is throttled to save power, so a
+            // longer discovery latency reads as intentional rather than broken.
+            if appServices.isScanPowerSaving && isDiscovering {
+                Label("省電力中 · スキャンを控えめにしています", systemImage: "leaf.fill")
+                    .font(.dsCaption)
+                    .foregroundStyle(Color.dsTextSecondary)
+                    .padding(.top, DSLayout.Spacing.xs)
+            }
+
             if !isDiscovering {
                 Button {
                     viewModel.startDiscovery(myPublicKey: myProfile.publicKey)

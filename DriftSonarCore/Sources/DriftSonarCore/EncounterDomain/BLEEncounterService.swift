@@ -38,6 +38,8 @@ public struct BLEDiagnostics: Sendable {
     public let isAdvertising: Bool
     public let discoveredCount: Int
     public let encounterCount: Int
+    /// TASK-146: whether the power-saving scan cadence is currently engaged.
+    public let isPowerSaving: Bool
     public let recentEvents: [String]
 }
 
@@ -152,6 +154,14 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     }
     private var _scanDutyCycle = ScanDutyCycleConfig.default
 
+    /// TASK-146: the more aggressive cadence used while `setScanPowerSaving(true)` is
+    /// in effect (Low Power Mode / low battery). Tunable like `scanDutyCycle`.
+    public var powerSavingScanDutyCycle: ScanDutyCycleConfig {
+        get { configLock.lock(); defer { configLock.unlock() }; return _powerSavingScanDutyCycle }
+        set { configLock.lock(); defer { configLock.unlock() }; _powerSavingScanDutyCycle = newValue }
+    }
+    private var _powerSavingScanDutyCycle = ScanDutyCycleConfig.powerSaving
+
     // MARK: - Diagnostics (TASK-148)
 
     /// Ring buffer of recent BLE events (newest last), maintained on `bleQueue`.
@@ -186,6 +196,7 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
                 isAdvertising: peripheralManager?.isAdvertising ?? false,
                 discoveredCount: discoveredCount,
                 encounterCount: encounterCount,
+                isPowerSaving: scanPowerSaveActive,
                 recentEvents: eventLog
             )
         }
@@ -332,11 +343,15 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
     // is continuous so a suspended app is never stranded in an OFF window — see
     // `ScanDutyCycleConfig`.
     //
-    // Owned by `bleQueue`: `scanPhaseWork` (the pending transition), `scanPhaseIsOn`
-    // and `scanIsBackground` are read/written only from bleQueue callbacks and hops.
+    // Owned by `bleQueue`: `scanPhaseWork` (the pending transition), `scanPhaseIsOn`,
+    // `scanIsBackground` and `scanPowerSaveActive` are read/written only from bleQueue
+    // callbacks and hops.
     private var scanPhaseWork: DispatchWorkItem?
     private var scanPhaseIsOn = false
     private var scanIsBackground = false
+    /// TASK-146: when true, the scheduler uses `powerSavingScanDutyCycle` instead of
+    /// `scanDutyCycle`. Driven by `setScanPowerSaving` from the app's power-state watcher.
+    private var scanPowerSaveActive = false
 
     /// (Re)start the duty-cycle scheduler from a clean OFF baseline so the first
     /// transition turns scanning ON. Always called on `bleQueue`.
@@ -348,7 +363,9 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
 
     /// Apply the next scan phase and schedule the transition after it. Runs on `bleQueue`.
     private func scheduleNextScanPhase() {
-        let cycle = scanDutyCycle.cycle(isBackground: scanIsBackground)
+        // TASK-146: pick the aggressive cadence while power-saving is engaged.
+        let config = scanPowerSaveActive ? powerSavingScanDutyCycle : scanDutyCycle
+        let cycle = config.cycle(isBackground: scanIsBackground)
         let (shouldScan, seconds) = cycle.nextPhase(currentlyScanning: scanPhaseIsOn)
         scanPhaseIsOn = shouldScan
 
@@ -384,6 +401,29 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
             guard self.centralManager != nil else { return }
             self.startScanScheduler()
         }
+    }
+
+    /// TASK-146: engage or release the power-saving scan cadence
+    /// (`powerSavingScanDutyCycle`). Called from the app's power-state watcher when
+    /// Low Power Mode toggles or the battery crosses the threshold. Re-plans from a
+    /// clean baseline so the new cadence takes effect immediately.
+    public func setScanPowerSaving(_ active: Bool) {
+        bleQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.scanPowerSaveActive != active else { return }
+            // Record the desired cadence unconditionally so a later execute()/restart()
+            // honours it, but only re-plan the live scheduler when discovery is actually
+            // running — a power-state change must never revive a scan the user stopped.
+            self.scanPowerSaveActive = active
+            guard self.isRunning, self.centralManager != nil else { return }
+            self.startScanScheduler()
+        }
+    }
+
+    /// Whether the power-saving scan cadence is currently engaged (TASK-146).
+    /// Read on `bleQueue` for consistency with the scheduler that mutates the flag.
+    public var isScanPowerSaving: Bool {
+        bleQueue.sync { scanPowerSaveActive }
     }
 
     /// Restart BLE scanning and advertising (TASK-094). Safe to call on foreground return.
