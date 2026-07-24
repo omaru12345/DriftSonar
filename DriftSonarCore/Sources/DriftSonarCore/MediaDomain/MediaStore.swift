@@ -72,6 +72,25 @@ public final class MediaStore {
         }
     }
 
+    /// 生存投稿から参照されなくなった孤立メディア（本体・サムネイル）を削除する（TASK-195）。
+    ///
+    /// 投稿の retention purge 後に呼ぶ。`keep` は生存投稿が参照する contentHash の集合で、
+    /// これに含まれない contentHash のファイルをすべて消す。共有 contentHash は「1件でも
+    /// 生存投稿が参照していれば keep に入る」ため保持される（参照カウント相当）。本体と
+    /// サムネ（`.thumb.jpg`）はどちらも同じ contentHash を接頭辞に持つので、まとめて対象になる。
+    ///
+    /// LRU の `enforceCapacity` はバイト上限でしか消さず age を見ないため、投稿レコードが
+    /// 消えてもファイルがディスクに無期限で残る穴（「記録に残らない」保証の綻び）をこれで塞ぐ。
+    /// - Returns: 削除したファイル数。
+    @discardableResult
+    public func purgeOrphans(keepingContentHashes keep: Set<String>) -> Int {
+        var removed = 0
+        for file in storedFiles() where !keep.contains(contentHash(of: file.url)) {
+            if (try? fileManager.removeItem(at: file.url)) != nil { removed += 1 }
+        }
+        return removed
+    }
+
     // MARK: - descriptor から URL を引く（TASK-188）
 
     /// descriptor に対応するサムネ URL を返す（無ければ nil）。
@@ -91,6 +110,15 @@ public final class MediaStore {
 
     private func fileURL(contentHash: String, fileExtension: String) -> URL {
         rootDirectory.appendingPathComponent("\(contentHash).\(fileExtension)")
+    }
+
+    /// ファイル名 `{contentHash}.{ext}` から contentHash を取り出す。
+    /// サムネは `.thumb.jpg` と多段拡張子なので、拡張子除去ではなく最初のドットまでで判定する
+    /// （contentHash は SHA-256 hex なのでドットを含まない）。
+    private func contentHash(of url: URL) -> String {
+        let name = url.lastPathComponent
+        guard let dot = name.firstIndex(of: ".") else { return name }
+        return String(name[..<dot])
     }
 
     /// アクセス時刻（= 更新日時）を現在に更新し LRU の新しさを表す。

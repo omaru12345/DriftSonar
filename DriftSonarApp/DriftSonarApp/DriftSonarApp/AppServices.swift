@@ -151,6 +151,13 @@ final class AppServices {
         if deleted > 0 {
             timelineViewModel.refresh()
         }
+        // TASK-195: 投稿失効で参照されなくなったメディア本体・サムネを連動削除。
+        // purge 後に生き残った投稿（protected 投稿含む）が参照する contentHash 以外を孤立とみなす。
+        // fetch が throw したときは purge をスキップ（keep 集合を空と誤認して全削除するのを防ぐ）。
+        if let mediaStore, let livePosts = try? postRepository.fetchTimeline(limit: .max, offset: 0) {
+            let liveHashes = Set(livePosts.flatMap { $0.media.map(\.contentHashHex) })
+            mediaStore.purgeOrphans(keepingContentHashes: liveHashes)
+        }
         // TASK-150: sweep expired 消えるメッセージ across all conversations.
         try? secretMessageRepository.deleteExpired(before: Date())
     }
