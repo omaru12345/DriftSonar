@@ -503,3 +503,101 @@ final class MeshForwardingServiceBoundaryTests: XCTestCase {
         XCTAssertEqual(saved.first?.hopCount, 7)   // relayed: 6 → 7
     }
 }
+
+// MARK: - Replay resistance after seenIDs eviction (TASK-177)
+
+/// A payload dated `timestamp` from `authorKey`, for driving the receive pipeline with an
+/// injected clock (`receive(payload:now:)`) so eviction and plausibility can be exercised
+/// deterministically without waiting real time.
+private func makeReplayPayload(
+    content: String,
+    authorKey: Data,
+    timestamp: Date,
+    ttl: Int = 7
+) throws -> Data {
+    let post = Post(content: content, authorPublicKey: authorKey, timestamp: timestamp, ttl: ttl)
+    return try PostSerializer.encode(post)
+}
+
+final class MeshReplayResistanceTests: XCTestCase {
+
+    private let t0 = Date(timeIntervalSince1970: 1_700_000_000)
+
+    // A post whose seen-ID has aged out of the window is re-received as "new", but its now
+    // stale timestamp fails the plausibility check — so it is dropped, not re-forwarded.
+    func testReplayAfterAgeEvictionIsRejectedByTimestamp() throws {
+        let (service, postRepo, _) = makeService()
+        service.clearSeenIDs()
+
+        let victim = try makeReplayPayload(content: "old", authorKey: Data(repeating: 0xA1, count: 32), timestamp: t0)
+        XCTAssertTrue(service.receive(payload: victim, now: t0), "first receipt is accepted")
+
+        // 48h later, unrelated traffic runs the age-prune and drops the victim's seen-ID.
+        let later = t0.addingTimeInterval(48 * 60 * 60)
+        let fresh = try makeReplayPayload(content: "fresh", authorKey: Data(repeating: 0xA2, count: 32), timestamp: later)
+        XCTAssertTrue(service.receive(payload: fresh, now: later))
+        XCTAssertEqual(service.seenIDCountForTesting, 1, "victim ID pruned by age; only the fresh one remains")
+
+        let acceptedReplay = service.receive(payload: victim, now: later)
+        XCTAssertFalse(acceptedReplay, "replay of a post past the retention window must not re-forward")
+        // And it was not re-persisted to the timeline (only the two originals live there).
+        XCTAssertEqual(try postRepo.fetchTimeline(limit: 10, offset: 0).count, 2)
+    }
+
+    // Age pruning bounds memory: 72 hourly posts collapse to roughly one retention window.
+    func testSeenIDsPrunedByAgeKeepMemoryBounded() throws {
+        let (service, _, _) = makeService()
+        service.clearSeenIDs()
+
+        var now = t0
+        for i in 0..<72 {
+            let key = Data(repeating: UInt8(i % 250), count: 32)
+            _ = service.receive(payload: try makeReplayPayload(content: "p\(i)", authorKey: key, timestamp: now), now: now)
+            now = now.addingTimeInterval(60 * 60)
+        }
+
+        // Window is maxTimestampAge (24h) + maxClockSkew (5min), so ~25 hourly IDs survive,
+        // never all 72.
+        XCTAssertLessThanOrEqual(service.seenIDCountForTesting, 26)
+        XCTAssertGreaterThan(service.seenIDCountForTesting, 20, "the recent window is retained")
+    }
+
+    // Documents TASK-177's irreducible tradeoff: when in-window distinct traffic exceeds
+    // maxSeenIDs, the count backstop force-evicts a still-in-window ID and its replay is
+    // re-accepted. Shrinkable by raising maxSeenIDs or a Bloom summary, not eliminable.
+    func testCountCapEvictionReAcceptsInWindowReplay() throws {
+        let cfg = MeshForwardingService.Config(maxSeenIDs: 3, requireValidSignature: false)
+        let (service, _, _) = makeService(config: cfg)
+        service.clearSeenIDs()
+
+        let victim = try makeReplayPayload(content: "victim", authorKey: Data(repeating: 0x01, count: 32), timestamp: t0)
+        XCTAssertTrue(service.receive(payload: victim, now: t0))
+
+        for i in 0..<3 {
+            let key = Data(repeating: UInt8(0x10 + i), count: 32)
+            _ = service.receive(payload: try makeReplayPayload(content: "flood\(i)", authorKey: key, timestamp: t0), now: t0)
+        }
+        XCTAssertEqual(service.seenIDCountForTesting, 3, "cap holds at maxSeenIDs")
+
+        XCTAssertTrue(
+            service.receive(payload: victim, now: t0),
+            "count-cap eviction of an in-window ID is the documented residual replay gap"
+        )
+    }
+
+    // markSeen runs before the timestamp check, so an implausibly future post is rejected on
+    // first sight yet still remembered — it must not resurface as new once the clock catches up.
+    func testFutureDatedPostStaysDeduplicatedAfterBecomingPlausible() throws {
+        let (service, _, _) = makeService()
+        service.clearSeenIDs()
+
+        let future = t0.addingTimeInterval(60 * 60)  // 1h ahead → beyond the 5min skew
+        let payload = try makeReplayPayload(content: "future", authorKey: Data(repeating: 0xC0, count: 32), timestamp: future)
+
+        XCTAssertFalse(service.receive(payload: payload, now: t0), "implausibly future post is rejected")
+        XCTAssertFalse(
+            service.receive(payload: payload, now: future),
+            "a rejected-but-seen post must not be re-forwarded once its timestamp becomes plausible"
+        )
+    }
+}
