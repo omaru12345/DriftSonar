@@ -2904,6 +2904,17 @@
           }
         }
       }
+    },
+    "近くの誰かから投稿が届きました": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A post drifted in from someone nearby"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

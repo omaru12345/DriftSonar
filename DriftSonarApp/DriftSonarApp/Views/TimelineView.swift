@@ -11,6 +11,10 @@ struct PostTimelineView: View {
     /// TASK-167: Post currently targeted by the report confirmation dialog.
     @State private var reportTarget: Post?
     @Environment(\.modelContext) private var modelContext
+    /// TASK-297: Reduce Motion falls the arrival ripple back to a static banner.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// TASK-297: Drives the one-shot demo-arrival banner + ripple overlay.
+    @State private var showDemoArrival = false
 
     /// TASK-167: Shared content filter for masking the copy action.
     private static let contentFilter = ContentFilter()
@@ -84,6 +88,25 @@ struct PostTimelineView: View {
             .navigationTitle("タイムライン")
             // TASK-084: Reset unread badge when user opens the Timeline.
             .onAppear { appServices.unreadPostCount = 0 }
+            // TASK-297: one-shot "a post drifted in" banner + ripple for the demo seed.
+            .overlay(alignment: .top) {
+                if showDemoArrival {
+                    DemoArrivalBanner(reduceMotion: reduceMotion)
+                        .padding(.horizontal, DSLayout.Spacing.lg)
+                        .padding(.top, DSLayout.Spacing.sm)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(1)
+                        .allowsHitTesting(false)
+                }
+            }
+            // The seed runs during AppServices init (before this view appears), so the
+            // flag may already be set on first appearance — check via .task, and also
+            // react if it flips later. `playDemoArrivalIfNeeded` consumes the flag so it
+            // fires exactly once.
+            .task { await playDemoArrivalIfNeeded() }
+            .onChange(of: appServices.demoArrivalPending) { _, pending in
+                if pending { Task { await playDemoArrivalIfNeeded() } }
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -139,6 +162,21 @@ struct PostTimelineView: View {
             } message: { _ in
                 Text("通報した投稿はこの端末で即座に非表示になります。投稿者をまとめて非表示にするにはブロックをご利用ください。")
             }
+        }
+    }
+
+    /// TASK-297: Plays the demo-arrival banner once, then auto-dismisses. Consumes
+    /// `demoArrivalPending` immediately so a re-render / re-appearance never replays it.
+    @MainActor
+    private func playDemoArrivalIfNeeded() async {
+        guard appServices.demoArrivalPending, !showDemoArrival else { return }
+        appServices.demoArrivalPending = false
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            showDemoArrival = true
+        }
+        try? await Task.sleep(for: .seconds(4))
+        withAnimation(.easeOut(duration: 0.5)) {
+            showDemoArrival = false
         }
     }
 
@@ -579,6 +617,58 @@ struct IdenticonView: View {
 
 // TASK-204: Skeleton rows mirror the washed-ashore card shape (TASK-197) so the
 // loading state doesn't flash a different layout than the loaded one.
+/// TASK-297: One-shot "a post drifted in from someone nearby" banner shown when the
+/// onboarding demo post is seeded. A capsule with a ripple motif that spreads once on
+/// appear — echoing the Radar water surface (`WaterSurfaceView`) and EP-038's Drift/漂着
+/// language. Under Reduce Motion the rings stay still.
+private struct DemoArrivalBanner: View {
+    let reduceMotion: Bool
+    @State private var ripple = false
+
+    var body: some View {
+        HStack(spacing: DSLayout.Spacing.md) {
+            ZStack {
+                // Rings spreading from the drop — mirrors WaterSurfaceView's ripple.
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .stroke(Color.seaGlass, lineWidth: 1.2)
+                        .frame(width: 22, height: 22)
+                        .scaleEffect(ripple ? 2.2 : 1.0)
+                        .opacity(ripple ? 0 : 0.5)
+                        .animation(
+                            reduceMotion ? nil :
+                                .easeOut(duration: 2.2)
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(i) * 0.6),
+                            value: ripple
+                        )
+                }
+                Image(systemName: "dot.radiowaves.left.and.right")
+                    .font(.headline)
+                    .foregroundStyle(Color.seaGlass)
+            }
+            .frame(width: 40, height: 40)
+            .accessibilityHidden(true)
+
+            Text("近くの誰かから投稿が届きました")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, DSLayout.Spacing.sm)
+        .padding(.horizontal, DSLayout.Spacing.md)
+        .background(Color.dsSurface, in: Capsule())
+        .overlay(Capsule().stroke(Color.driftwood.opacity(0.18), lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
+        .onAppear {
+            guard !reduceMotion else { return }
+            ripple = true
+        }
+    }
+}
+
 private struct SkeletonTimelineView: View {
     var body: some View {
         List(0..<6, id: \.self) { _ in

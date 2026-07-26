@@ -36,6 +36,12 @@ final class AppServices {
     let timelineViewModel: TimelineViewModel
     /// Unread post count for tab badge (TASK-084).
     var unreadPostCount: Int = 0
+    /// TASK-297: Set once, this launch, right after the demo propagation post is seeded,
+    /// so the Timeline can play a one-shot "arrival" banner + ripple. Transient (never
+    /// persisted): the persisted `hasSeededDemoPropagation` flag already guarantees the
+    /// seed — and thus this signal — fires at most once per install. The Timeline consumes
+    /// it (sets it back to false) as soon as it plays.
+    var demoArrivalPending: Bool = false
     /// Whether Bluetooth is currently unavailable (TASK-093).
     var isBluetoothUnavailable: Bool = false
     /// Currently selected tab index for deep-link navigation (TASK-085).
@@ -341,5 +347,8 @@ final class AppServices {
 
         defaults.set(true, forKey: Self.demoSeededKey)
         timelineViewModel.refresh()
+        // TASK-297: the seed just landed this launch — let the Timeline play a one-shot
+        // arrival animation. Only reached on a real seed, so it signals at most once ever.
+        demoArrivalPending = true
     }
 }
