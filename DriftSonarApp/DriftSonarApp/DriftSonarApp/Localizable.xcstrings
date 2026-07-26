@@ -1,6 +1,61 @@
 {
   "sourceLanguage": "ja",
   "strings": {
+    "スパム・宣伝": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam or advertising"
+          }
+        }
+      }
+    },
+    "嫌がらせ・いじめ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harassment or bullying"
+          }
+        }
+      }
+    },
+    "不適切・わいせつな内容（画像・動画含む）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inappropriate or obscene content (including images and videos)"
+          }
+        }
+      }
+    },
+    "暴力的・違法な内容": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violent or illegal content"
+          }
+        }
+      }
+    },
+    "その他": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        }
+      }
+    },
     "%@ との安全番号": {
       "extractionState": "manual",
       "localizations": {

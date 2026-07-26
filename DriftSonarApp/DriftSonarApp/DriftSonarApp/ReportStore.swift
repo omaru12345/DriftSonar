@@ -21,6 +21,19 @@ enum ReportStore {
         case other = "その他"
 
         var id: String { rawValue }
+
+        /// Localized label for the report picker. TASK-158/228: `rawValue` is a plain
+        /// `String`, so passing it to `Button`/`Text` hits the verbatim initializer and
+        /// never localizes — resolve the display text explicitly via `String(localized:)`.
+        var displayName: String {
+            switch self {
+            case .spam: return String(localized: "スパム・宣伝")
+            case .harassment: return String(localized: "嫌がらせ・いじめ")
+            case .inappropriate: return String(localized: "不適切・わいせつな内容（画像・動画含む）")
+            case .violenceOrIllegal: return String(localized: "暴力的・違法な内容")
+            case .other: return String(localized: "その他")
+            }
+        }
     }
 
     /// All currently reported (hidden) post IDs.
