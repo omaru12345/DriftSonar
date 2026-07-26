@@ -24,12 +24,21 @@
 		3DBC26B02F4CBD2400D66431 /* SafetyNumberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26B12F4CBD2400D66431 /* SafetyNumberView.swift */; };
 		3DBC26C02F4CBD2400D66431 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26C12F4CBD2400D66431 /* QRScannerView.swift */; };
 		47CFDD62B8FE2D828434F24A /* InitialSetupViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5709E8866AEC2FF9DBD6A441 /* InitialSetupViewModelTests.swift */; };
+		65687871EF2ADB8DAB3A9F3A /* SetupFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8485ACECFF764E75DF04E445 /* SetupFlowUITests.swift */; };
 		6B204A46800914E5DF901AB7 /* TimelineViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F667441E795FA5AB235210B1 /* TimelineViewModelTests.swift */; };
 		6E7C0DA39C079EB025DE141D /* TestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */; };
 		7B7D044083FD186E3073BCF3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2484C368750D0A201ADDCC1 /* Foundation.framework */; };
+		7FE8BEBC7AAE5289056311EE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2484C368750D0A201ADDCC1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		41F6AD4871DB23F027670665 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3D52D78A2F4CB1C400293211 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3D52D7912F4CB1C400293211;
+			remoteInfo = DriftSonarApp;
+		};
 		D934E92F946B7B6931FBC668 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3D52D78A2F4CB1C400293211 /* Project object */;
@@ -57,7 +66,9 @@
 		3DBC26AB2F4CBD2400D66431 /* EncounterHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterHistoryView.swift; sourceTree = "<group>"; };
 		3DBC26B12F4CBD2400D66431 /* SafetyNumberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyNumberView.swift; sourceTree = "<group>"; };
 		3DBC26C12F4CBD2400D66431 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		407FD5EDEF963BECFE6B67C1 /* DriftSonarAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5709E8866AEC2FF9DBD6A441 /* InitialSetupViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InitialSetupViewModelTests.swift; sourceTree = "<group>"; };
+		8485ACECFF764E75DF04E445 /* SetupFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetupFlowUITests.swift; sourceTree = "<group>"; };
 		B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestDoubles.swift; sourceTree = "<group>"; };
 		E2484C368750D0A201ADDCC1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -86,6 +97,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		25A54DE437E868E05B9F2F5D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7FE8BEBC7AAE5289056311EE /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3D52D78F2F4CB1C400293211 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -114,6 +133,7 @@
 				3D52D7A22F4CB3F000293211 /* Frameworks */,
 				3D52D7932F4CB1C400293211 /* Products */,
 				E7F5D825F68358EF7B9404F0 /* DriftSonarAppTests */,
+				6C8B38D8E624DFC0496B8B82 /* DriftSonarAppUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -122,6 +142,7 @@
 			children = (
 				3D52D7922F4CB1C400293211 /* DriftSonarApp.app */,
 				B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */,
+				407FD5EDEF963BECFE6B67C1 /* DriftSonarAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -164,6 +185,15 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		6C8B38D8E624DFC0496B8B82 /* DriftSonarAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				8485ACECFF764E75DF04E445 /* SetupFlowUITests.swift */,
+			);
+			name = DriftSonarAppUITests;
+			path = DriftSonarAppUITests;
+			sourceTree = "<group>";
+		};
 		B2BAAB9D890EF2E673231631 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -186,6 +216,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		2B7D959553296F2D32EC7DD2 /* DriftSonarAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2E75B8E0ABF9665A5DA03171 /* Build configuration list for PBXNativeTarget "DriftSonarAppUITests" */;
+			buildPhases = (
+				94EB8BAA834C393A6CE1120E /* Sources */,
+				25A54DE437E868E05B9F2F5D /* Frameworks */,
+				34FF9D9FD3B4FCC375C28850 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C53A3BC8D4BD8B89FD648EF3 /* PBXTargetDependency */,
+			);
+			name = DriftSonarAppUITests;
+			productName = DriftSonarAppUITests;
+			productReference = 407FD5EDEF963BECFE6B67C1 /* DriftSonarAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		39C2E7E0A205FD28041ADDBC /* DriftSonarAppTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C294D6BBC624ECFE639CB368 /* Build configuration list for PBXNativeTarget "DriftSonarAppTests" */;
@@ -262,11 +310,19 @@
 			targets = (
 				3D52D7912F4CB1C400293211 /* DriftSonarApp */,
 				39C2E7E0A205FD28041ADDBC /* DriftSonarAppTests */,
+				2B7D959553296F2D32EC7DD2 /* DriftSonarAppUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		34FF9D9FD3B4FCC375C28850 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3CA2126BCAE90E42759C7EA0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -316,6 +372,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		94EB8BAA834C393A6CE1120E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65687871EF2ADB8DAB3A9F3A /* SetupFlowUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -324,6 +388,12 @@
 			name = DriftSonarApp;
 			target = 3D52D7912F4CB1C400293211 /* DriftSonarApp */;
 			targetProxy = D934E92F946B7B6931FBC668 /* PBXContainerItemProxy */;
+		};
+		C53A3BC8D4BD8B89FD648EF3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DriftSonarApp;
+			target = 3D52D7912F4CB1C400293211 /* DriftSonarApp */;
+			targetProxy = 41F6AD4871DB23F027670665 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -505,6 +575,39 @@
 			};
 			name = Release;
 		};
+		6FCAC584F004F839ABCB5A43 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.driftsonar.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = DriftSonarApp;
+			};
+			name = Debug;
+		};
+		95058948DC5A5C2DE1FFFDC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.driftsonar.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = DriftSonarApp;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		C7810857BEE58C6809326EAC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -543,6 +646,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2E75B8E0ABF9665A5DA03171 /* Build configuration list for PBXNativeTarget "DriftSonarAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95058948DC5A5C2DE1FFFDC3 /* Release */,
+				6FCAC584F004F839ABCB5A43 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		3D52D78D2F4CB1C400293211 /* Build configuration list for PBXProject "DriftSonarApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

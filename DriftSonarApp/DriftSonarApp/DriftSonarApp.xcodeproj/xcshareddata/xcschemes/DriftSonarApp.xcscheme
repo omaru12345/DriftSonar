@@ -47,6 +47,16 @@
                ReferencedContainer = "container:DriftSonarApp.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2B7D959553296F2D32EC7DD2"
+               BuildableName = "DriftSonarAppUITests.xctest"
+               BlueprintName = "DriftSonarAppUITests"
+               ReferencedContainer = "container:DriftSonarApp.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

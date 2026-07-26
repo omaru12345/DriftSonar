@@ -57,6 +57,7 @@ struct InitialSetupView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                     .disabled(!canCreate)
+                    .accessibilityIdentifier("setup_create_button")  // TASK-160
 
                     // The keys stay on this device — say it where the decision is made.
                     Text("あなたの鍵ペアは、この端末の中だけで生成・保管されます")
@@ -129,6 +130,7 @@ struct InitialSetupView: View {
                 .submitLabel(.next)
                 // TASK-143: The empty title key would leave VoiceOver nameless.
                 .accessibilityLabel("ニックネーム")
+                .accessibilityIdentifier("setup_nickname_field")  // TASK-160
             }
 
             // Tide line between the fields (same recipe as the timeline cards).
@@ -190,6 +192,7 @@ private struct OnboardingIntroView: View {
                         .font(.dsCaption)
                         .foregroundStyle(Color.dsTextSecondary)
                         .padding(DSLayout.Spacing.md)
+                        .accessibilityIdentifier("onboarding_skip")  // TASK-160
                 }
             }
             .frame(height: 44)
