@@ -22,12 +22,12 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<!-- 輸出コンプライアンス (TASK-171/#206): E2E 暗号 DM がコア機能のため「暗号を使用する」= true。
-	     独自暗号は無く CryptoKit 標準アルゴリズム(X25519/Ed25519/AES-GCM/HKDF/SHA-2)のみ = EAR マスマーケット
-	     例外(5D992.c)に該当。ASC の追問には「標準暗号・マスマーケット例外に該当」と回答する。
-	     ※ 例外利用には米 BIS への年次自己分類レポート提出義務あり(運用側で対応)。詳細 docs/app-store-release.md。 -->
+	<!-- 輸出コンプライアンス: 独自暗号は無く CryptoKit 標準アルゴリズム(X25519/Ed25519/AES-GCM/HKDF/SHA-2)
+	     のみを使用し、EAR の例外に該当するため「非exempt暗号は使用しない」= false と申告する。
+	     builds 1〜6（審査到達済み）と同じ申告。true は ASC の輸出コンプライアンス書類/コードが
+	     必要でアップロードが弾かれるため採らない（#206 の true 申告は撤回）。詳細 docs/app-store-release.md。 -->
 	<key>ITSAppUsesNonExemptEncryption</key>
-	<true/>
+	<false/>
 	<!-- TASK-172: 近接オフライン通信のみに使用。位置情報は追跡しないことを明記（GL 5.1 審査対策・CoreLocation は不使用） -->
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>近くのユーザーをBluetooth LEで検出し、メッセージをオフグリッドで直接伝播するためだけに使用します。位置情報の追跡には一切使用しません。</string>
