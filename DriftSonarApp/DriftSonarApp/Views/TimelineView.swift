@@ -233,7 +233,8 @@ struct PostTimelineView: View {
     }
 
     private func resolveDisplayName(post: Post, isMine: Bool, isAnonymous: Bool) -> String {
-        if isAnonymous { return "匿名" }
+        // TASK-228: 表示名は Text(String) に渡すため自動ローカライズされない。String(localized:) で明示的に引く。
+        if isAnonymous { return String(localized: "匿名") }
         if isMine { return myProfile.nickname }
         return nicknameMap[post.authorPublicKey]
             ?? String(PublicKeyFingerprint.hex(of: post.authorPublicKey).prefix(8)) + "…"
@@ -309,11 +310,12 @@ struct PostRowView: View {
         guard post.authorPublicKey != WelcomePost.authorKey else { return nil }
         let remaining = RetentionPolicy.remainingLifetime(forTimestamp: post.timestamp)
         guard remaining > 0 else { return nil }
+        // TASK-228: Label(String)/accessibilityLabel(String) に渡すので String(localized:) で明示ローカライズ。
         let hours = Int(remaining / 3_600)
-        if hours >= 1 { return "あと約\(hours)時間で消えます" }
+        if hours >= 1 { return String(localized: "あと約\(hours)時間で消えます") }
         let minutes = Int(remaining / 60)
-        if minutes >= 1 { return "あと約\(minutes)分で消えます" }
-        return "まもなく消えます"
+        if minutes >= 1 { return String(localized: "あと約\(minutes)分で消えます") }
+        return String(localized: "まもなく消えます")
     }
 
     var body: some View {
@@ -443,8 +445,11 @@ struct PostRowView: View {
     }
 
     /// Non-jargon distance label — "岸" (shores) instead of hops/relays.
+    /// TASK-228: Text(String) に渡すので String(localized:) で明示ローカライズ。
     private var hopLabel: String {
-        post.hopCount == 0 ? "まっすぐ届いた" : "\(post.hopCount)つの岸を漂って"
+        post.hopCount == 0
+            ? String(localized: "まっすぐ届いた")
+            : String(localized: "\(post.hopCount)つの岸を漂って")
     }
 
     /// Weathered tint: crisp sea up close, weathered ink far away (TASK-206 token —
