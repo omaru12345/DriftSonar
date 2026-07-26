@@ -34,6 +34,39 @@
         }
       }
     },
+    "Bluetooth 権限": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth Permission"
+          }
+        }
+      }
+    },
+    "Central（スキャン側）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Central (Scanner)"
+          }
+        }
+      }
+    },
+    "DriftSonar はサーバーを持たず、すべての通信は端末間の Bluetooth で完結します。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DriftSonar has no server; all communication happens directly between devices over Bluetooth."
+          }
+        }
+      }
+    },
     "DriftSonar は端末同士が直接つながる、サーバーを持たない SNS です。投稿の中央監視は行われないため、健全な利用は一人ひとりの行動と端末側の機能で守られます。ご利用の前に以下に同意してください。": {
       "extractionState": "manual",
       "localizations": {
@@ -41,6 +74,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "DriftSonar is a serverless social app where devices connect directly. There is no central moderation of posts, so a healthy space depends on each person's conduct and the on-device tools. Please agree to the following before you begin."
+          }
+        }
+      }
+    },
+    "DriftSonar は近くの端末と Bluetooth ですれ違うことで投稿やメッセージを運びます。オンのままにすると、アプリを開いていないときも受け渡しが続き、離れていても内容が届きやすくなります。オフにすると、アプリを閉じている間は通信を停止します（次にアプリを開いたときに再開します）。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DriftSonar carries posts and messages by passing nearby devices over Bluetooth. Left on, exchanges continue even when the app isn't open, so content reaches you more easily from a distance. Turned off, communication stops while the app is closed (it resumes the next time you open the app)."
+          }
+        }
+      }
+    },
+    "Peripheral（広告側）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peripheral (Advertiser)"
           }
         }
       }
@@ -111,6 +166,17 @@
         }
       }
     },
+    "いいえ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        }
+      }
+    },
     "いま、波間に流したいことは？": {
       "extractionState": "manual",
       "localizations": {
@@ -122,6 +188,28 @@
         }
       }
     },
+    "うち新規受理": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newly Accepted"
+          }
+        }
+      }
+    },
+    "うち棄却（重複・無効等）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejected (Duplicate/Invalid, etc.)"
+          }
+        }
+      }
+    },
     "このボトルには収まりきらないようです。短い動画や小さめの画像でもう一度お試しください。": {
       "extractionState": "manual",
       "localizations": {
@@ -129,6 +217,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "This won't fit in the bottle. Try a shorter video or a smaller image."
+          }
+        }
+      }
+    },
+    "このユーザーの投稿が再び表示されるようになります。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This user's posts will be shown again."
           }
         }
       }
@@ -177,6 +276,28 @@
         }
       }
     },
+    "すれ違い成立数": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encounters"
+          }
+        }
+      }
+    },
+    "はい": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        }
+      }
+    },
     "まだ何も流れ着いていません": {
       "extractionState": "manual",
       "localizations": {
@@ -221,6 +342,83 @@
         }
       }
     },
+    "アカウント": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "アカウントを削除": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Account"
+          }
+        }
+      }
+    },
+    "アカウントを削除しますか？": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete your account?"
+          }
+        }
+      }
+    },
+    "アプリについて": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        }
+      }
+    },
+    "アプリを閉じている間も近くの端末とすれ違い通信を続けます。その分バッテリーを消費します。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps exchanging with nearby devices even while the app is closed. This uses extra battery."
+          }
+        }
+      }
+    },
+    "アプリ内の通報・ブロックに加えて、不適切なコンテンツや迷惑なユーザーを開発者へ直接メールで報告できます。いただいた報告には24時間以内に対応し、該当コンテンツの削除と違反ユーザーの排除を行います。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In addition to in-app reporting and blocking, you can email the developer directly about inappropriate content or troublesome users. Reports are addressed within 24 hours, removing the content in question and barring the offending user."
+          }
+        }
+      }
+    },
+    "オープンソースライセンス": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Source Licenses"
+          }
+        }
+      }
+    },
     "キャンセル": {
       "extractionState": "manual",
       "localizations": {
@@ -232,6 +430,17 @@
         }
       }
     },
+    "サポート・通報": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support & Reporting"
+          }
+        }
+      }
+    },
     "システムに合わせる": {
       "extractionState": "manual",
       "localizations": {
@@ -239,6 +448,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use System Language"
+          }
+        }
+      }
+    },
+    "スキャン中": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning"
           }
         }
       }
@@ -265,6 +485,39 @@
         }
       }
     },
+    "バックグラウンド通信": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background Communication"
+          }
+        }
+      }
+    },
+    "バージョン": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "ピアへ送出した数（再送含む）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to Peers (Incl. Resends)"
+          }
+        }
+      }
+    },
     "ブロックできます": {
       "extractionState": "manual",
       "localizations": {
@@ -276,6 +529,72 @@
         }
       }
     },
+    "ブロックを解除しますか？": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unblock this user?"
+          }
+        }
+      }
+    },
+    "ブロックを解除すると、その相手の投稿が再び Timeline に表示されます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unblocking makes that person's posts appear on the Timeline again."
+          }
+        }
+      }
+    },
+    "ブロック中のユーザー": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked Users"
+          }
+        }
+      }
+    },
+    "ブロック中のユーザーはいません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No blocked users"
+          }
+        }
+      }
+    },
+    "ブロック日時: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked: %@"
+          }
+        }
+      }
+    },
+    "プライバシーポリシー": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        }
+      }
+    },
     "プロフィール": {
       "extractionState": "manual",
       "localizations": {
@@ -283,6 +602,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Profile"
+          }
+        }
+      }
+    },
+    "プロフィールと暗号鍵、これまでの投稿・メッセージ・ブロックリスト・保存メディアをすべて削除します。新しく始める場合は公開鍵も再発行されます。この操作は取り消せません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletes your profile and encryption keys, along with all posts, messages, block list, and saved media. Starting fresh reissues your public key too. This cannot be undone."
+          }
+        }
+      }
+    },
+    "プロフィール・暗号鍵・投稿・ダイレクトメッセージ・ブロックリスト・保存メディアなど、この端末内のデータをすべて完全に削除し、初期状態に戻します。サーバーを持たないため、削除は端末内で即時に完結します。この操作は取り消せません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently deletes all data on this device — profile, encryption keys, posts, direct messages, block list, saved media — and returns the app to its initial state. With no server, deletion completes instantly on-device. This cannot be undone."
           }
         }
       }
@@ -320,6 +661,17 @@
         }
       }
     },
+    "メッシュ伝播": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesh Propagation"
+          }
+        }
+      }
+    },
     "メディアをうまく載せられませんでした。もう一度お試しください。": {
       "extractionState": "manual",
       "localizations": {
@@ -353,6 +705,17 @@
         }
       }
     },
+    "ライセンス": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licenses"
+          }
+        }
+      }
+    },
     "レーダー": {
       "extractionState": "manual",
       "localizations": {
@@ -360,6 +723,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Radar"
+          }
+        }
+      }
+    },
+    "一時的に許可": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporarily Allowed"
+          }
+        }
+      }
+    },
+    "不明": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        }
+      }
+    },
+    "不許可": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Allowed"
           }
         }
       }
@@ -375,6 +771,17 @@
         }
       }
     },
+    "不適切なコンテンツ・行為を報告": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report Inappropriate Content or Behavior"
+          }
+        }
+      }
+    },
     "不適切な投稿は「通報」でこの端末から即座に非表示にできます。": {
       "extractionState": "manual",
       "localizations": {
@@ -382,6 +789,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can hide an inappropriate post from this device instantly by reporting it."
+          }
+        }
+      }
+    },
+    "以下は静的解析ツール SwiftLint とその依存パッケージで、ビルド時のみ使用されアプリには同梱されません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The following are the static-analysis tool SwiftLint and its dependencies, used only at build time and not bundled with the app."
           }
         }
       }
@@ -408,6 +826,17 @@
         }
       }
     },
+    "削除する": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
     "匿名": {
       "extractionState": "manual",
       "localizations": {
@@ -426,6 +855,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send anonymously"
+          }
+        }
+      }
+    },
+    "受信した投稿数": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posts Received"
+          }
+        }
+      }
+    },
+    "受信数 = 新規受理数 + 棄却数。棄却には重複・期限切れ・署名不正・レート超過が含まれます。送出数は定期再ゴシップによる再送も数えます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received = newly accepted + rejected. Rejections include duplicates, expiry, invalid signatures, and rate-limit overflow. Sends also count resends from periodic re-gossip."
           }
         }
       }
@@ -452,6 +903,17 @@
         }
       }
     },
+    "名前未取得のユーザー": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User (name unavailable)"
+          }
+        }
+      }
+    },
     "変更は即時に反映され、再起動後も保持されます。": {
       "extractionState": "manual",
       "localizations": {
@@ -474,6 +936,17 @@
         }
       }
     },
+    "広告中": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advertising"
+          }
+        }
+      }
+    },
     "手紙を流す": {
       "extractionState": "manual",
       "localizations": {
@@ -485,6 +958,17 @@
         }
       }
     },
+    "接続中のピア数": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peers Connecting"
+          }
+        }
+      }
+    },
     "文字数が%lld文字超過しています": {
       "extractionState": "manual",
       "localizations": {
@@ -492,6 +976,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Over the limit by %lld characters"
+          }
+        }
+      }
+    },
+    "新しい投稿や DM が届いたときにローカル通知でお知らせします。許可の変更は iOS の設定アプリから行えます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll get a local notification when a new post or DM arrives. You can change permission in the iOS Settings app."
           }
         }
       }
@@ -518,6 +1013,28 @@
         }
       }
     },
+    "暫定的に許可": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provisionally Allowed"
+          }
+        }
+      }
+    },
+    "未設定": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Set"
+          }
+        }
+      }
+    },
     "本アプリは%lld歳以上の方のみご利用いただけます。%lld歳以上であることを確認します。": {
       "extractionState": "manual",
       "localizations": {
@@ -525,6 +1042,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "This app is only for people aged %lld or older. I confirm that I am %lld or older."
+          }
+        }
+      }
+    },
+    "検出した端末数": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devices Detected"
           }
         }
       }
@@ -573,6 +1101,17 @@
         }
       }
     },
+    "状態": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
     "画像と動画は同じボトルに入りません。どちらかだけにしてみましょう。": {
       "extractionState": "manual",
       "localizations": {
@@ -580,6 +1119,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Images and videos can't share a bottle. Try just one kind."
+          }
+        }
+      }
+    },
+    "省電力モード": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power-Saving Mode"
           }
         }
       }
@@ -617,6 +1167,61 @@
         }
       }
     },
+    "解除": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unblock"
+          }
+        }
+      }
+    },
+    "解除する": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unblock"
+          }
+        }
+      }
+    },
+    "設定": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "設定アプリで通知を許可": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Notifications in Settings"
+          }
+        }
+      }
+    },
+    "許可": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allowed"
+          }
+        }
+      }
+    },
     "近くで誰かが DriftSonar を開くと\nその投稿が波に乗って流れ着きます": {
       "extractionState": "manual",
       "localizations": {
@@ -628,6 +1233,17 @@
         }
       }
     },
+    "近くの端末を検出できないときの診断情報を表示します。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows diagnostic info for when nearby devices can't be detected."
+          }
+        }
+      }
+    },
     "迷惑なユーザーはブロックすると、その相手の投稿が即座にすべて非表示になります。": {
       "extractionState": "manual",
       "localizations": {
@@ -635,6 +1251,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Blocking a troublesome user instantly hides all of their posts."
+          }
+        }
+      }
+    },
+    "通信診断": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection Diagnostics"
+          }
+        }
+      }
+    },
+    "通信診断（Bluetooth）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection Diagnostics (Bluetooth)"
           }
         }
       }
@@ -657,6 +1295,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "You Can Report"
+          }
+        }
+      }
+    },
+    "通知": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        }
+      }
+    },
+    "連絡先": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact"
+          }
+        }
+      }
+    },
+    "配布されるアプリ本体は Apple のフレームワーク（CryptoKit・SwiftData・Core Bluetooth・SwiftUI）のみを使用し、第三者のランタイムライブラリは含みません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shipped app uses only Apple frameworks (CryptoKit, SwiftData, Core Bluetooth, SwiftUI) and includes no third-party runtime libraries."
+          }
+        }
+      }
+    },
+    "閉じる": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "開発・ビルドツール": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Development & Build Tools"
           }
         }
       }
