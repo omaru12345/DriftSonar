@@ -52,6 +52,10 @@ struct DriftSonarAppApp: App {
     private let notificationDelegate = NotificationTapDelegate()
 
     init() {
+        // TASK-192 (#228): apply the persisted UI language before any view renders, so
+        // the first frame is already in the user's chosen language. Initialising the
+        // singleton swaps `Bundle.main`'s localized-string lookups.
+        _ = LocalizationManager.shared
         // EP-038 (TASK-196): serif display face for navigation titles.
         DSAppearance.apply()
     }
