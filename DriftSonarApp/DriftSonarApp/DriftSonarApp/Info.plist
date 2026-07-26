@@ -27,13 +27,13 @@
 	<false/>
 	<!-- TASK-172: 近接オフライン通信のみに使用。位置情報は追跡しないことを明記（GL 5.1 審査対策・CoreLocation は不使用） -->
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>近くのユーザーをBluetooth LEで検出し、メッセージをオフグリッドで直接伝播するためだけに使用します。位置情報の追跡には一切使用しません。 / Used only to discover nearby users over Bluetooth LE and relay messages off-grid. Location is NOT tracked.</string>
+	<string>近くのユーザーをBluetooth LEで検出し、メッセージをオフグリッドで直接伝播するためだけに使用します。位置情報の追跡には一切使用しません。</string>
 	<!-- TASK-187: 投稿に添付する写真・動画の選択に使用。位置情報(EXIF)は保存時に除去します。 -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>投稿に添付する写真・動画を選ぶために写真ライブラリへアクセスします。位置情報などのメタデータは添付時に除去されます。</string>
 	<!-- TASK-131: DM 相手の安全番号 QR を対面で読み取り、鍵のすり替え(中間者攻撃)がないか確認するためだけに使用します。 -->
 	<key>NSCameraUsageDescription</key>
-	<string>DM相手の安全番号QRコードを読み取り、鍵がすり替えられていないか確認するためにカメラを使用します。撮影内容は保存も送信もされません。 / Used only to scan a contact's safety-number QR code to verify their key. Nothing is stored or transmitted.</string>
+	<string>DM相手の安全番号QRコードを読み取り、鍵がすり替えられていないか確認するためにカメラを使用します。撮影内容は保存も送信もされません。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

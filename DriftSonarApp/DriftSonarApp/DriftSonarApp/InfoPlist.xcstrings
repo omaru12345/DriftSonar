@@ -1,0 +1,60 @@
+{
+  "sourceLanguage" : "ja",
+  "strings" : {
+    "NSBluetoothAlwaysUsageDescription" : {
+      "comment" : "TASK-172: 近接オフライン通信のみ。位置情報は追跡しない旨を明記（GL 5.1 対策）。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used only to discover nearby users over Bluetooth LE and relay messages off-grid. Your location is never tracked."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近くのユーザーをBluetooth LEで検出し、メッセージをオフグリッドで直接伝播するためだけに使用します。位置情報の追跡には一切使用しません。"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "TASK-131: 安全番号 QR の対面スキャンのみ。撮影内容は保存も送信もしない。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used only to scan a contact's safety-number QR code and confirm their key hasn't been swapped. Nothing is stored or transmitted."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DM相手の安全番号QRコードを読み取り、鍵がすり替えられていないか確認するためにカメラを使用します。撮影内容は保存も送信もされません。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "TASK-187: 投稿添付の写真・動画選択のみ。位置情報などのメタデータは添付時に除去。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to pick photos and videos to attach to your posts. Metadata such as location is stripped when attaching."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投稿に添付する写真・動画を選ぶために写真ライブラリへアクセスします。位置情報などのメタデータは添付時に除去されます。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
