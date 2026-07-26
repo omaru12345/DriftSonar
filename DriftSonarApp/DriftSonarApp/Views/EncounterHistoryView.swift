@@ -15,6 +15,10 @@ struct EncounterHistoryView: View {
     @State private var sections: [EncounterHistorySection] = []
     @State private var didLoad = false
 
+    /// TASK-292: 選択 UI 言語のロケール（ContentView が LocalizationManager から注入）。
+    /// 日付・時刻の整形を ja_JP 固定ではなく選択言語に追従させる。
+    @Environment(\.locale) private var locale
+
     var body: some View {
         Group {
             if sections.isEmpty {
@@ -22,7 +26,7 @@ struct EncounterHistoryView: View {
             } else {
                 List {
                     ForEach(sections, id: \.day) { section in
-                        Section(Self.dayLabel(for: section.day)) {
+                        Section(Self.dayLabel(for: section.day, locale: locale)) {
                             ForEach(section.events, id: \.peerId) { event in
                                 EncounterHistoryRow(event: event)
                             }
@@ -47,15 +51,16 @@ struct EncounterHistoryView: View {
         sections = EncounterHistoryGrouping.sections(from: events)
     }
 
-    /// 今日 / 昨日 / それ以外は「M月d日(E)」。
-    static func dayLabel(for day: Date, calendar: Calendar = .current) -> String {
+    /// 今日 / 昨日 / それ以外は月・日・曜日（ja: 3月5日(火) / en: Tue, Mar 5）。
+    static func dayLabel(for day: Date, calendar: Calendar = .current, locale: Locale = .current) -> String {
         // TASK-228: Section(String) 経路なので相対日ラベルは String(localized:) で明示ローカライズ。
         if calendar.isDateInToday(day) { return String(localized: "今日") }
         if calendar.isDateInYesterday(day) { return String(localized: "昨日") }
+        // TASK-292: ja_JP 固定 dateFormat をやめ、選択言語のロケールで並び順を組み立てる。
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.locale = locale
         formatter.calendar = calendar
-        formatter.dateFormat = "M月d日(E)"
+        formatter.setLocalizedDateFormatFromTemplate("MMMdEEE")
         return formatter.string(from: day)
     }
 }
@@ -65,16 +70,16 @@ struct EncounterHistoryView: View {
 private struct EncounterHistoryRow: View {
     let event: EncounteredEvent
 
+    /// TASK-292: 時刻の 12/24 時間表記を選択言語のロケールに追従させる。
+    @Environment(\.locale) private var locale
+
     private var displayName: String {
         if let nickname = event.nickname, !nickname.isEmpty { return nickname }
         return String(localized: "名前のない漂流者")
     }
 
     private var timeText: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "HH:mm"
-        return formatter.string(from: event.encounteredAt)
+        event.encounteredAt.formatted(.dateTime.hour().minute().locale(locale))
     }
 
     var body: some View {

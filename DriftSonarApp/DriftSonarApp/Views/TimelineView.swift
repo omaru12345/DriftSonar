@@ -289,6 +289,9 @@ struct PostRowView: View {
     /// too dark on the abyss surface).
     @Environment(\.colorScheme) private var colorScheme
 
+    /// TASK-292: 選択 UI 言語のロケール。相対時刻を ja/en に追従させる。
+    @Environment(\.locale) private var locale
+
     /// TASK-167: Shared content filter that masks prohibited words on display.
     private static let contentFilter = ContentFilter()
 
@@ -300,6 +303,8 @@ struct PostRowView: View {
     private var relativeTime: String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
+        // TASK-292: 既定の Locale.current ではなく選択言語のロケールで整形する。
+        formatter.locale = locale
         return formatter.localizedString(for: post.timestamp, relativeTo: Date())
     }
 
