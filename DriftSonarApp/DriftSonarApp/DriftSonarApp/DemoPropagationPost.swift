@@ -15,7 +15,8 @@ import Foundation
 /// demonstrates the "記録に残らない" retention behaviour.
 enum DemoPropagationPost {
     /// Display name shown for the demo post's author. A drifter "nearby", not the system.
-    static let authorName = "近くの漂流者"
+    /// Localized (resolved when the seed is created) so it follows the in-app language.
+    static var authorName: String { String(localized: "近くの漂流者") }
 
     /// Sentinel public key identifying the demo author. Not a real key pair — it only
     /// needs to be stable and unlikely to collide with a peer's 32-byte key. Distinct
@@ -27,10 +28,12 @@ enum DemoPropagationPost {
     static let hopCount = 3
 
     /// Demo body shown in the Timeline. The copy makes its demo origin explicit so it
-    /// is never mistaken for a genuine received message.
-    static let content = """
-    これはデモです 🌊
-    近くで誰かが DriftSonar を開くと、その人の投稿はこんなふうに Bluetooth 経由であなたの画面へ漂着します。WiFi もアカウントも要りません。
-    このデモ投稿は本物ではないので、しばらくすると自動で消えます。
-    """
+    /// is never mistaken for a genuine received message. Localized (resolved at seed time).
+    static var content: String {
+        String(localized: """
+        これはデモです 🌊
+        近くで誰かが DriftSonar を開くと、その人の投稿はこんなふうに Bluetooth 経由であなたの画面へ漂着します。WiFi もアカウントも要りません。
+        このデモ投稿は本物ではないので、しばらくすると自動で消えます。
+        """)
+    }
 }

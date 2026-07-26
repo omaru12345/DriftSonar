@@ -2640,6 +2640,270 @@
           }
         }
       }
+    },
+    "鍵を利用できません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key unavailable"
+          }
+        }
+      }
+    },
+    "暗号化に失敗しました": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption failed"
+          }
+        }
+      }
+    },
+    "Bluetooth を利用できません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth unavailable"
+          }
+        }
+      }
+    },
+    "投稿に失敗しました": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t post"
+          }
+        }
+      }
+    },
+    "エラー": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        }
+      }
+    },
+    "再試行": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        }
+      }
+    },
+    "端末の暗号鍵を取得できませんでした。アプリを再起動しても直らない場合は、プロフィールの再セットアップが必要です。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t load this device’s encryption key. If restarting the app doesn’t fix it, you’ll need to set up your profile again."
+          }
+        }
+      }
+    },
+    "メッセージを暗号化できませんでした。もう一度お試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t encrypt the message. Please try again."
+          }
+        }
+      }
+    },
+    "Bluetooth がオフか、利用が許可されていません。設定をご確認ください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth is off or not permitted. Please check your settings."
+          }
+        }
+      }
+    },
+    "投稿を作成できませんでした。もう一度お試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t create the post. Please try again."
+          }
+        }
+      }
+    },
+    "新しい投稿が届きました": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New post received"
+          }
+        }
+      }
+    },
+    "投稿を確認してください": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to see the post"
+          }
+        }
+      }
+    },
+    "新しい DM": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New DM"
+          }
+        }
+      }
+    },
+    "暗号化されたメッセージが届きました": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’ve received an encrypted message"
+          }
+        }
+      }
+    },
+    "タイムラインの読み込みに失敗しました。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t load the timeline."
+          }
+        }
+      }
+    },
+    "投稿内容を入力してください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter something to post."
+          }
+        }
+      }
+    },
+    "%lld文字以内で入力してください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please keep it to %lld characters or fewer."
+          }
+        }
+      }
+    },
+    "画像は%lld枚までです。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can attach up to %lld images."
+          }
+        }
+      }
+    },
+    "動画は%lld本までです。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can attach up to %lld videos."
+          }
+        }
+      }
+    },
+    "添付メディアを処理できませんでした。容量や形式をご確認ください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t process the attached media. Please check its size and format."
+          }
+        }
+      }
+    },
+    "添付メディアの合計サイズが大きすぎます。枚数を減らすか、短い動画をお試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The attached media is too large in total. Try fewer items or a shorter video."
+          }
+        }
+      }
+    },
+    "近くの漂流者": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A drifter nearby"
+          }
+        }
+      }
+    },
+    "これはデモです 🌊\n近くで誰かが DriftSonar を開くと、その人の投稿はこんなふうに Bluetooth 経由であなたの画面へ漂着します。WiFi もアカウントも要りません。\nこのデモ投稿は本物ではないので、しばらくすると自動で消えます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a demo 🌊\nWhen someone nearby opens DriftSonar, their post drifts onto your screen like this over Bluetooth — no WiFi or account needed.\nThis demo post isn’t real, so it will disappear on its own after a while."
+          }
+        }
+      }
+    },
+    "DriftSonar へようこそ！🐬\nここはサーバーを持たない、すれ違い型の SNS です。近くで誰かが DriftSonar を開くと、その人の投稿が Bluetooth でこの画面に流れてきます。WiFi も電話番号もアカウント登録も要りません。\nまずは右上の作成ボタンから、最初のひとことを漂わせてみましょう。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to DriftSonar! 🐬\nThis is a serverless SNS built on passing encounters. When someone nearby opens DriftSonar, their posts flow onto this screen over Bluetooth. No WiFi, phone number, or account sign-up required.\nStart by tapping the compose button in the top right to set your first words adrift."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

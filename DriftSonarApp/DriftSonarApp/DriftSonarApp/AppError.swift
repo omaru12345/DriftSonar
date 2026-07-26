@@ -27,26 +27,29 @@ enum AppError: Identifiable, Equatable {
 
     var id: String { title + "\n" + body }
 
+    // Copy is resolved via `String(localized:)` so it follows the in-app language
+    // (LocalizationManager swaps Bundle.main). `.message` already carries an
+    // already-localized string from the caller, so it is returned verbatim.
     var title: String {
         switch self {
-        case .keyUnavailable: return "鍵を利用できません"
-        case .encryptionFailed: return "暗号化に失敗しました"
-        case .bluetoothUnavailable: return "Bluetooth を利用できません"
-        case .postFailed: return "投稿に失敗しました"
-        case .message: return "エラー"
+        case .keyUnavailable: return String(localized: "鍵を利用できません")
+        case .encryptionFailed: return String(localized: "暗号化に失敗しました")
+        case .bluetoothUnavailable: return String(localized: "Bluetooth を利用できません")
+        case .postFailed: return String(localized: "投稿に失敗しました")
+        case .message: return String(localized: "エラー")
         }
     }
 
     var body: String {
         switch self {
         case .keyUnavailable:
-            return "端末の暗号鍵を取得できませんでした。アプリを再起動しても直らない場合は、プロフィールの再セットアップが必要です。"
+            return String(localized: "端末の暗号鍵を取得できませんでした。アプリを再起動しても直らない場合は、プロフィールの再セットアップが必要です。")
         case .encryptionFailed:
-            return "メッセージを暗号化できませんでした。もう一度お試しください。"
+            return String(localized: "メッセージを暗号化できませんでした。もう一度お試しください。")
         case .bluetoothUnavailable:
-            return "Bluetooth がオフか、利用が許可されていません。設定をご確認ください。"
+            return String(localized: "Bluetooth がオフか、利用が許可されていません。設定をご確認ください。")
         case .postFailed:
-            return "投稿を作成できませんでした。もう一度お試しください。"
+            return String(localized: "投稿を作成できませんでした。もう一度お試しください。")
         case .message(let text):
             return text
         }
@@ -73,7 +76,7 @@ extension View {
             set: { if !$0 { error.wrappedValue = nil } }
         )
         return alert(
-            error.wrappedValue?.title ?? "エラー",
+            error.wrappedValue?.title ?? String(localized: "エラー"),
             isPresented: isPresented,
             presenting: error.wrappedValue
         ) { err in
