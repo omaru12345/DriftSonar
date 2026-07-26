@@ -1,0 +1,61 @@
+{
+  "sourceLanguage" : "ja",
+  "strings" : {
+    "あとで設定からいつでも変更できます" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change this anytime in Settings."
+          }
+        }
+      }
+    },
+    "システムに合わせる" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use System Language"
+          }
+        }
+      }
+    },
+    "変更は即時に反映され、再起動後も保持されます。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes take effect immediately and are kept after you relaunch."
+          }
+        }
+      }
+    },
+    "表示言語" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        }
+      }
+    },
+    "表示言語を選んでください" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Your Language"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

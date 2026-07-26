@@ -18,10 +18,16 @@ struct ContentView: View {
     @State private var setupViewModel = InitialSetupViewModel()
     /// TASK-167: First-launch agreement to the UGC terms (App Store GL 1.2).
     @AppStorage("hasAcceptedEULA") private var hasAcceptedEULA = false
+    /// TASK-192 (#228): process-wide UI language. Read here so the install-time gate
+    /// and the `\.locale` override both react to language changes.
+    private var localization: LocalizationManager { .shared }
 
     var body: some View {
         Group {
-            if !hasAcceptedEULA {
+            if !localization.hasChosen {
+                // TASK-192: choose the UI language before anything else on first launch.
+                LanguageSelectionView()
+            } else if !hasAcceptedEULA {
                 // TASK-167: Require agreement to community/UGC terms before any use.
                 EULAGateView { hasAcceptedEULA = true }
             } else if let existingProfile = profiles.first {
@@ -40,6 +46,9 @@ struct ContentView: View {
         // `Color.accentColor` then resolves to that corrupted (blue) environment value.
         // Reference the asset by name so the tint is pinned to Drift deep-tide.
         .tint(Color("AccentColor"))
+        // TASK-192 (#228): push the chosen language's locale so dates/numbers format to
+        // match and localized `Text` re-resolves against the swapped bundle on a switch.
+        .environment(\.locale, localization.locale)
     }
 }
 

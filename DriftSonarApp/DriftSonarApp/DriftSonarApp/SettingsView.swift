@@ -77,6 +77,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 notificationSection
+                languageSection
                 blockedSection
                 contactSection
                 diagnosticsSection
@@ -145,6 +146,30 @@ struct SettingsView: View {
             Task { @MainActor in
                 notificationStatus = settings.authorizationStatus
             }
+        }
+    }
+
+    // MARK: - Language (TASK-192 / #228)
+
+    /// UI-language picker. Changes are applied immediately (the chosen `.lproj` is
+    /// swapped in) and persisted, so they survive relaunch.
+    @ViewBuilder
+    private var languageSection: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { LocalizationManager.shared.language },
+                set: { LocalizationManager.shared.select($0) }
+            )) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.displayName).tag(language)
+                }
+            } label: {
+                Label("表示言語", systemImage: "globe")
+            }
+        } header: {
+            Text("表示言語")
+        } footer: {
+            Text("変更は即時に反映され、再起動後も保持されます。")
         }
     }
 
