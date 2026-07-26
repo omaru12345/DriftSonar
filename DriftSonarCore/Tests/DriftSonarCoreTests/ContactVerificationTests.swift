@@ -103,6 +103,70 @@ final class ContactVerificationTests: XCTestCase {
         XCTAssertFalse(try service.isVerified(otherPublicKey: makeKey()))
     }
 
+    // MARK: - 検証状態の 3 値判定と失効（TASK-132）
+
+    /// レコードが無ければ status は unverified。
+    func testStatusUnverifiedWhenNoRecord() throws {
+        let service = ContactVerificationService(repository: InMemoryVerifiedContactRepository())
+        XCTAssertEqual(try service.status(myPublicKey: makeKey(), otherPublicKey: makeKey()), .unverified)
+    }
+
+    /// 検証時と同じ鍵素材なら status は verified。
+    func testStatusVerifiedWhenSafetyNumberMatches() throws {
+        let mine = makeKey()
+        let theirs = makeKey()
+        let peerQR = SafetyNumber.compute(theirs, mine).qrPayload
+        let service = ContactVerificationService(repository: InMemoryVerifiedContactRepository())
+        _ = try service.verify(scannedPayload: peerQR, myPublicKey: mine, otherPublicKey: theirs)
+
+        guard case let .verified(contact) = try service.status(myPublicKey: mine, otherPublicKey: theirs) else {
+            return XCTFail("鍵素材が変わっていなければ verified を返すべき")
+        }
+        XCTAssertEqual(contact.publicKey, theirs)
+    }
+
+    /// 検証済みレコードは残るが自分の鍵が変わると安全番号が食い違い、keyChanged になる。
+    func testStatusKeyChangedWhenSafetyNumberDiffers() throws {
+        let mine = makeKey()
+        let theirs = makeKey()
+        let peerQR = SafetyNumber.compute(theirs, mine).qrPayload
+        let service = ContactVerificationService(repository: InMemoryVerifiedContactRepository())
+        _ = try service.verify(scannedPayload: peerQR, myPublicKey: mine, otherPublicKey: theirs)
+
+        // 自分の鍵が変わった（再インストール・鍵ローテーション相当）。相手キーは同じ。
+        let myNewKey = makeKey()
+        guard case let .keyChanged(previous) = try service.status(myPublicKey: myNewKey, otherPublicKey: theirs) else {
+            return XCTFail("鍵素材が変わったら keyChanged を返すべき")
+        }
+        XCTAssertEqual(previous.safetyNumberDigits, SafetyNumber.compute(mine, theirs).digits)
+    }
+
+    /// keyChanged でもレコードは残り、警告が 1 回で消えない（status は毎回 keyChanged を返す）。
+    /// 再検証すると save が上書きし、status は verified へ戻る。
+    func testStatusKeyChangedPersistsUntilReVerify() throws {
+        let mine = makeKey()
+        let theirs = makeKey()
+        let peerQR = SafetyNumber.compute(theirs, mine).qrPayload
+        let service = ContactVerificationService(repository: InMemoryVerifiedContactRepository())
+        _ = try service.verify(scannedPayload: peerQR, myPublicKey: mine, otherPublicKey: theirs)
+
+        // 自分の鍵が変わった状態では、何度呼んでも keyChanged のまま（警告は消えない）。
+        let myNewKey = makeKey()
+        guard case .keyChanged = try service.status(myPublicKey: myNewKey, otherPublicKey: theirs) else {
+            return XCTFail("keyChanged を返すべき")
+        }
+        guard case .keyChanged = try service.status(myPublicKey: myNewKey, otherPublicKey: theirs) else {
+            return XCTFail("再取得しても keyChanged のままであるべき")
+        }
+
+        // 新しい鍵素材で対面再確認すると上書きされ、status は verified へ回復する。
+        let newPeerQR = SafetyNumber.compute(theirs, myNewKey).qrPayload
+        _ = try service.verify(scannedPayload: newPeerQR, myPublicKey: myNewKey, otherPublicKey: theirs)
+        guard case .verified = try service.status(myPublicKey: myNewKey, otherPublicKey: theirs) else {
+            return XCTFail("再検証後は verified に戻るべき")
+        }
+    }
+
     /// 再検証すると verifiedAt が更新される（上書き）。
     func testReVerifyUpdatesTimestamp() throws {
         let mine = makeKey()

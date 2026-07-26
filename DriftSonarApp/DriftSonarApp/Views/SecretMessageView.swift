@@ -40,6 +40,26 @@ struct SecretMessageView: View {
         .background(Color.seaGlass.opacity(0.14))
     }
 
+    // TASK-132: 検証済みだった相手の安全番号が変わったときの警告バンド。E2E バッジの
+    // すぐ下に赤みのある帯で出し、以前の「確認済み」を鵜呑みにせず再確認を促す。
+    @ViewBuilder
+    private var keyChangedWarning: some View {
+        if viewModel.isKeyChanged {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.shield.fill")
+                Text("相手の安全番号が変わりました。もう一度確認してください")
+            }
+            .font(.dsCaption)
+            .foregroundStyle(Color.dsWarn)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(Color.dsWarn.opacity(0.14))
+            // 色だけで危険を伝えないよう、VoiceOver にも状態を明示する（TASK-143 と同じ方針）。
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("警告。相手の安全番号が変わりました。もう一度確認してください")
+        }
+    }
+
     // TASK-150: 消えるメッセージ — quiet band under the badge when this conversation
     // auto-deletes, so the disappearing behaviour is never a silent surprise.
     @ViewBuilder
@@ -95,10 +115,28 @@ struct SecretMessageView: View {
         return colorScheme == .dark ? .abyss : .foam
     }
 
+    // TASK-132: 安全番号ボタンの盾アイコンで未検証/確認済み/鍵変更の 3 状態を区別する。
+    private var shieldSymbol: String {
+        if viewModel.isKeyChanged { return "exclamationmark.shield.fill" }
+        return viewModel.isVerified ? "checkmark.shield.fill" : "checkmark.shield"
+    }
+
+    private var shieldTint: Color {
+        if viewModel.isKeyChanged { return .dsWarn }
+        return viewModel.isVerified ? .seaGlass : .accentColor
+    }
+
+    private var shieldAccessibilityLabel: String {
+        if viewModel.isKeyChanged { return "安全番号（変更あり・要再確認）" }
+        return viewModel.isVerified ? "安全番号（確認済み）" : "安全番号を確認"
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // TASK-141: E2E encryption reassurance badge (aligns with EP-025 verified badge).
             encryptionBadge
+            // TASK-132: 安全番号が変わった相手への再確認警告（該当時のみ）。
+            keyChangedWarning
             // TASK-150: disappearing-messages status band.
             ephemeralHint
 
@@ -177,11 +215,12 @@ struct SecretMessageView: View {
                             peerName: peerTitle
                         )
                     } label: {
-                        // TASK-131: 検証済みなら塗りつぶしの盾＋sea glass 色で「確認済み」を示す。
-                        Image(systemName: viewModel.isVerified ? "checkmark.shield.fill" : "checkmark.shield")
-                            .foregroundStyle(viewModel.isVerified ? Color.seaGlass : Color.accentColor)
+                        // TASK-131/132: 3 状態を盾アイコンで区別する。
+                        // 確認済み=塗りつぶし盾＋sea glass、鍵変更=警告盾＋warn 色、未検証=線画盾＋accent。
+                        Image(systemName: shieldSymbol)
+                            .foregroundStyle(shieldTint)
                     }
-                    .accessibilityLabel(viewModel.isVerified ? "安全番号（確認済み）" : "安全番号を確認")
+                    .accessibilityLabel(shieldAccessibilityLabel)
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {

@@ -17,6 +17,23 @@ struct EncounterView: View {
     @Query(sort: \EncounteredEventModel.encounteredAt, order: .reverse)
     private var encounterHistory: [EncounteredEventModel]
 
+    /// TASK-132: 対面の安全番号突合で検証済みになった相手（EP-025 / TASK-131）。
+    /// 出会った行に「✓ 確認済み」バッジを出すために引く。
+    @Query private var verifiedContacts: [VerifiedContactModel]
+
+    /// 相手の公開鍵 → 検証したときの安全番号。
+    private var verifiedDigitsByKey: [Data: String] {
+        Dictionary(verifiedContacts.map { ($0.publicKey, $0.safetyNumberDigits) },
+                   uniquingKeysWith: { first, _ in first })
+    }
+
+    /// TASK-132: レコードがあるだけでは足りず、いまの安全番号（自分・相手の鍵素材から算出）が
+    /// 検証時と一致するときだけ「確認済み」とみなす。鍵素材が変わった相手には出さない。
+    private func isVerified(_ peerPublicKey: Data) -> Bool {
+        guard let storedDigits = verifiedDigitsByKey[peerPublicKey] else { return false }
+        return SafetyNumber.compute(myProfile.publicKey, peerPublicKey).digits == storedDigits
+    }
+
     /// TASK-198: BLE auto-starts at launch, but `viewModel.isDiscovering` only flips
     /// in `onAppear` — one frame later. Folding in `bleService.isRunning` keeps the
     /// first frame from flashing the calm/recovery state.
@@ -58,7 +75,10 @@ struct EncounterView: View {
                                     otherPublicKey: peer.peerPublicKey,
                                     peerNickname: peer.nickname
                                 )) {
-                                    ContactRowView(peer: peer)
+                                    ContactRowView(
+                                        peer: peer,
+                                        isVerified: isVerified(peer.peerPublicKey)
+                                    )
                                 }
                                 .listRowBackground(Color.dsSurface)
                                 // TASK-033: Long-press context menu to block this peer
@@ -265,6 +285,8 @@ private struct WaterSurfaceView: View {
 /// read crisp sea, faint ones read washed-out driftwood.
 private struct ContactRowView: View {
     let peer: EncounteredEvent
+    /// TASK-132: 対面の安全番号突合で検証済みの相手なら「✓ 確認済み」バッジを出す。
+    var isVerified: Bool = false
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -274,10 +296,14 @@ private struct ContactRowView: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
-                // TASK-079: Show nickname if available, fall back to peerId
-                Text(peer.nickname ?? peer.peerId)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
+                HStack(spacing: DSLayout.Spacing.xs) {
+                    // TASK-079: Show nickname if available, fall back to peerId
+                    Text(peer.nickname ?? peer.peerId)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                    // TASK-132: 検証済みバッジ。sea glass の塗り盾で DM 画面のバッジと揃える。
+                    if isVerified { verifiedBadge }
+                }
                 Text(PublicKeyFingerprint.formatted(of: peer.peerPublicKey))
                     .font(.dsMono(.caption))
                     .foregroundStyle(.secondary)
@@ -303,6 +329,16 @@ private struct ContactRowView: View {
             }
         }
         .padding(.vertical, DSLayout.Spacing.xs)
+    }
+
+    // TASK-132: 検証済みを示す小さなバッジ。色（sea glass）だけに頼らず「確認済み」の
+    // 文字も添え、VoiceOver でも 1 要素として読めるようにする（TASK-143 と同じ方針）。
+    private var verifiedBadge: some View {
+        Label("確認済み", systemImage: "checkmark.shield.fill")
+            .font(.dsCaption.weight(.semibold))
+            .foregroundStyle(Color.seaGlass)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("確認済み")
     }
 
     private var avatarInitial: String {
