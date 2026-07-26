@@ -31,6 +31,7 @@ struct SettingsView: View {
     /// Reset on account deletion so the app returns to the first-launch flow.
     @AppStorage("hasAcceptedEULA") private var hasAcceptedEULA = false
     @AppStorage("hasSeededWelcomePost") private var hasSeededWelcomePost = false
+    @AppStorage("hasSeededDemoPropagation") private var hasSeededDemoPropagation = false
     /// TASK-169 (GL 2.5.4): user control for background すれ違い通信. Shares the key with
     /// `ContentView`, which applies it on every scene-phase change.
     @AppStorage("backgroundBLEEnabled") private var backgroundBLEEnabled = true
@@ -375,6 +376,7 @@ struct SettingsView: View {
         // 6) Local flags / report state, then return to first-launch flow.
         ReportStore.clear()
         hasSeededWelcomePost = false
+        hasSeededDemoPropagation = false
         hasAcceptedEULA = false
 
         dismiss()
