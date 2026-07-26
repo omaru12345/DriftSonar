@@ -707,7 +707,8 @@ private struct SkeletonTimelineView: View {
 // MARK: - EmptyTimelineView
 
 // TASK-115: Dolphin mascot illustration in empty state.
-private struct EmptyTimelineView: View {
+// Internal (not private) so the snapshot tests can render it in isolation (TASK-161).
+struct EmptyTimelineView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image("DriftSonarLogo")
