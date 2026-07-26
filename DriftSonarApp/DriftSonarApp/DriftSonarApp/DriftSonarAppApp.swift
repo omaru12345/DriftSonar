@@ -51,7 +51,15 @@ private final class NotificationTapDelegate: NSObject, UNUserNotificationCenterD
 struct DriftSonarAppApp: App {
     private let notificationDelegate = NotificationTapDelegate()
 
+    /// True when the process is hosting XCTest. The App-target unit tests inject into the
+    /// running app host (TASK-159), so we skip the full app boot — SwiftData store, the
+    /// `ContentView` tree (which spins up BLE via `AppServices`) and the notification-permission
+    /// task. Without this, those concurrent tasks race the test host's rapid relaunches and
+    /// abort the process, failing the run even though every test case passes.
+    private static let isRunningUnitTests = NSClassFromString("XCTestCase") != nil
+
     init() {
+        guard !Self.isRunningUnitTests else { return }
         // TASK-192 (#228): apply the persisted UI language before any view renders, so
         // the first frame is already in the user's chosen language. Initialising the
         // singleton swaps `Bundle.main`'s localized-string lookups.
@@ -70,7 +78,10 @@ struct DriftSonarAppApp: App {
             BlockedKeyModel.self,  // TASK-033
             VerifiedContactModel.self,  // TASK-131: 安全番号突合による検証済み相手
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // In-memory under XCTest so the test host never touches the on-disk store — the
+        // `.modelContainer` modifier below is applied unconditionally, so the container is
+        // built even when `body` renders `EmptyView` for unit tests (TASK-159).
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: Self.isRunningUnitTests)
 
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -89,8 +100,13 @@ struct DriftSonarAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .task { await requestNotificationPermission() }
+            if Self.isRunningUnitTests {
+                // Unit tests exercise ViewModels directly; the host app must stay dormant.
+                EmptyView()
+            } else {
+                ContentView()
+                    .task { await requestNotificationPermission() }
+            }
         }
         .modelContainer(sharedModelContainer)
     }

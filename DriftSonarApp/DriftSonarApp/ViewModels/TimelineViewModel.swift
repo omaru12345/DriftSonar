@@ -4,6 +4,16 @@ import CryptoKit
 
 @Observable
 class TimelineViewModel {
+    // The app builds with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, which makes this
+    // `@Observable` class implicitly `@MainActor` and gives it a *main-actor-isolated*
+    // `deinit`. On the iOS 17 back-deploy concurrency runtime that isolated deinit
+    // (`swift_task_deinitOnExecutorMainActorBackDeploy`) double-frees its task-local scope
+    // and aborts the process whenever the view model is deallocated — which the App-target
+    // unit tests do constantly (TASK-159). In the app the shared view model lives for the
+    // whole session and is never deallocated, so this never bit production; declaring the
+    // deinit `nonisolated` keeps teardown off the executor and sidesteps the runtime bug.
+    nonisolated deinit {}
+
     var posts: [Post] = []
     var isLoading = false
     /// Unified user-facing error surfaced as an alert (TASK-154).

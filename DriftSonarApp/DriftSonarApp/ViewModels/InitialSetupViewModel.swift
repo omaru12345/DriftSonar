@@ -4,6 +4,12 @@ import DriftSonarCore
 
 @Observable
 class InitialSetupViewModel {
+    // `nonisolated` teardown avoids the main-actor-isolated `deinit` (implied by the app's
+    // `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`) whose back-deploy runtime shim double-frees
+    // when the view model is deallocated under the App-target unit tests (TASK-159). See the
+    // matching note in `TimelineViewModel`.
+    nonisolated deinit {}
+
     var nickname: String = ""
     var bio: String = ""
     var errorMessage: String?

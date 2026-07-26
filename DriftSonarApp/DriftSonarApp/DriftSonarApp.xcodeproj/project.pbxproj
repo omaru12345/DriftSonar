@@ -23,7 +23,21 @@
 		3DBC26AA2F4CBD2400D66431 /* EncounterHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26AB2F4CBD2400D66431 /* EncounterHistoryView.swift */; };
 		3DBC26B02F4CBD2400D66431 /* SafetyNumberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26B12F4CBD2400D66431 /* SafetyNumberView.swift */; };
 		3DBC26C02F4CBD2400D66431 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC26C12F4CBD2400D66431 /* QRScannerView.swift */; };
+		47CFDD62B8FE2D828434F24A /* InitialSetupViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5709E8866AEC2FF9DBD6A441 /* InitialSetupViewModelTests.swift */; };
+		6B204A46800914E5DF901AB7 /* TimelineViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F667441E795FA5AB235210B1 /* TimelineViewModelTests.swift */; };
+		6E7C0DA39C079EB025DE141D /* TestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */; };
+		7B7D044083FD186E3073BCF3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2484C368750D0A201ADDCC1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D934E92F946B7B6931FBC668 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3D52D78A2F4CB1C400293211 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3D52D7912F4CB1C400293211;
+			remoteInfo = DriftSonarApp;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		3D52D7922F4CB1C400293211 /* DriftSonarApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DriftSonarApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -43,6 +57,11 @@
 		3DBC26AB2F4CBD2400D66431 /* EncounterHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterHistoryView.swift; sourceTree = "<group>"; };
 		3DBC26B12F4CBD2400D66431 /* SafetyNumberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyNumberView.swift; sourceTree = "<group>"; };
 		3DBC26C12F4CBD2400D66431 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		5709E8866AEC2FF9DBD6A441 /* InitialSetupViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InitialSetupViewModelTests.swift; sourceTree = "<group>"; };
+		B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestDoubles.swift; sourceTree = "<group>"; };
+		E2484C368750D0A201ADDCC1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		F667441E795FA5AB235210B1 /* TimelineViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimelineViewModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -75,6 +94,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D7835EC2F93BDC84DAE9B11A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B7D044083FD186E3073BCF3 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -86,6 +113,7 @@
 				3D52D7942F4CB1C400293211 /* DriftSonarApp */,
 				3D52D7A22F4CB3F000293211 /* Frameworks */,
 				3D52D7932F4CB1C400293211 /* Products */,
+				E7F5D825F68358EF7B9404F0 /* DriftSonarAppTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -93,6 +121,7 @@
 			isa = PBXGroup;
 			children = (
 				3D52D7922F4CB1C400293211 /* DriftSonarApp.app */,
+				B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -101,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				3D52D7A32F4CB3F000293211 /* DriftSonarCore */,
+				B2BAAB9D890EF2E673231631 /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -134,9 +164,46 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		B2BAAB9D890EF2E673231631 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				E2484C368750D0A201ADDCC1 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		E7F5D825F68358EF7B9404F0 /* DriftSonarAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */,
+				5709E8866AEC2FF9DBD6A441 /* InitialSetupViewModelTests.swift */,
+				F667441E795FA5AB235210B1 /* TimelineViewModelTests.swift */,
+			);
+			name = DriftSonarAppTests;
+			path = DriftSonarAppTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		39C2E7E0A205FD28041ADDBC /* DriftSonarAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C294D6BBC624ECFE639CB368 /* Build configuration list for PBXNativeTarget "DriftSonarAppTests" */;
+			buildPhases = (
+				7EE6539EAB67604765329B78 /* Sources */,
+				D7835EC2F93BDC84DAE9B11A /* Frameworks */,
+				3CA2126BCAE90E42759C7EA0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				905635E303DE73222F50ED10 /* PBXTargetDependency */,
+			);
+			name = DriftSonarAppTests;
+			productName = DriftSonarAppTests;
+			productReference = B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		3D52D7912F4CB1C400293211 /* DriftSonarApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3D52D79F2F4CB1C500293211 /* Build configuration list for PBXNativeTarget "DriftSonarApp" */;
@@ -186,7 +253,7 @@
 			mainGroup = 3D52D7892F4CB1C400293211;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				3DBC25D82F4CB8AD00D66431 /* XCLocalSwiftPackageReference "../../DriftSonarCore" */,
+				3DBC25D82F4CB8AD00D66431 /* XCLocalSwiftPackageReference "DriftSonarCore" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3D52D7932F4CB1C400293211 /* Products */;
@@ -194,11 +261,19 @@
 			projectRoot = "";
 			targets = (
 				3D52D7912F4CB1C400293211 /* DriftSonarApp */,
+				39C2E7E0A205FD28041ADDBC /* DriftSonarAppTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3CA2126BCAE90E42759C7EA0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3D52D7902F4CB1C400293211 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -231,7 +306,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7EE6539EAB67604765329B78 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E7C0DA39C079EB025DE141D /* TestDoubles.swift in Sources */,
+				47CFDD62B8FE2D828434F24A /* InitialSetupViewModelTests.swift in Sources */,
+				6B204A46800914E5DF901AB7 /* TimelineViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		905635E303DE73222F50ED10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DriftSonarApp;
+			target = 3D52D7912F4CB1C400293211 /* DriftSonarApp */;
+			targetProxy = D934E92F946B7B6931FBC668 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3D52D79D2F4CB1C500293211 /* Debug */ = {
@@ -390,7 +484,6 @@
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = JR7TH3GM72;
-				PROVISIONING_PROFILE_SPECIFIER = "DriftSonar App Store";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DriftSonarApp/Info.plist;
@@ -401,6 +494,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.driftsonar.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "DriftSonar App Store";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -408,6 +502,41 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		C7810857BEE58C6809326EAC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.driftsonar.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DriftSonarApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DriftSonarApp";
+			};
+			name = Debug;
+		};
+		D4AFB53A66EFA6E10A89A94C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.driftsonar.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DriftSonarApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DriftSonarApp";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -432,10 +561,19 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C294D6BBC624ECFE639CB368 /* Build configuration list for PBXNativeTarget "DriftSonarAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4AFB53A66EFA6E10A89A94C /* Release */,
+				C7810857BEE58C6809326EAC /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		3DBC25D82F4CB8AD00D66431 /* XCLocalSwiftPackageReference "../../DriftSonarCore" */ = {
+		3DBC25D82F4CB8AD00D66431 /* XCLocalSwiftPackageReference "DriftSonarCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../DriftSonarCore;
 		};
