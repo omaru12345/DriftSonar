@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "ja",
   "strings": {
+    "%@、%@ にすれ違い": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crossed paths with %@ at %@"
+          }
+        }
+      }
+    },
     "%lldつの岸を漂って": {
       "extractionState": "manual",
       "localizations": {
@@ -34,6 +45,17 @@
         }
       }
     },
+    "Bluetooth をオンにして、画面を開いたままにしておきましょう。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Bluetooth and keep this screen open."
+          }
+        }
+      }
+    },
     "Bluetooth 権限": {
       "extractionState": "manual",
       "localizations": {
@@ -41,6 +63,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bluetooth Permission"
+          }
+        }
+      }
+    },
+    "Bluetoothをオンにしてください": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please turn on Bluetooth"
           }
         }
       }
@@ -188,6 +221,17 @@
         }
       }
     },
+    "いまは凪いでいます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All is calm now"
+          }
+        }
+      }
+    },
     "うち新規受理": {
       "extractionState": "manual",
       "localizations": {
@@ -276,6 +320,17 @@
         }
       }
     },
+    "すれ違いの記録": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encounter History"
+          }
+        }
+      }
+    },
     "すれ違い成立数": {
       "extractionState": "manual",
       "localizations": {
@@ -283,6 +338,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encounters"
+          }
+        }
+      }
+    },
+    "すれ違った誰かが、ここに流れ着きます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone you cross paths with will drift ashore here"
           }
         }
       }
@@ -309,6 +375,17 @@
         }
       }
     },
+    "まだ誰ともすれ違っていません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You haven't crossed paths with anyone yet"
+          }
+        }
+      }
+    },
     "まだ誰の投稿も流れ着いていません。近くで誰かが DriftSonar を開くまで、あなたの漂流を映しています。": {
       "extractionState": "manual",
       "localizations": {
@@ -316,6 +393,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing has drifted ashore yet. Until someone nearby opens DriftSonar, this shows your own drift."
+          }
+        }
+      }
+    },
+    "まだ誰も波間に見えません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No one is in the waves yet"
           }
         }
       }
@@ -338,6 +426,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disappearing soon"
+          }
+        }
+      }
+    },
+    "もう一度耳を澄ます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen again"
           }
         }
       }
@@ -727,6 +826,17 @@
         }
       }
     },
+    "レーダーは休んでいます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The radar is resting"
+          }
+        }
+      }
+    },
     "一時的に許可": {
       "extractionState": "manual",
       "localizations": {
@@ -793,6 +903,28 @@
         }
       }
     },
+    "人が多い場所（カフェ・駅・イベント）で開くと届きやすくなります。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening it in a crowded place (café, station, event) helps you connect."
+          }
+        }
+      }
+    },
+    "今日": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        }
+      }
+    },
     "以下は静的解析ツール SwiftLint とその依存パッケージで、ビルド時のみ使用されアプリには同梱されません。": {
       "extractionState": "manual",
       "localizations": {
@@ -837,6 +969,17 @@
         }
       }
     },
+    "前回のすれ違い: ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last encounter: "
+          }
+        }
+      }
+    },
     "匿名": {
       "extractionState": "manual",
       "localizations": {
@@ -855,6 +998,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send anonymously"
+          }
+        }
+      }
+    },
+    "友だちを招待（QRコード）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite a Friend (QR Code)"
+          }
+        }
+      }
+    },
+    "友だちを誘って同時に開くと、最初のすれ違いが生まれます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite a friend to open it at the same time for your first encounter."
           }
         }
       }
@@ -881,6 +1046,17 @@
         }
       }
     },
+    "同じ部屋くらいの距離です": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About a room away"
+          }
+        }
+      }
+    },
     "同意して始める": {
       "extractionState": "manual",
       "localizations": {
@@ -888,6 +1064,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agree and Start"
+          }
+        }
+      }
+    },
+    "名前のない漂流者": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nameless drifter"
           }
         }
       }
@@ -1013,6 +1200,28 @@
         }
       }
     },
+    "昨日": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday"
+          }
+        }
+      }
+    },
+    "普通": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moderate"
+          }
+        }
+      }
+    },
     "暫定的に許可": {
       "extractionState": "manual",
       "localizations": {
@@ -1064,6 +1273,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld characters left"
+          }
+        }
+      }
+    },
+    "波間で出会った人": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People You've Met"
+          }
+        }
+      }
+    },
+    "波間に耳を澄ませています": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening to the waves"
           }
         }
       }
@@ -1130,6 +1361,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Power-Saving Mode"
+          }
+        }
+      }
+    },
+    "省電力中 · スキャンを控えめにしています": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power-saving · Scanning less frequently"
+          }
+        }
+      }
+    },
+    "確認済み": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verified"
           }
         }
       }
@@ -1222,6 +1475,28 @@
         }
       }
     },
+    "近い": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Near"
+          }
+        }
+      }
+    },
+    "近くで誰かが DriftSonar を開くと\nすれ違いがここに刻まれます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When someone nearby opens DriftSonar,\nthe encounter is recorded here."
+          }
+        }
+      }
+    },
     "近くで誰かが DriftSonar を開くと\nその投稿が波に乗って流れ着きます": {
       "extractionState": "manual",
       "localizations": {
@@ -1229,6 +1504,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "When someone nearby opens DriftSonar,\ntheir posts ride the waves and drift to you."
+          }
+        }
+      }
+    },
+    "近くにいます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nearby"
           }
         }
       }
@@ -1321,6 +1607,17 @@
         }
       }
     },
+    "遠い": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Far"
+          }
+        }
+      }
+    },
     "配布されるアプリ本体は Apple のフレームワーク（CryptoKit・SwiftData・Core Bluetooth・SwiftUI）のみを使用し、第三者のランタイムライブラリは含みません。": {
       "extractionState": "manual",
       "localizations": {
@@ -1350,6 +1647,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Development & Build Tools"
+          }
+        }
+      }
+    },
+    "離れています": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Far away"
+          }
+        }
+      }
+    },
+    "電波の強さ %lld dBm、%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signal strength %lld dBm, %@"
+          }
+        }
+      }
+    },
+    "電波は数十メートル届きます。近くに誰かいれば自然とつながります。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The signal reaches tens of meters. If someone's nearby, you'll connect naturally."
           }
         }
       }

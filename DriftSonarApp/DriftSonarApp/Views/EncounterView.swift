@@ -138,17 +138,22 @@ struct EncounterView: View {
     // TASK-198: BLE auto-starts at launch (#229 / GL 2.1), so the default UI is a
     // status line, not a start button. The button appears only in the rare stopped
     // state (e.g. discovery failed) as a recovery path.
+    // TASK-228: 三項演算子の Text は String 初期化子に落ちて自動ローカライズされないため、
+    // LocalizedStringKey として明示的に型付けしてカタログ参照させる。
+    private var statusTitleKey: LocalizedStringKey {
+        isDiscovering ? "波間に耳を澄ませています" : "いまは凪いでいます"
+    }
+    private var statusSubtitleKey: LocalizedStringKey {
+        isDiscovering ? "すれ違った誰かが、ここに流れ着きます" : "レーダーは休んでいます"
+    }
+
     @ViewBuilder
     private var statusArea: some View {
         VStack(spacing: DSLayout.Spacing.xs) {
-            Text(isDiscovering ? "波間に耳を澄ませています" : "いまは凪いでいます")
+            Text(statusTitleKey)
                 .font(.dsTitle)
                 .foregroundStyle(statusTint)
-            Text(
-                isDiscovering
-                    ? "すれ違った誰かが、ここに流れ着きます"
-                    : "レーダーは休んでいます"
-            )
+            Text(statusSubtitleKey)
             .font(.dsCaption)
             .foregroundStyle(Color.dsTextSecondary)
 
@@ -347,20 +352,22 @@ private struct ContactRowView: View {
     }
 
     /// TASK-147: short word for the proximity bucket shown on the row.
+    /// TASK-228: 文字列補間へ渡すので String(localized:) で明示ローカライズ。
     private static func proximityWord(_ level: ProximityLevel) -> String {
         switch level {
-        case .near: return "近い"
-        case .normal: return "普通"
-        case .far: return "遠い"
+        case .near: return String(localized: "近い")
+        case .normal: return String(localized: "普通")
+        case .far: return String(localized: "遠い")
         }
     }
 
     /// TASK-143/147: spoken description of the proximity bucket for VoiceOver.
+    /// TASK-228: accessibilityLabel の %@ 置換へ渡すので String(localized:) で明示ローカライズ。
     private static func proximityDescription(_ level: ProximityLevel) -> String {
         switch level {
-        case .near: return "近くにいます"
-        case .normal: return "同じ部屋くらいの距離です"
-        case .far: return "離れています"
+        case .near: return String(localized: "近くにいます")
+        case .normal: return String(localized: "同じ部屋くらいの距離です")
+        case .far: return String(localized: "離れています")
         }
     }
 
@@ -392,7 +399,8 @@ private struct EmptyRadarView: View {
 
     /// TASK-122: concrete, actionable hints rotated on a timer so the empty state
     /// nudges the user toward a first encounter rather than just informing them.
-    private static let hints = [
+    // TASK-228: Text(String) 経路だと自動ローカライズされないため LocalizedStringKey 配列にする。
+    private static let hints: [LocalizedStringKey] = [
         "人が多い場所（カフェ・駅・イベント）で開くと届きやすくなります。",
         "Bluetooth をオンにして、画面を開いたままにしておきましょう。",
         "友だちを誘って同時に開くと、最初のすれ違いが生まれます。",
