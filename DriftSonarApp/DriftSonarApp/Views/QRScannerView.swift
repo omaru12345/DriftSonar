@@ -140,33 +140,47 @@ private final class ScannerViewController: UIViewController {
         }
     }
 
+    /// セッション構成（入出力の追加・開始）は AVFoundation 推奨どおり `sessionQueue` 上で行い、
+    /// メインスレッドの瞬間フリーズと `session` への並行アクセスを避ける。プレビュー層の追加のみ
+    /// メインへ戻す。
     private func configureSession() {
-        // シミュレータやカメラ非搭載端末では device が nil。安全に案内へフォールバック。
-        guard let device = AVCaptureDevice.default(for: .video),
-              let input = try? AVCaptureDeviceInput(device: device),
-              session.canAddInput(input) else {
-            onUnavailable?()
-            return
-        }
-        session.addInput(input)
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            // シミュレータやカメラ非搭載端末では device が nil。安全に案内へフォールバック。
+            guard let device = AVCaptureDevice.default(for: .video),
+                  let input = try? AVCaptureDeviceInput(device: device),
+                  self.session.canAddInput(input) else {
+                DispatchQueue.main.async { self.onUnavailable?() }
+                return
+            }
+            self.session.beginConfiguration()
+            self.session.addInput(input)
 
-        let output = AVCaptureMetadataOutput()
-        guard session.canAddOutput(output) else {
-            onUnavailable?()
-            return
-        }
-        session.addOutput(output)
-        output.setMetadataObjectsDelegate(coordinator, queue: DispatchQueue.main)
-        // addOutput 後でないと .qr が metadataObjectTypes に含まれない。
-        output.metadataObjectTypes = output.availableMetadataObjectTypes.contains(.qr) ? [.qr] : []
+            let output = AVCaptureMetadataOutput()
+            guard self.session.canAddOutput(output) else {
+                self.session.commitConfiguration()
+                DispatchQueue.main.async { self.onUnavailable?() }
+                return
+            }
+            self.session.addOutput(output)
+            output.setMetadataObjectsDelegate(self.coordinator, queue: DispatchQueue.main)
+            // カメラ入力があるとき .qr は常にサポートされる。`availableMetadataObjectTypes` の
+            // 評価タイミング差で空配列になり検出できなくなる事故を避け、直接指定する。
+            output.metadataObjectTypes = [.qr]
+            self.session.commitConfiguration()
 
+            self.session.startRunning()
+
+            DispatchQueue.main.async { self.installPreviewLayer() }
+        }
+    }
+
+    private func installPreviewLayer() {
         let preview = AVCaptureVideoPreviewLayer(session: session)
         preview.videoGravity = .resizeAspectFill
         preview.frame = view.layer.bounds
         view.layer.addSublayer(preview)
         previewLayer = preview
-
-        sessionQueue.async { [session] in session.startRunning() }
     }
 
     override func viewDidLayoutSubviews() {
