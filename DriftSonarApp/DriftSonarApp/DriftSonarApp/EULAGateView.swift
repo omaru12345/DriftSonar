@@ -134,7 +134,9 @@ struct EULAGateView: View {
         }
     }
 
-    private func policyItem(icon: String, title: String, body: String) -> some View {
+    // TASK-228: title/body は Text(_:) に渡すので LocalizedStringKey で受け、呼び出し側の
+    // 日本語リテラルが String Catalog 経由で自動ローカライズされるようにする。
+    private func policyItem(icon: String, title: LocalizedStringKey, body: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)

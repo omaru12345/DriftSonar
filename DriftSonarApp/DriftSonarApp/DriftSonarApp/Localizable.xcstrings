@@ -23,6 +23,39 @@
         }
       }
     },
+    "%lld歳以上です": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I am %lld or older"
+          }
+        }
+      }
+    },
+    "DriftSonar は端末同士が直接つながる、サーバーを持たない SNS です。投稿の中央監視は行われないため、健全な利用は一人ひとりの行動と端末側の機能で守られます。ご利用の前に以下に同意してください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DriftSonar is a serverless social app where devices connect directly. There is no central moderation of posts, so a healthy space depends on each person's conduct and the on-device tools. Please agree to the following before you begin."
+          }
+        }
+      }
+    },
+    "「同意して始める」を押すと、上記の利用規約と禁止事項、および%lld歳以上であることの確認に同意したものとみなされます。違反した場合、当該コンテンツの非表示やブロックの対象となります。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By tapping “Agree and Start,” you agree to the terms and prohibitions above and confirm that you are %lld or older. Violations may result in the content being hidden or blocked."
+          }
+        }
+      }
+    },
     "あとで設定からいつでも変更できます": {
       "extractionState": "manual",
       "localizations": {
@@ -133,6 +166,17 @@
         }
       }
     },
+    "ご利用にあたって": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before You Begin"
+          }
+        }
+      }
+    },
     "まだ何も流れ着いていません": {
       "extractionState": "manual",
       "localizations": {
@@ -221,6 +265,28 @@
         }
       }
     },
+    "ブロックできます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You Can Block"
+          }
+        }
+      }
+    },
+    "プロフィール": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        }
+      }
+    },
     "ボトルに入りきらないようです。あと%lld文字だけ短くしてみましょう。": {
       "extractionState": "manual",
       "localizations": {
@@ -287,6 +353,39 @@
         }
       }
     },
+    "レーダー": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radar"
+          }
+        }
+      }
+    },
+    "不適切なコンテンツの禁止": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Objectionable Content"
+          }
+        }
+      }
+    },
+    "不適切な投稿は「通報」でこの端末から即座に非表示にできます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can hide an inappropriate post from this device instantly by reporting it."
+          }
+        }
+      }
+    },
     "写真・動画を追加": {
       "extractionState": "manual",
       "localizations": {
@@ -294,6 +393,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add photo or video"
+          }
+        }
+      }
+    },
+    "利用規約・コミュニティガイドライン": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms & Community Guidelines"
           }
         }
       }
@@ -320,6 +430,17 @@
         }
       }
     },
+    "同意して始める": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and Start"
+          }
+        }
+      }
+    },
     "名前を伏せて流します。誰の手紙かは、届いた先でも分かりません。": {
       "extractionState": "manual",
       "localizations": {
@@ -338,6 +459,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Changes take effect immediately and are kept after you relaunch."
+          }
+        }
+      }
+    },
+    "嫌がらせ・脅迫・差別・わいせつ・違法な内容など、不快・不適切な投稿は固く禁止します。これはテキストだけでなく、添付する画像・動画にも等しく適用されます。これらに対して一切の許容はありません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harassment, threats, discrimination, obscenity, illegal content, and any other objectionable or inappropriate posts are strictly prohibited. This applies equally to text and to attached images and videos. There is zero tolerance for such content."
           }
         }
       }
@@ -371,6 +503,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "New Post"
+          }
+        }
+      }
+    },
+    "明らかな不適切語を含む投稿は自動的に伏せ字で表示されます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posts containing clearly inappropriate words are automatically masked."
+          }
+        }
+      }
+    },
+    "本アプリは%lld歳以上の方のみご利用いただけます。%lld歳以上であることを確認します。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app is only for people aged %lld or older. I confirm that I am %lld or older."
           }
         }
       }
@@ -430,6 +584,17 @@
         }
       }
     },
+    "自動フィルタ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic Filter"
+          }
+        }
+      }
+    },
     "表示言語": {
       "extractionState": "manual",
       "localizations": {
@@ -463,6 +628,17 @@
         }
       }
     },
+    "迷惑なユーザーはブロックすると、その相手の投稿が即座にすべて非表示になります。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocking a troublesome user instantly hides all of their posts."
+          }
+        }
+      }
+    },
     "通報した投稿はこの端末で即座に非表示になります。投稿者をまとめて非表示にするにはブロックをご利用ください。": {
       "extractionState": "manual",
       "localizations": {
@@ -470,6 +646,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "A reported post is hidden immediately on this device. To hide everything from a poster at once, use Block."
+          }
+        }
+      }
+    },
+    "通報できます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You Can Report"
           }
         }
       }
