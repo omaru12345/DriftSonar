@@ -144,6 +144,17 @@
         }
       }
     },
+    "Bluetooth：すれ違った人とことばを届け合うために使います。\n通知：近くの人や DM の着信に気づくために使います。\n\n位置情報やアカウント登録は要りません。この後、必要になったときに端末が確認します。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth: used to exchange words with people you cross paths with.\nNotifications: used to let you know about people nearby and incoming DMs.\n\nNo location access or account sign-up is required. Your device will ask later, when it's needed."
+          }
+        }
+      }
+    },
     "Central（スキャン側）": {
       "extractionState": "manual",
       "localizations": {
@@ -298,6 +309,17 @@
         }
       }
     },
+    "あなたの鍵ペアは、この端末の中だけで生成・保管されます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your key pair is generated and stored only on this device."
+          }
+        }
+      }
+    },
     "いいえ": {
       "extractionState": "manual",
       "localizations": {
@@ -364,6 +386,17 @@
         }
       }
     },
+    "この QR コードを相手に読み取らせると\nあなたの公開鍵を共有できます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have someone scan this QR code\nto share your public key."
+          }
+        }
+      }
+    },
     "このあと送受信するメッセージは%@で消えます": {
       "extractionState": "manual",
       "localizations": {
@@ -419,6 +452,17 @@
         }
       }
     },
+    "この名前で海へ出る": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set out to sea with this name"
+          }
+        }
+      }
+    },
     "この形式のメディアはまだ流せません。別のファイルをお試しください。": {
       "extractionState": "manual",
       "localizations": {
@@ -448,6 +492,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "This contact is verified"
+          }
+        }
+      }
+    },
+    "この端末の暗号鍵が見つかりませんでした。アプリの再インストールやバックアップ復元で鍵が失われた可能性があります。プロフィールを作り直すと再び利用できます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device's encryption keys couldn't be found. They may have been lost during a reinstall or backup restore. Recreating your profile lets you use the app again."
           }
         }
       }
@@ -503,6 +558,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yes"
+          }
+        }
+      }
+    },
+    "はじめる": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Started"
+          }
+        }
+      }
+    },
+    "はじめる前に、二つだけ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two Things Before You Begin"
           }
         }
       }
@@ -617,6 +694,17 @@
         }
       }
     },
+    "アカウントも、クラウドの履歴もありません。あえてオフグリッドの、秘密の話に閉じた小さな SNS です。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no accounts and no cloud history. It's a small, deliberately off-grid social app closed around private conversations."
+          }
+        }
+      }
+    },
     "アカウントを削除": {
       "extractionState": "manual",
       "localizations": {
@@ -727,6 +815,28 @@
         }
       }
     },
+    "サーバーのない海で、\nことばは人から人へ漂って届く": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In a sea without servers,\nwords drift from person to person."
+          }
+        }
+      }
+    },
+    "サーバーのない海へ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To a Sea Without Servers"
+          }
+        }
+      }
+    },
     "システムに合わせる": {
       "extractionState": "manual",
       "localizations": {
@@ -734,6 +844,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use System Language"
+          }
+        }
+      }
+    },
+    "スキップ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
           }
         }
       }
@@ -760,6 +881,17 @@
         }
       }
     },
+    "タップで全画面表示": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to view full screen"
+          }
+        }
+      }
+    },
     "テキストをコピー": {
       "extractionState": "manual",
       "localizations": {
@@ -767,6 +899,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copy Text"
+          }
+        }
+      }
+    },
+    "ニックネーム": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        }
+      }
+    },
+    "ニックネームを入力してください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a nickname."
+          }
+        }
+      }
+    },
+    "ニックネーム（必須）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname (required)"
           }
         }
       }
@@ -899,6 +1064,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "This deletes your profile and encryption keys, along with all posts, messages, block list, and saved media. Starting fresh reissues your public key too. This cannot be undone."
+          }
+        }
+      }
+    },
+    "プロフィールと暗号鍵が一致しません。データが破損しているか、別の端末の鍵が混在している可能性があります。プロフィールを作り直すと再び利用できます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile and encryption keys don't match. The data may be corrupted, or keys from another device may be mixed in. Recreating your profile lets you use the app again."
+          }
+        }
+      }
+    },
+    "プロフィールを作り直しますか？": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recreate your profile?"
+          }
+        }
+      }
+    },
+    "プロフィールを作り直す": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recreate Profile"
+          }
+        }
+      }
+    },
+    "プロフィールを作成できませんでした。もう一度お試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't create your profile. Please try again."
+          }
+        }
+      }
+    },
+    "プロフィールを編集": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Profile"
           }
         }
       }
@@ -1101,6 +1321,17 @@
         }
       }
     },
+    "二人だけの入江": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Cove for Two"
+          }
+        }
+      }
+    },
     "人が多い場所（カフェ・駅・イベント）で開くと届きやすくなります。": {
       "extractionState": "manual",
       "localizations": {
@@ -1130,6 +1361,105 @@
           "stringUnit": {
             "state": "translated",
             "value": "The following are the static-analysis tool SwiftLint and its dependencies, used only at build time and not bundled with the app."
+          }
+        }
+      }
+    },
+    "任意・100文字まで": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional, up to 100 characters"
+          }
+        }
+      }
+    },
+    "作り直す": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recreate"
+          }
+        }
+      }
+    },
+    "保存": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "保存に失敗しました: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to save: %@"
+          }
+        }
+      }
+    },
+    "信頼する相手との会話は、二人の端末だけで解ける暗号（エンドツーエンド暗号化）に閉じます。ほかの誰にも、私たちにも読めません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversations with people you trust are closed inside encryption only your two devices can open (end-to-end encryption). No one else — not even we — can read them."
+          }
+        }
+      }
+    },
+    "公開鍵": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Key"
+          }
+        }
+      }
+    },
+    "公開鍵 QR コード": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Key QR Code"
+          }
+        }
+      }
+    },
+    "公開鍵 QR コードを表示": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Public Key QR Code"
+          }
+        }
+      }
+    },
+    "公開鍵は変更できません。あなたの本人性そのものです。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your public key cannot be changed. It is your very identity."
           }
         }
       }
@@ -1174,6 +1504,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last encounter: "
+          }
+        }
+      }
+    },
+    "動画はまだ取得されていません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The video hasn't been downloaded yet"
           }
         }
       }
@@ -1541,6 +1882,17 @@
         }
       }
     },
+    "次へ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        }
+      }
+    },
     "残り%lld文字": {
       "extractionState": "manual",
       "localizations": {
@@ -1581,6 +1933,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send"
+          }
+        }
+      }
+    },
+    "海での呼び名を決めましょう。ニックネームを入力してください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose your name at sea. Please enter a nickname."
+          }
+        }
+      }
+    },
+    "海での呼び名（必須）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your name at sea (required)"
           }
         }
       }
@@ -1636,6 +2010,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Status"
+          }
+        }
+      }
+    },
+    "現在のプロフィールと鍵を削除し、初期セットアップからやり直します。新しい公開鍵が発行されます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletes your current profile and keys and starts over from initial setup. A new public key will be issued."
           }
         }
       }
@@ -1794,6 +2179,50 @@
         }
       }
     },
+    "自己紹介": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bio"
+          }
+        }
+      }
+    },
+    "自己紹介が少し長いようです。100文字までに縮めてみましょう。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your bio is a little long. Try trimming it to 100 characters."
+          }
+        }
+      }
+    },
+    "自己紹介は%lld文字以内で入力してください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bio must be %lld characters or fewer."
+          }
+        }
+      }
+    },
+    "自己紹介（任意・100文字まで）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bio (optional, up to 100 characters)"
+          }
+        }
+      }
+    },
     "表示言語": {
       "extractionState": "manual",
       "localizations": {
@@ -1834,6 +2263,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unblock"
+          }
+        }
+      }
+    },
+    "記録に残らない場所": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Place That Leaves No Record"
           }
         }
       }
@@ -2069,6 +2509,17 @@
         }
       }
     },
+    "鍵の不整合を検出しました": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key mismatch detected"
+          }
+        }
+      }
+    },
     "閉じる": {
       "extractionState": "manual",
       "localizations": {
@@ -2098,6 +2549,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Far away"
+          }
+        }
+      }
+    },
+    "電波が届く数十メートルの人へ、サーバーを通さず直接ことばが漂います。すれ違うたび、投稿は人から人へ運ばれて広がっていきます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Words drift directly, with no server, to people within tens of meters. Each time you cross paths, posts are carried from person to person and spread."
           }
         }
       }

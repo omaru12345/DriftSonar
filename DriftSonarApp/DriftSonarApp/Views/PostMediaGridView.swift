@@ -86,7 +86,9 @@ struct PostMediaGridView: View {
                 }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(media[index].kind == .video ? "添付動画" : "添付画像")
+        // TASK-228: 三項は LocalizedStringKey として型付けしないとローカライズされない。
+        .accessibilityLabel(media[index].kind == .video
+            ? LocalizedStringKey("添付動画") : LocalizedStringKey("添付画像"))
         .accessibilityHint("タップで全画面表示")
     }
 }

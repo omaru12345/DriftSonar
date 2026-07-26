@@ -164,11 +164,12 @@ private struct ProfileIntegrityErrorView: View {
     @State private var showingConfirm = false
 
     private var message: String {
+        // TASK-228: Text(message) 経路なので String(localized:) で明示ローカライズ。
         switch status {
         case .keysMissing:
-            return "この端末の暗号鍵が見つかりませんでした。アプリの再インストールやバックアップ復元で鍵が失われた可能性があります。プロフィールを作り直すと再び利用できます。"
+            return String(localized: "この端末の暗号鍵が見つかりませんでした。アプリの再インストールやバックアップ復元で鍵が失われた可能性があります。プロフィールを作り直すと再び利用できます。")
         case .keyMismatch:
-            return "プロフィールと暗号鍵が一致しません。データが破損しているか、別の端末の鍵が混在している可能性があります。プロフィールを作り直すと再び利用できます。"
+            return String(localized: "プロフィールと暗号鍵が一致しません。データが破損しているか、別の端末の鍵が混在している可能性があります。プロフィールを作り直すと再び利用できます。")
         case .ok:
             return ""
         }
@@ -456,12 +457,13 @@ private struct EditProfileView: View {
     }
 
     private func save() {
+        // TASK-228: Text(errorMessage) 経路なので String(localized:) で明示ローカライズ。
         guard !trimmedNickname.isEmpty else {
-            errorMessage = "ニックネームを入力してください。"
+            errorMessage = String(localized: "ニックネームを入力してください。")
             return
         }
         guard bio.count <= Self.maxBioLength else {
-            errorMessage = "自己紹介は\(Self.maxBioLength)文字以内で入力してください。"
+            errorMessage = String(localized: "自己紹介は\(Self.maxBioLength)文字以内で入力してください。")
             return
         }
 
@@ -472,7 +474,7 @@ private struct EditProfileView: View {
         do {
             try modelContext.save()
         } catch {
-            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+            errorMessage = String(localized: "保存に失敗しました: \(error.localizedDescription)")
             return
         }
 

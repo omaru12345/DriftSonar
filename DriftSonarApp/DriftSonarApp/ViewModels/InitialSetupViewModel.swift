@@ -21,7 +21,7 @@ class InitialSetupViewModel {
         // Trim to match the View's canCreate gate — whitespace-only names must
         // not slip through other call paths.
         guard !nickname.trimmingCharacters(in: .whitespaces).isEmpty else {
-            errorMessage = "海での呼び名を決めましょう。ニックネームを入力してください。"
+            errorMessage = String(localized: "海での呼び名を決めましょう。ニックネームを入力してください。")
             return
         }
 
@@ -38,10 +38,10 @@ class InitialSetupViewModel {
         } catch let error as DomainError {
             switch error {
             case .bioTooLong:
-                errorMessage = "自己紹介が少し長いようです。100文字までに縮めてみましょう。"
+                errorMessage = String(localized: "自己紹介が少し長いようです。100文字までに縮めてみましょう。")
             }
         } catch {
-            errorMessage = "プロフィールを作成できませんでした。もう一度お試しください。"
+            errorMessage = String(localized: "プロフィールを作成できませんでした。もう一度お試しください。")
         }
     }
 }
