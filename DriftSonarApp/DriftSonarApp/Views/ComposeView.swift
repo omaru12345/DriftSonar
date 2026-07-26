@@ -35,6 +35,11 @@ struct ComposeView: View {
 
     private var remaining: Int { maxLength - content.count }
     private var isOverLimit: Bool { remaining < 0 }
+    /// TASK-228: 文字数カウントの VoiceOver ラベル。三項演算子を LocalizedStringKey として
+    /// 明示的に型付けし、String Catalog 経由でローカライズさせる。
+    private var remainingAccessibilityLabel: LocalizedStringKey {
+        isOverLimit ? "文字数が\(-remaining)文字超過しています" : "残り\(remaining)文字"
+    }
     /// Text *or* media is enough to post; block while a pick is still processing.
     private var canPost: Bool {
         let hasText = !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -71,11 +76,9 @@ struct ComposeView: View {
                         .foregroundStyle(remaining < 20 ? Color.dsWarnText : Color.dsTextSecondary)
                         .padding(.leading, DSLayout.Spacing.lg)
                         // TASK-143: The low/over-limit warning is colour-only; spell it out.
-                        .accessibilityLabel(
-                            isOverLimit
-                                ? "文字数が\(-remaining)文字超過しています"
-                                : "残り\(remaining)文字"
-                        )
+                        // TASK-228: 三項演算子は LocalizedStringKey として型付けしないと自動
+                        // ローカライズされない（String 初期化子に落ちる）。
+                        .accessibilityLabel(remainingAccessibilityLabel)
 
                     if mediaIngestService != nil {
                         // TASK-187: up to 4 images OR 1 video; the combination is validated
@@ -245,7 +248,9 @@ struct ComposeView: View {
                         .padding(4)
                 }
             }
-            .accessibilityLabel(preview.attachment.kind == .video ? "添付動画" : "添付画像")
+            // TASK-228: 三項は LocalizedStringKey として型付けしないとローカライズされない。
+            .accessibilityLabel(preview.attachment.kind == .video
+                ? LocalizedStringKey("添付動画") : LocalizedStringKey("添付画像"))
     }
 
     // MARK: - Selection → ingest (TASK-187)

@@ -439,9 +439,13 @@ struct PostRowView: View {
         }
         .foregroundStyle(weatheredTint)
         // TASK-143: distance also reads through colour; give VoiceOver the full sentence.
-        .accessibilityLabel(
-            post.hopCount == 0 ? "あなたにまっすぐ届いた投稿" : "\(post.hopCount)つの岸を漂って届いた投稿"
-        )
+        .accessibilityLabel(hopAccessibilityLabel)
+    }
+
+    // TASK-228: 三項演算子を Text/accessibilityLabel へ直接渡すと String 初期化子に落ちて
+    // 自動ローカライズされない。LocalizedStringKey として明示的に型付けしてカタログ参照させる。
+    private var hopAccessibilityLabel: LocalizedStringKey {
+        post.hopCount == 0 ? "あなたにまっすぐ届いた投稿" : "\(post.hopCount)つの岸を漂って届いた投稿"
     }
 
     /// Non-jargon distance label — "岸" (shores) instead of hops/relays.
