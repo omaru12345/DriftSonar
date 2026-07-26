@@ -22,6 +22,9 @@ struct SafetyNumberView: View {
 
     /// TASK-131: カメラスキャナの提示状態。
     @State private var showScanner = false
+    /// TASK-131: スキャンで読み取ったペイロード。スキャナが閉じ切ってから突合＋アラート提示する
+    /// （`fullScreenCover` の閉じアニメーション中に親の `.alert` を出すと無視される SwiftUI の競合を回避）。
+    @State private var pendingScan: String?
     /// TASK-131: この画面でスキャン突合に成功したか（提示中の即時反映用）。
     @State private var justVerified = false
     /// TASK-131: 突合結果のフィードバック（一致/不一致/解釈不能）を伝えるアラート。
@@ -68,9 +71,14 @@ struct SafetyNumberView: View {
                 }
             }
         }
-        // TASK-131: 相手の QR を読み取って自端末計算値と突合する。
-        .fullScreenCover(isPresented: $showScanner) {
-            QRScannerView(onFound: handleScanned)
+        // TASK-131: 相手の QR を読み取って自端末計算値と突合する。突合とアラート提示は
+        // スキャナが閉じ切った onDismiss で行い、presentation の競合を避ける。
+        .fullScreenCover(isPresented: $showScanner, onDismiss: {
+            guard let payload = pendingScan else { return }
+            pendingScan = nil
+            handleScanned(payload)
+        }) {
+            QRScannerView(onFound: { pendingScan = $0 })
         }
         .alert(item: $scanFeedback) { feedback in
             Alert(title: Text(feedback.title), message: Text(feedback.message),
