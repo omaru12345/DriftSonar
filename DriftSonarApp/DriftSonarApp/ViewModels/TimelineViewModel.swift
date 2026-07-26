@@ -39,7 +39,7 @@ class TimelineViewModel {
         do {
             posts = try useCase.execute(limit: 50)
         } catch {
-            self.error = .message("タイムラインの読み込みに失敗しました。")
+            self.error = .message(String(localized: "タイムラインの読み込みに失敗しました。"))
         }
         isLoading = false
     }
@@ -84,17 +84,17 @@ class TimelineViewModel {
             refresh()
             return nil
         } catch CreatePostError.emptyContent {
-            return .message("投稿内容を入力してください。")
+            return .message(String(localized: "投稿内容を入力してください。"))
         } catch CreatePostError.contentTooLong {
-            return .message("\(CreatePostUseCase.maxContentLength)文字以内で入力してください。")
+            return .message(String(localized: "\(CreatePostUseCase.maxContentLength)文字以内で入力してください。"))
         } catch CreatePostError.tooManyImages {
-            return .message("画像は\(CreatePostUseCase.maxImages)枚までです。")
+            return .message(String(localized: "画像は\(CreatePostUseCase.maxImages)枚までです。"))
         } catch CreatePostError.tooManyVideos {
-            return .message("動画は\(CreatePostUseCase.maxVideos)本までです。")
+            return .message(String(localized: "動画は\(CreatePostUseCase.maxVideos)本までです。"))
         } catch CreatePostError.invalidMedia {
-            return .message("添付メディアを処理できませんでした。容量や形式をご確認ください。")
+            return .message(String(localized: "添付メディアを処理できませんでした。容量や形式をご確認ください。"))
         } catch CreatePostError.mediaTooLarge {
-            return .message("添付メディアの合計サイズが大きすぎます。枚数を減らすか、短い動画をお試しください。")
+            return .message(String(localized: "添付メディアの合計サイズが大きすぎます。枚数を減らすか、短い動画をお試しください。"))
         } catch {
             return .postFailed
         }

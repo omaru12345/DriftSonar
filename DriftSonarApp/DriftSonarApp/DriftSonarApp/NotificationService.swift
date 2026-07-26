@@ -14,9 +14,9 @@ enum NotificationService {
     /// Send a local notification when a new Post is received via BLE.
     static func sendPostNotification(post: Post) {
         let content = UNMutableNotificationContent()
-        content.title = "新しい投稿が届きました"
+        content.title = String(localized: "新しい投稿が届きました")
         let preview = String(post.content.prefix(50))
-        content.body = preview.isEmpty ? "投稿を確認してください" : preview
+        content.body = preview.isEmpty ? String(localized: "投稿を確認してください") : preview
         content.sound = .default
         content.categoryIdentifier = "POST"
 
@@ -34,8 +34,8 @@ enum NotificationService {
     /// Content is intentionally vague — we never show decrypted text in notifications.
     static func sendDMNotification() {
         let content = UNMutableNotificationContent()
-        content.title = "新しい DM"
-        content.body = "暗号化されたメッセージが届きました"
+        content.title = String(localized: "新しい DM")
+        content.body = String(localized: "暗号化されたメッセージが届きました")
         content.sound = .default
         content.categoryIdentifier = "DM"
 
