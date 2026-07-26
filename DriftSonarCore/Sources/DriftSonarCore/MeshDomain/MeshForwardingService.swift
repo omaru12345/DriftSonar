@@ -111,10 +111,16 @@ public final class MeshForwardingService {
 
     /// In-memory set of post IDs seen (TASK-006). Persisted to UserDefaults for cross-session dedup (TASK-092).
     private var seenMessageIDs: Set<UUID> = []
-    /// Insertion-order tracking for LRU eviction when set exceeds maxSeenIDs.
-    private var seenOrder: [UUID] = []
+    /// Insertion-ordered `(id, reception time)` pairs backing eviction (TASK-006 / TASK-177).
+    /// Reception time only ever moves forward, so the oldest entries stay at the front and
+    /// both the age-bounded and count-bounded evictions are cheap front-of-array trims.
+    private var seenOrder: [(id: UUID, seenAt: Date)] = []
 
     private static let seenIDsKey = "DriftSonar.seenMessageIDs"
+    private static let seenAtKey = "DriftSonar.seenMessageIDsSeenAt"
+
+    /// Live seen-ID count. Exposed for tests to assert age/count eviction (TASK-177).
+    var seenIDCountForTesting: Int { seenMessageIDs.count }
     /// Per-sender receive timestamps within the current rate-limit window (TASK-032).
     private var senderTimestamps: [Data: [Date]] = [:]
 
@@ -151,12 +157,22 @@ public final class MeshForwardingService {
         guard let stored = UserDefaults.standard.array(forKey: Self.seenIDsKey) as? [String] else { return }
         let ids = stored.compactMap { UUID(uuidString: $0) }
         seenMessageIDs = Set(ids)
-        seenOrder = ids
+        let times = UserDefaults.standard.array(forKey: Self.seenAtKey) as? [Double]
+        if let times, times.count == ids.count {
+            seenOrder = zip(ids, times).map { (id: $0, seenAt: Date(timeIntervalSince1970: $1)) }
+        } else {
+            // Backward compat (TASK-177): pre-existing installs persisted IDs without
+            // reception times. Treat them as just-received so they keep deduplicating for
+            // one more window rather than being pruned on the next receive — harmless,
+            // since a genuinely stale replayed post is rejected by the timestamp check.
+            let now = Date()
+            seenOrder = ids.map { (id: $0, seenAt: now) }
+        }
     }
 
     private func persistSeenIDs() {
-        let strings = seenOrder.map(\.uuidString)
-        UserDefaults.standard.set(strings, forKey: Self.seenIDsKey)
+        UserDefaults.standard.set(seenOrder.map(\.id.uuidString), forKey: Self.seenIDsKey)
+        UserDefaults.standard.set(seenOrder.map(\.seenAt.timeIntervalSince1970), forKey: Self.seenAtKey)
     }
 
     /// TASK-151: Panic-wipe support. Forgets all cross-session dedup and rate-limit
@@ -173,6 +189,7 @@ public final class MeshForwardingService {
         seenOrder.removeAll()
         senderTimestamps.removeAll()
         UserDefaults.standard.removeObject(forKey: Self.seenIDsKey)
+        UserDefaults.standard.removeObject(forKey: Self.seenAtKey)
     }
 
     // MARK: - Public API
@@ -180,11 +197,11 @@ public final class MeshForwardingService {
     /// Handle a raw payload arriving over BLE.
     /// - Returns: `true` if the message was new and should be stored/forwarded.
     @discardableResult
-    public func receive(payload: Data) -> Bool {
+    public func receive(payload: Data, now: Date = Date()) -> Bool {
         // TASK-148: tally every payload as received, then accepted vs rejected so the
         // diagnostics screen can show whether propagation is actually working.
         statsLock.lock(); receivedCount += 1; statsLock.unlock()
-        let accepted = process(payload: payload)
+        let accepted = process(payload: payload, now: now)
         statsLock.lock()
         if accepted { acceptedCount += 1 } else { rejectedCount += 1 }
         statsLock.unlock()
@@ -194,27 +211,27 @@ public final class MeshForwardingService {
     /// The receive pipeline. Returns `true` if the post was new, valid, and stored for
     /// forwarding; `false` for any drop (undecodable / duplicate / implausible timestamp
     /// / rate-limited / bad signature / out-of-bounds / expired TTL).
-    private func process(payload: Data) -> Bool {
+    private func process(payload: Data, now: Date) -> Bool {
         guard let post = try? PostSerializer.decode(payload) else { return false }
 
         // Deduplication (TASK-006)
         guard !isKnown(id: post.id) else { return false }
-        markSeen(id: post.id)
+        markSeen(id: post.id, now: now)
 
         // Timestamp sanity check (TASK-173)
         // Reject posts dated implausibly far in the future (timeline-pinning attack)
         // or older than the retention window. Marked seen above so they aren't reprocessed.
-        guard isTimestampPlausible(post.timestamp) else {
+        guard isTimestampPlausible(post.timestamp, now: now) else {
             print("[MeshForwarding] Dropped post \(post.id): implausible timestamp \(post.timestamp)")
             return false
         }
 
         // Rate limiting (TASK-032)
-        guard !isRateLimited(authorPublicKey: post.authorPublicKey) else {
+        guard !isRateLimited(authorPublicKey: post.authorPublicKey, now: now) else {
             print("[MeshForwarding] Dropped post \(post.id): rate limit exceeded for sender")
             return false
         }
-        recordReceive(authorPublicKey: post.authorPublicKey)
+        recordReceive(authorPublicKey: post.authorPublicKey, now: now)
 
         // Signature verification (TASK-026 / TASK-027)
         if config.requireValidSignature {
@@ -356,15 +373,14 @@ public final class MeshForwardingService {
         return true
     }
 
-    private func isRateLimited(authorPublicKey: Data) -> Bool {
-        let cutoff = Date(timeIntervalSinceNow: -config.rateLimitWindow)
+    private func isRateLimited(authorPublicKey: Data, now: Date) -> Bool {
+        let cutoff = now.addingTimeInterval(-config.rateLimitWindow)
         let recent = (senderTimestamps[authorPublicKey] ?? []).filter { $0 > cutoff }
         return recent.count >= config.rateLimitPerSender
     }
 
-    private func recordReceive(authorPublicKey: Data) {
-        let now = Date()
-        let cutoff = Date(timeIntervalSinceNow: -config.rateLimitWindow)
+    private func recordReceive(authorPublicKey: Data, now: Date) {
+        let cutoff = now.addingTimeInterval(-config.rateLimitWindow)
         var timestamps = (senderTimestamps[authorPublicKey] ?? []).filter { $0 > cutoff }
         timestamps.append(now)
         senderTimestamps[authorPublicKey] = timestamps
@@ -374,14 +390,33 @@ public final class MeshForwardingService {
         seenMessageIDs.contains(id)
     }
 
-    private func markSeen(id: UUID) {
-        if seenMessageIDs.count >= config.maxSeenIDs,
-           let oldest = seenOrder.first {
-            seenMessageIDs.remove(oldest)
+    /// Record a post ID as seen, then evict (TASK-006 / TASK-177).
+    ///
+    /// Replay resistance: a replayed post is only re-acceptable once its ID has left this
+    /// set. So we keep every ID for as long as a post bearing it could still pass the
+    /// timestamp check — `maxTimestampAge` back plus `maxClockSkew` forward, the full span
+    /// over which `isTimestampPlausible` can return true for a fixed timestamp. Any ID
+    /// pruned by this age bound belongs to a post that is now timestamp-rejected anyway, so
+    /// pruning it opens no replay window. The count cap is only a memory backstop: it can
+    /// force out a still-in-window ID when in-window traffic exceeds `maxSeenIDs`, the one
+    /// irreducible replay gap (shrinkable by raising `maxSeenIDs` or, per TASK-177's note,
+    /// a Bloom-filter summary of expired IDs — deferred until traffic warrants it).
+    private func markSeen(id: UUID, now: Date) {
+        // Age-bounded eviction: drop IDs older than the widest window over which any post
+        // bearing them could still be plausible. seenAt is monotonic, so the doomed
+        // entries are a contiguous run at the front.
+        let ageCutoff = now.addingTimeInterval(-(config.maxTimestampAge + config.maxClockSkew))
+        while let oldest = seenOrder.first, oldest.seenAt < ageCutoff {
+            seenMessageIDs.remove(oldest.id)
+            seenOrder.removeFirst()
+        }
+        // Count backstop: hard cap so a burst of in-window traffic cannot grow unbounded.
+        while seenMessageIDs.count >= config.maxSeenIDs, let oldest = seenOrder.first {
+            seenMessageIDs.remove(oldest.id)
             seenOrder.removeFirst()
         }
         seenMessageIDs.insert(id)
-        seenOrder.append(id)
+        seenOrder.append((id: id, seenAt: now))
         // TASK-092: Persist periodically (every 10 new IDs to reduce write frequency).
         if seenOrder.count % 10 == 0 {
             persistSeenIDs()
