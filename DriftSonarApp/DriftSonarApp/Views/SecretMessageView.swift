@@ -277,6 +277,9 @@ private struct MessageBubble: View {
     let isMine: Bool
     let timestamp: Date
 
+    /// TASK-292: 送信時刻の日付・時刻整形を選択言語のロケールに追従させる。
+    @Environment(\.locale) private var locale
+
     // TASK-228: 三項の "自分"/"相手" は文字列補間へ入ると自動ローカライズされないため、
     // String(localized:) で明示的にローカライズした語を差し込む。
     private var senderLabel: String {
@@ -307,7 +310,7 @@ private struct MessageBubble: View {
                     )
                 // TASK-141/200: Per-message send time — mono data role (TASK-196).
                 // dsTextSecondary: system .secondary is 3.1:1 on the sand ground.
-                Text(Self.timeLabel(for: timestamp))
+                Text(timeLabel(for: timestamp))
                     .font(.dsMono(.caption2))
                     .foregroundStyle(Color.dsTextSecondary)
             }
@@ -315,18 +318,21 @@ private struct MessageBubble: View {
             // explicitly for VoiceOver and read the bubble as a single element.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(
-                "\(senderLabel)のメッセージ、\(text)、\(Self.timeLabel(for: timestamp))"
+                "\(senderLabel)のメッセージ、\(text)、\(timeLabel(for: timestamp))"
             )
             if !isMine { Spacer(minLength: 60) }
         }
     }
 
     /// Time only for today, abbreviated date + time otherwise.
-    private static func timeLabel(for date: Date) -> String {
+    /// TASK-292: 既定ロケールではなく選択言語のロケールで整形する。
+    private func timeLabel(for date: Date) -> String {
         if Calendar.current.isDateInToday(date) {
-            return date.formatted(date: .omitted, time: .shortened)
+            return date.formatted(.dateTime.hour().minute().locale(locale))
         }
-        return date.formatted(date: .abbreviated, time: .shortened)
+        return date.formatted(
+            .dateTime.year().month(.abbreviated).day().hour().minute().locale(locale)
+        )
     }
 }
 
