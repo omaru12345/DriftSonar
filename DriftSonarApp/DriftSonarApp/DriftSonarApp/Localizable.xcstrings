@@ -1,61 +1,479 @@
 {
-  "sourceLanguage" : "ja",
-  "strings" : {
-    "あとで設定からいつでも変更できます" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can change this anytime in Settings."
+  "sourceLanguage": "ja",
+  "strings": {
+    "%lldつの岸を漂って": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drifted across %lld shores"
           }
         }
       }
     },
-    "システムに合わせる" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use System Language"
+    "%lldつの岸を漂って届いた投稿": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A post that drifted across %lld shores"
           }
         }
       }
     },
-    "変更は即時に反映され、再起動後も保持されます。" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changes take effect immediately and are kept after you relaunch."
+    "あとで設定からいつでも変更できます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can change this anytime in Settings."
           }
         }
       }
     },
-    "表示言語" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Language"
+    "あと約%lld分で消えます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disappears in about %lld minutes"
           }
         }
       }
     },
-    "表示言語を選んでください" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Your Language"
+    "あと約%lld時間で消えます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disappears in about %lld hours"
+          }
+        }
+      }
+    },
+    "あなたにまっすぐ届いた投稿": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A post that reached you directly"
+          }
+        }
+      }
+    },
+    "あなたの投稿": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Posts"
+          }
+        }
+      }
+    },
+    "いま、波間に流したいことは？": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What do you want to set adrift?"
+          }
+        }
+      }
+    },
+    "このボトルには収まりきらないようです。短い動画や小さめの画像でもう一度お試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This won't fit in the bottle. Try a shorter video or a smaller image."
+          }
+        }
+      }
+    },
+    "このユーザーをブロック": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block This User"
+          }
+        }
+      }
+    },
+    "この形式のメディアはまだ流せません。別のファイルをお試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This media format can't be set adrift yet. Try another file."
+          }
+        }
+      }
+    },
+    "この投稿を通報": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report This Post"
+          }
+        }
+      }
+    },
+    "まだ何も流れ着いていません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing has drifted ashore yet"
+          }
+        }
+      }
+    },
+    "まだ誰の投稿も流れ着いていません。近くで誰かが DriftSonar を開くまで、あなたの漂流を映しています。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing has drifted ashore yet. Until someone nearby opens DriftSonar, this shows your own drift."
+          }
+        }
+      }
+    },
+    "まっすぐ届いた": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reached you directly"
+          }
+        }
+      }
+    },
+    "まもなく消えます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disappearing soon"
+          }
+        }
+      }
+    },
+    "キャンセル": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "システムに合わせる": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use System Language"
+          }
+        }
+      }
+    },
+    "タイムライン": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timeline"
+          }
+        }
+      }
+    },
+    "テキストをコピー": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Text"
+          }
+        }
+      }
+    },
+    "ボトルに入りきらないようです。あと%lld文字だけ短くしてみましょう。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It won't fit in the bottle. Try shortening it by just %lld characters."
+          }
+        }
+      }
+    },
+    "ボトルに入る動画は%lld本まで。1本だけ選び直してみましょう。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bottle holds up to %lld video. Try picking just one."
+          }
+        }
+      }
+    },
+    "ボトルに入る画像は%lld枚まで。少し減らしてみましょう。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bottle holds up to %lld images. Try removing a few."
+          }
+        }
+      }
+    },
+    "メディアをうまく載せられませんでした。もう一度お試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't attach the media. Please try again."
+          }
+        }
+      }
+    },
+    "メディアを削除": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove media"
+          }
+        }
+      }
+    },
+    "メディアを読み込めませんでした。別のファイルをお試しください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load the media. Try another file."
+          }
+        }
+      }
+    },
+    "写真・動画を追加": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add photo or video"
+          }
+        }
+      }
+    },
+    "匿名": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anonymous"
+          }
+        }
+      }
+    },
+    "匿名で流す": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send anonymously"
+          }
+        }
+      }
+    },
+    "名前を伏せて流します。誰の手紙かは、届いた先でも分かりません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent without your name. No one downstream can tell whose letter it is."
+          }
+        }
+      }
+    },
+    "変更は即時に反映され、再起動後も保持されます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes take effect immediately and are kept after you relaunch."
+          }
+        }
+      }
+    },
+    "手紙を流す": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a Letter"
+          }
+        }
+      }
+    },
+    "文字数が%lld文字超過しています": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over the limit by %lld characters"
+          }
+        }
+      }
+    },
+    "新規投稿": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Post"
+          }
+        }
+      }
+    },
+    "残り%lld文字": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld characters left"
+          }
+        }
+      }
+    },
+    "流す": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        }
+      }
+    },
+    "添付動画": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attached video"
+          }
+        }
+      }
+    },
+    "添付画像": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attached image"
+          }
+        }
+      }
+    },
+    "画像と動画は同じボトルに入りません。どちらかだけにしてみましょう。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images and videos can't share a bottle. Try just one kind."
+          }
+        }
+      }
+    },
+    "表示言語": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        }
+      }
+    },
+    "表示言語を選んでください": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Your Language"
+          }
+        }
+      }
+    },
+    "近くで誰かが DriftSonar を開くと\nその投稿が波に乗って流れ着きます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When someone nearby opens DriftSonar,\ntheir posts ride the waves and drift to you."
+          }
+        }
+      }
+    },
+    "通報した投稿はこの端末で即座に非表示になります。投稿者をまとめて非表示にするにはブロックをご利用ください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reported post is hidden immediately on this device. To hide everything from a poster at once, use Block."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

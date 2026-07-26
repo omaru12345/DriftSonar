@@ -266,16 +266,17 @@ struct ComposeView: View {
         // a next step.
         let videoTotal = selection.filter { isVideo($0) }.count
         let imageTotal = selection.count - videoTotal
+        // TASK-228: これらは AppError.message(String) に流れるため String(localized:) で明示ローカライズ。
         if videoTotal > CreatePostUseCase.maxVideos {
-            revertSelection("ボトルに入る動画は\(CreatePostUseCase.maxVideos)本まで。1本だけ選び直してみましょう。")
+            revertSelection(String(localized: "ボトルに入る動画は\(CreatePostUseCase.maxVideos)本まで。1本だけ選び直してみましょう。"))
             return
         }
         if videoTotal >= 1 && imageTotal >= 1 {
-            revertSelection("画像と動画は同じボトルに入りません。どちらかだけにしてみましょう。")
+            revertSelection(String(localized: "画像と動画は同じボトルに入りません。どちらかだけにしてみましょう。"))
             return
         }
         if imageTotal > CreatePostUseCase.maxImages {
-            revertSelection("ボトルに入る画像は\(CreatePostUseCase.maxImages)枚まで。少し減らしてみましょう。")
+            revertSelection(String(localized: "ボトルに入る画像は\(CreatePostUseCase.maxImages)枚まで。少し減らしてみましょう。"))
             return
         }
 
@@ -332,18 +333,19 @@ struct ComposeView: View {
     /// Maps a `MediaError` to safe, user-facing copy (TASK-154 pattern).
     /// TASK-199: worded gently, with a next step.
     private static func mediaError(from error: Error) -> AppError {
+        // TASK-228: AppError.message(String) 経由なので String(localized:) で明示ローカライズ。
         guard let media = error as? MediaError else {
-            return .message("メディアをうまく載せられませんでした。もう一度お試しください。")
+            return .message(String(localized: "メディアをうまく載せられませんでした。もう一度お試しください。"))
         }
         switch media {
         case .cannotFitBudget:
-            return .message("このボトルには収まりきらないようです。短い動画や小さめの画像でもう一度お試しください。")
+            return .message(String(localized: "このボトルには収まりきらないようです。短い動画や小さめの画像でもう一度お試しください。"))
         case .unsupportedMIME:
-            return .message("この形式のメディアはまだ流せません。別のファイルをお試しください。")
+            return .message(String(localized: "この形式のメディアはまだ流せません。別のファイルをお試しください。"))
         case .emptyInput, .decodeFailed:
-            return .message("メディアを読み込めませんでした。別のファイルをお試しください。")
+            return .message(String(localized: "メディアを読み込めませんでした。別のファイルをお試しください。"))
         default:
-            return .message("メディアをうまく載せられませんでした。もう一度お試しください。")
+            return .message(String(localized: "メディアをうまく載せられませんでした。もう一度お試しください。"))
         }
     }
 
