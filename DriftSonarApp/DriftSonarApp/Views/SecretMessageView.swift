@@ -177,18 +177,25 @@ struct SecretMessageView: View {
                             peerName: peerTitle
                         )
                     } label: {
-                        Image(systemName: "checkmark.shield")
+                        // TASK-131: 検証済みなら塗りつぶしの盾＋sea glass 色で「確認済み」を示す。
+                        Image(systemName: viewModel.isVerified ? "checkmark.shield.fill" : "checkmark.shield")
+                            .foregroundStyle(viewModel.isVerified ? Color.seaGlass : Color.accentColor)
                     }
-                    .accessibilityLabel("安全番号を確認")
+                    .accessibilityLabel(viewModel.isVerified ? "安全番号（確認済み）" : "安全番号を確認")
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 ephemeralMenu
             }
         }
-        // TASK-130: 安全番号（数列 + QR）の確認画面。
+        // TASK-130/131: 安全番号（数列 + QR）の確認と、相手 QR スキャンによる検証。
         .sheet(item: $safetyNumberSheet) { item in
-            SafetyNumberView(safetyNumber: item.safetyNumber, peerName: item.peerName)
+            SafetyNumberView(
+                safetyNumber: item.safetyNumber,
+                peerName: item.peerName,
+                isVerified: viewModel.isVerified,
+                onScan: { viewModel.verifyScanned(payload: $0) }
+            )
         }
         // TASK-154: Unified error alert (key unavailable / encryption failed).
         .errorAlert(Binding(
@@ -197,7 +204,9 @@ struct SecretMessageView: View {
         ))
         .onAppear {
             viewModel.setup(
-                repository: SwiftDataSecretMessageRepository(container: modelContext.container)
+                repository: SwiftDataSecretMessageRepository(container: modelContext.container),
+                // TASK-131: 検証済み相手の永続化を結線。
+                verificationRepository: SwiftDataVerifiedContactRepository(container: modelContext.container)
             )
         }
         // TASK-150: on foreground return, re-purge and re-filter so messages that expired

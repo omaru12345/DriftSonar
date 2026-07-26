@@ -12,12 +12,27 @@ struct SafetyNumberView: View {
     let safetyNumber: SafetyNumber
     /// 相手の表示名（ニックネームまたはフィンガープリント）。説明文に添える。
     let peerName: String
+    /// TASK-131: この相手が既に検証済みか（呼び出し時点の状態）。
+    var isVerified: Bool = false
+    /// TASK-131: スキャンした QR ペイロードを突合・保存する。結果を受けて表示を更新する。
+    /// `nil` のときはスキャン導線を出さない（プレビュー等）。
+    var onScan: ((String) -> ContactVerificationResult)?
 
     @Environment(\.dismiss) private var dismiss
 
-    /// 安全番号を対面突合用に QR へ載せるときのスキーム。既存の `driftsonar://pk/` と揃える。
-    /// TASK-131 のスキャン照合はこのペイロードを解釈して相手側計算値と突き合わせる。
-    private var qrPayload: String { "driftsonar://sn/\(safetyNumber.digits)" }
+    /// TASK-131: カメラスキャナの提示状態。
+    @State private var showScanner = false
+    /// TASK-131: この画面でスキャン突合に成功したか（提示中の即時反映用）。
+    @State private var justVerified = false
+    /// TASK-131: 突合結果のフィードバック（一致/不一致/解釈不能）を伝えるアラート。
+    @State private var scanFeedback: ScanFeedback?
+
+    /// 検証済み表示は「呼び出し時点で検証済み」または「この画面で検証成功」のいずれか。
+    private var showsVerified: Bool { isVerified || justVerified }
+
+    /// 安全番号を対面突合用に QR へ載せるときのペイロード。スキームは Core の
+    /// `SafetyNumber.qrScheme` に一元化し、TASK-131 のスキャン照合側と食い違わないようにする。
+    private var qrPayload: String { safetyNumber.qrPayload }
 
     /// 60 桁を 5 桁 × 12 ブロックへ区切った読み上げ単位。3 列 × 4 行のグリッドで見せる。
     private var blocks: [String] {
@@ -36,8 +51,10 @@ struct SafetyNumberView: View {
             ScrollView {
                 VStack(spacing: DSLayout.Spacing.xl) {
                     intro
+                    if showsVerified { verifiedBanner }
                     qrCard
                     digitBlocks
+                    if onScan != nil { scanButton }
                     reassurance
                 }
                 .padding()
@@ -50,6 +67,37 @@ struct SafetyNumberView: View {
                     Button("閉じる") { dismiss() }
                 }
             }
+        }
+        // TASK-131: 相手の QR を読み取って自端末計算値と突合する。
+        .fullScreenCover(isPresented: $showScanner) {
+            QRScannerView(onFound: handleScanned)
+        }
+        .alert(item: $scanFeedback) { feedback in
+            Alert(title: Text(feedback.title), message: Text(feedback.message),
+                  dismissButton: .default(Text("OK")))
+        }
+    }
+
+    /// スキャン結果を突合し、UI へ反映する。
+    private func handleScanned(_ payload: String) {
+        guard let onScan else { return }
+        switch onScan(payload) {
+        case .verified:
+            justVerified = true
+            scanFeedback = ScanFeedback(
+                title: "確認できました",
+                message: "\(peerName) の安全番号が一致しました。この会話は途中で盗み見られていません。"
+            )
+        case .mismatch:
+            scanFeedback = ScanFeedback(
+                title: "番号が一致しません",
+                message: "相手の鍵がすり替えられている可能性があります。同じ相手であることを対面で確かめてください。"
+            )
+        case .invalidPayload:
+            scanFeedback = ScanFeedback(
+                title: "読み取れませんでした",
+                message: "DriftSonar の安全番号 QR ではありません。相手の「安全番号」画面を読み取ってください。"
+            )
         }
     }
 
@@ -111,6 +159,35 @@ struct SafetyNumberView: View {
         }
     }
 
+    // TASK-131: 検証済みバンド。突合成功後・既検証時に安心材料として上部へ出す。
+    private var verifiedBanner: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.seal.fill")
+            Text("この相手は確認済みです")
+        }
+        .font(.dsBody)
+        .foregroundStyle(Color.seaGlass)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DSLayout.Spacing.sm)
+        .padding(.horizontal, DSLayout.Spacing.md)
+        .background(Color.seaGlass.opacity(0.16), in: RoundedRectangle(cornerRadius: DSLayout.Radius.md))
+    }
+
+    // TASK-131: 相手の QR を読み取って自動突合する導線。目視突合より確実。
+    private var scanButton: some View {
+        Button {
+            showScanner = true
+        } label: {
+            Label(showsVerified ? "もう一度スキャンして確認" : "相手の QR をスキャンして確認",
+                  systemImage: "qrcode.viewfinder")
+                .font(.dsBody)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DSLayout.Spacing.sm)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(Color.deepTide)
+    }
+
     private var reassurance: some View {
         HStack(spacing: 6) {
             Image(systemName: "info.circle")
@@ -138,4 +215,13 @@ struct SafetyNumberView: View {
         guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else { return nil }
         return Image(decorative: cgImage, scale: 1, orientation: .up)
     }
+}
+
+// MARK: - ScanFeedback
+
+/// TASK-131: スキャン突合結果のアラート内容。`.alert(item:)` 用。
+private struct ScanFeedback: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
 }
