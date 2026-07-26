@@ -140,6 +140,11 @@ final class AppServices {
             // shows a blank Timeline (App Store Guideline 4.2).
             seedWelcomePostIfNeeded(container: container)
 
+            // TASK-121: Right after onboarding, demonstrate propagation once by drifting
+            // in a single demo post from a "nearby" stranger — solo installs otherwise
+            // never feel the core すれ違い experience.
+            seedDemoPropagationIfNeeded(container: container)
+
             // TASK-149: Enforce the "記録に残らない" retention window at launch — purge
             // cache/timeline content older than the policy. The welcome seed is pinned so a
             // solo timeline never goes blank. Also runs on foreground return (ContentView).
@@ -289,6 +294,52 @@ final class AppServices {
         try? context.save()
 
         defaults.set(true, forKey: Self.welcomeSeededKey)
+        timelineViewModel.refresh()
+    }
+
+    // MARK: - Demo propagation (TASK-121)
+
+    private static let demoSeededKey = "hasSeededDemoPropagation"
+    /// Sentinel `peerId` for the demo author's `EncounteredEventModel`, so TimelineView can
+    /// resolve its name. Like the welcome peer it is NOT a real すれ違い — the encounter-history
+    /// timeline (TASK-120) filters it out.
+    static let demoEncounterPeerId = "driftsonar-demo"
+    /// Stable ID so the demo post is upserted (never duplicated) if the flag is lost.
+    private static let demoPostID = UUID(uuidString: "D71F7500-0000-0000-0000-000000000002")!
+
+    /// Drifts in one demo post the first time the app runs with a profile. Best-effort:
+    /// a failure must never block startup, so errors are swallowed and the flag is only
+    /// set on success. Unlike the welcome seed the demo post is not pinned — it carries a
+    /// normal TTL and expires on its own, demonstrating the retention behaviour too.
+    private func seedDemoPropagationIfNeeded(container: ModelContainer) {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.demoSeededKey) else { return }
+
+        let post = Post(
+            id: Self.demoPostID,
+            content: DemoPropagationPost.content,
+            authorPublicKey: DemoPropagationPost.authorKey,
+            timestamp: Date(),
+            signature: Data(),
+            ttl: 4,
+            hopCount: DemoPropagationPost.hopCount
+        )
+        do {
+            try postRepository.save(post)
+        } catch {
+            return
+        }
+
+        let context = container.mainContext
+        context.insert(EncounteredEventModel(
+            peerId: Self.demoEncounterPeerId,
+            peerPublicKey: DemoPropagationPost.authorKey,
+            encounteredAt: Date(),
+            nickname: DemoPropagationPost.authorName
+        ))
+        try? context.save()
+
+        defaults.set(true, forKey: Self.demoSeededKey)
         timelineViewModel.refresh()
     }
 }

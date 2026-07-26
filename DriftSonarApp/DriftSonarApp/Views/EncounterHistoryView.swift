@@ -41,9 +41,10 @@ struct EncounterHistoryView: View {
         guard !didLoad else { return }
         didLoad = true
         let events = ((try? appServices.encounterHistoryRepository.getHistory(limit: fetchLimit)) ?? [])
-            // The welcome author's sentinel row is not a real すれ違い — exclude it so a
-            // fresh install shows the empty state rather than a fake "DriftSonar" encounter.
+            // The welcome/demo sentinel rows are not real すれ違い — exclude them so a
+            // fresh install shows the empty state rather than a fake system encounter.
             .filter { $0.peerId != AppServices.welcomeEncounterPeerId }
+            .filter { $0.peerId != AppServices.demoEncounterPeerId }
         sections = EncounterHistoryGrouping.sections(from: events)
     }
 
