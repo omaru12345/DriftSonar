@@ -91,12 +91,13 @@ struct SecretMessageView: View {
         .accessibilityLabel("消えるメッセージの設定")
     }
 
+    // TASK-228: Picker の Text(String) と文字列補間へ渡すので String(localized:) で明示ローカライズ。
     private static func durationLabel(_ duration: EphemeralDMDuration) -> String {
         switch duration {
-        case .off: return "オフ"
-        case .oneHour: return "1時間"
-        case .oneDay: return "24時間"
-        case .oneWeek: return "1週間"
+        case .off: return String(localized: "オフ")
+        case .oneHour: return String(localized: "1時間")
+        case .oneDay: return String(localized: "24時間")
+        case .oneWeek: return String(localized: "1週間")
         }
     }
 
@@ -126,9 +127,12 @@ struct SecretMessageView: View {
         return viewModel.isVerified ? .seaGlass : .accentColor
     }
 
+    // TASK-228: accessibilityLabel(String) 経路なので String(localized:) で明示ローカライズ。
     private var shieldAccessibilityLabel: String {
-        if viewModel.isKeyChanged { return "安全番号（変更あり・要再確認）" }
-        return viewModel.isVerified ? "安全番号（確認済み）" : "安全番号を確認"
+        if viewModel.isKeyChanged { return String(localized: "安全番号（変更あり・要再確認）") }
+        return viewModel.isVerified
+            ? String(localized: "安全番号（確認済み）")
+            : String(localized: "安全番号を確認")
     }
 
     var body: some View {
@@ -273,6 +277,12 @@ private struct MessageBubble: View {
     let isMine: Bool
     let timestamp: Date
 
+    // TASK-228: 三項の "自分"/"相手" は文字列補間へ入ると自動ローカライズされないため、
+    // String(localized:) で明示的にローカライズした語を差し込む。
+    private var senderLabel: String {
+        isMine ? String(localized: "自分") : String(localized: "相手")
+    }
+
     var body: some View {
         HStack {
             if isMine { Spacer(minLength: 60) }
@@ -305,7 +315,7 @@ private struct MessageBubble: View {
             // explicitly for VoiceOver and read the bubble as a single element.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(
-                "\(isMine ? "自分" : "相手")のメッセージ、\(text)、\(Self.timeLabel(for: timestamp))"
+                "\(senderLabel)のメッセージ、\(text)、\(Self.timeLabel(for: timestamp))"
             )
             if !isMine { Spacer(minLength: 60) }
         }
