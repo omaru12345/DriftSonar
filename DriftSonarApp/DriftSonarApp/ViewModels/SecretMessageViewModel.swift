@@ -33,7 +33,11 @@ class SecretMessageViewModel {
     }
 
     /// TASK-131: この相手を対面の安全番号突合で検証済みにしたか。バッジ表示に使う。
+    /// TASK-132: 安全番号が検証時と変わったら失効するので、その場合は false になる。
     private(set) var isVerified: Bool = false
+    /// TASK-132: 検証済みだった相手の安全番号が変わった（＝検証を裏付けた鍵素材が変化）。
+    /// 検証済みバッジではなく「再確認してください」警告を出すための状態。
+    private(set) var isKeyChanged: Bool = false
     /// TASK-131: 安全番号突合と検証済み保存を担うサービス（`setup` で結線）。
     private var verificationService: ContactVerificationService?
 
@@ -47,11 +51,10 @@ class SecretMessageViewModel {
 
     func setup(repository: SecretMessageRepository, verificationRepository: VerifiedContactRepository? = nil) {
         self.messageRepository = repository
-        // TASK-131: 検証済み相手の永続化を結線し、この相手が検証済みかを反映する。
+        // TASK-131: 検証済み相手の永続化を結線する。3 値判定は自分の公開鍵が要るので、
+        // 鍵の読み込み後に refreshVerificationStatus() で反映する（TASK-132）。
         if let verificationRepository {
-            let service = ContactVerificationService(repository: verificationRepository)
-            self.verificationService = service
-            isVerified = (try? service.isVerified(otherPublicKey: otherPublicKey)) ?? false
+            self.verificationService = ContactVerificationService(repository: verificationRepository)
         }
         loadEphemeralDuration()
         // TASK-153: Load the agreement private key here instead of receiving it from
@@ -66,7 +69,35 @@ class SecretMessageViewModel {
             self.error = .keyUnavailable
             return
         }
+        // TASK-132: 自分の公開鍵が揃ったこの時点で検証状態を確定する。
+        refreshVerificationStatus()
         loadMessages()
+    }
+
+    /// TASK-132: この相手の検証状態（未検証/検証済み/安全番号変化）を確定してバッジ表示へ反映する。
+    /// 安全番号が検証時と変われば検証済み扱いを外し（isVerified=false）、再確認を促す警告を出す。
+    /// 古い検証レコードは残すので、再び対面確認するまで会話を開くたびに警告が出続ける。
+    private func refreshVerificationStatus() {
+        guard let verificationService, let myPublicKey else {
+            isVerified = false
+            isKeyChanged = false
+            return
+        }
+        let status = (try? verificationService.status(
+            myPublicKey: myPublicKey,
+            otherPublicKey: otherPublicKey
+        )) ?? .unverified
+        switch status {
+        case .verified:
+            isVerified = true
+            isKeyChanged = false
+        case .keyChanged:
+            isVerified = false
+            isKeyChanged = true
+        case .unverified:
+            isVerified = false
+            isKeyChanged = false
+        }
     }
 
     /// TASK-131: スキャンした相手の安全番号 QR を自端末計算値と突合し、一致時のみ検証済みを保存する。
@@ -79,7 +110,11 @@ class SecretMessageViewModel {
             myPublicKey: myPublicKey,
             otherPublicKey: otherPublicKey
         )) ?? .invalidPayload
-        if case .verified = result { isVerified = true }
+        // TASK-132: 突合成功で検証済みへ。再確認が済んだので鍵変更警告も解除する。
+        if case .verified = result {
+            isVerified = true
+            isKeyChanged = false
+        }
         return result
     }
 
