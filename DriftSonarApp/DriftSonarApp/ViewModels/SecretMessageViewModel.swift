@@ -1,3 +1,4 @@
+import CryptoKit
 import SwiftUI
 import SwiftData
 import DriftSonarCore
@@ -19,6 +20,17 @@ class SecretMessageViewModel {
     /// Loaded from the Keychain in `setup` (TASK-153). `nil` means the key could
     /// not be retrieved — messages can be neither decrypted nor sent.
     private var myPrivateKey: Data?
+    /// TASK-130: 自分の長期公開鍵（agreement）。`setup` で秘密鍵から導出する。
+    /// 相手の公開鍵と合わせて安全番号（Safety Number）を算出するために保持する。
+    private var myPublicKey: Data?
+
+    /// TASK-130: 相手と対面で突き合わせる安全番号。双方の公開鍵から順序非依存で
+    /// 決定的に導かれるため、中間者攻撃がなければ両端末で同じ数列・QR になる。
+    /// 秘密鍵が未取得（`nil`）の場合は算出できないため `nil` を返す。
+    var safetyNumber: SafetyNumber? {
+        guard let myPublicKey else { return nil }
+        return SafetyNumber.compute(myPublicKey, otherPublicKey)
+    }
 
     private var messageRepository: SecretMessageRepository?
     /// Called with encrypted data to enqueue for BLE delivery.
@@ -34,7 +46,11 @@ class SecretMessageViewModel {
         // TASK-153: Load the agreement private key here instead of receiving it from
         // the View. Failure is surfaced to the user rather than silently using empty Data.
         do {
-            myPrivateKey = try KeychainService.loadAgreementPrivateKey()
+            let privateKey = try KeychainService.loadAgreementPrivateKey()
+            myPrivateKey = privateKey
+            // TASK-130: 秘密鍵から自分の agreement 公開鍵を導出（安全番号の算出に使う）。
+            myPublicKey = try? Curve25519.KeyAgreement.PrivateKey(rawRepresentation: privateKey)
+                .publicKey.rawRepresentation
         } catch {
             self.error = .keyUnavailable
             return
