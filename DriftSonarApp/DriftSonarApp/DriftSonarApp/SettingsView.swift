@@ -31,6 +31,9 @@ struct SettingsView: View {
     /// Reset on account deletion so the app returns to the first-launch flow.
     @AppStorage("hasAcceptedEULA") private var hasAcceptedEULA = false
     @AppStorage("hasSeededWelcomePost") private var hasSeededWelcomePost = false
+    /// TASK-169 (GL 2.5.4): user control for background すれ違い通信. Shares the key with
+    /// `ContentView`, which applies it on every scene-phase change.
+    @AppStorage("backgroundBLEEnabled") private var backgroundBLEEnabled = true
 
     @State private var showingDeleteConfirm = false
 
@@ -78,6 +81,7 @@ struct SettingsView: View {
             Form {
                 notificationSection
                 languageSection
+                backgroundCommunicationSection
                 blockedSection
                 contactSection
                 diagnosticsSection
@@ -170,6 +174,33 @@ struct SettingsView: View {
             Text("表示言語")
         } footer: {
             Text("変更は即時に反映され、再起動後も保持されます。")
+        }
+    }
+
+    // MARK: - Background communication (TASK-169 / GL 2.5.4)
+
+    /// Background BLE is the app's core mechanism (Store-and-Forward mesh keeps
+    /// propagating while the app is backgrounded), but App Review Guideline 2.5.4
+    /// requires the user be able to turn it off. This toggle does exactly that, with
+    /// an explicit battery notice while it is on.
+    @ViewBuilder
+    private var backgroundCommunicationSection: some View {
+        Section {
+            Toggle(isOn: $backgroundBLEEnabled) {
+                Label("バックグラウンド通信", systemImage: "dot.radiowaves.left.and.right")
+            }
+            if backgroundBLEEnabled {
+                Label(
+                    "アプリを閉じている間も近くの端末とすれ違い通信を続けます。その分バッテリーを消費します。",
+                    systemImage: "battery.25"
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("バックグラウンド通信")
+        } footer: {
+            Text("DriftSonar は近くの端末と Bluetooth ですれ違うことで投稿やメッセージを運びます。オンのままにすると、アプリを開いていないときも受け渡しが続き、離れていても内容が届きやすくなります。オフにすると、アプリを閉じている間は通信を停止します（次にアプリを開いたときに再開します）。")
         }
     }
 

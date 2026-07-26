@@ -43,6 +43,30 @@ struct PostTimelineView: View {
         }
     }
 
+    /// TASK-123: このユーザー自身の（署名鍵で書いた）投稿。
+    private var myVisiblePosts: [Post] {
+        visiblePosts.filter { $0.authorPublicKey == myProfile.signingPublicKey }
+    }
+
+    /// TASK-123: 自分以外が書いた投稿（実ピアの受信投稿＋シードされた welcome システム投稿）。
+    private var otherVisiblePosts: [Post] {
+        visiblePosts.filter { $0.authorPublicKey != myProfile.signingPublicKey }
+    }
+
+    /// TASK-123: 実ピアからの受信投稿が 1 件でもあるか。自分の投稿と welcome システム投稿は
+    /// 「受信」に含めない（それらは端末ローカルで生まれるため、圏内に誰も居なくても存在する）。
+    private var hasReceivedPosts: Bool {
+        visiblePosts.contains {
+            $0.authorPublicKey != myProfile.signingPublicKey
+                && $0.authorPublicKey != WelcomePost.authorKey
+        }
+    }
+
+    /// TASK-123: まだ受信投稿が無く、自分の過去投稿だけを控えめにリプレイ表示する状態か。
+    private var isReplayingOwnPosts: Bool {
+        !hasReceivedPosts && !myVisiblePosts.isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -50,20 +74,11 @@ struct PostTimelineView: View {
                     SkeletonTimelineView()
                 } else if visiblePosts.isEmpty {
                     EmptyTimelineView()
+                } else if isReplayingOwnPosts {
+                    // TASK-123: 圏内不在時は自分の過去投稿を「あなたの投稿」セクションで表示。
+                    replayTimeline
                 } else {
-                    ScrollViewReader { proxy in
-                    List(visiblePosts, id: \.id) { post in
-                        postRow(for: post)
-                    }
-                    .listStyle(.plain)
-                    .refreshable { viewModel.refresh() }
-                    // TASK-090: Auto-scroll to top when new posts arrive.
-                    .onChange(of: visiblePosts.count) { oldCount, newCount in
-                        if newCount > oldCount, let first = visiblePosts.first {
-                            withAnimation { proxy.scrollTo(first.id, anchor: .top) }
-                        }
-                    }
-                    } // end ScrollViewReader
+                    normalTimeline
                 }
             }
             .navigationTitle("タイムライン")
@@ -125,6 +140,57 @@ struct PostTimelineView: View {
                 Text("通報した投稿はこの端末で即座に非表示になります。投稿者をまとめて非表示にするにはブロックをご利用ください。")
             }
         }
+    }
+
+    /// 通常のタイムライン（受信投稿を含む一枚のリスト）。新着到着で先頭へスクロールする。
+    private var normalTimeline: some View {
+        ScrollViewReader { proxy in
+            List(visiblePosts, id: \.id) { post in
+                postRow(for: post)
+            }
+            .listStyle(.plain)
+            .refreshable { viewModel.refresh() }
+            // TASK-090: Auto-scroll to top when new posts arrive.
+            .onChange(of: visiblePosts.count) { oldCount, newCount in
+                if newCount > oldCount, let first = visiblePosts.first {
+                    withAnimation { proxy.scrollTo(first.id, anchor: .top) }
+                }
+            }
+        }
+    }
+
+    /// TASK-123: 受信投稿がまだ無いあいだのリプレイ表示。welcome などシステム投稿を上に置き、
+    /// その下に「あなたの投稿」セクションとして自分の過去投稿をまとめて出す。受信投稿が届くと
+    /// `isReplayingOwnPosts` が false になり `normalTimeline` に自動で切り替わる。
+    private var replayTimeline: some View {
+        List {
+            if !otherVisiblePosts.isEmpty {
+                Section {
+                    ForEach(otherVisiblePosts, id: \.id) { postRow(for: $0) }
+                }
+            }
+            Section {
+                ForEach(myVisiblePosts, id: \.id) { postRow(for: $0) }
+            } header: {
+                replaySectionHeader
+            }
+        }
+        .listStyle(.plain)
+        .refreshable { viewModel.refresh() }
+    }
+
+    /// TASK-123: 「あなたの投稿だけを見ている」状態だと分かる見出し。
+    private var replaySectionHeader: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("あなたの投稿")
+                .font(.dsCaption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text("まだ誰の投稿も流れ着いていません。近くで誰かが DriftSonar を開くまで、あなたの漂流を映しています。")
+                .font(.dsCaption)
+                .foregroundStyle(.tertiary)
+        }
+        .textCase(nil)
+        .padding(.vertical, 4)
     }
 
     /// Builds the row view for a single post, resolving nickname and anonymous state (TASK-111).

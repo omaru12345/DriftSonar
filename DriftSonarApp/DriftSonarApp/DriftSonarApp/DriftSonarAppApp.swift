@@ -68,6 +68,7 @@ struct DriftSonarAppApp: App {
             EncounteredEventModel.self,
             SecretMessageModel.self,
             BlockedKeyModel.self,  // TASK-033
+            VerifiedContactModel.self,  // TASK-131: 安全番号突合による検証済み相手
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

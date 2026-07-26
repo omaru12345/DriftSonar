@@ -11,6 +11,10 @@ struct SecretMessageView: View {
     /// Optional nickname received via BLE (TASK-080). Falls back to fingerprint.
     private let peerNickname: String?
 
+    /// TASK-130: 「安全番号を確認」シートで提示する内容。`nil` の間は開かない。
+    /// 提示時に算出済みの安全番号を確定して渡すため、空シートが出る経路が無い。
+    @State private var safetyNumberSheet: SafetyNumberSheetItem?
+
     init(otherPublicKey: Data, peerNickname: String? = nil) {
         _viewModel = State(initialValue: SecretMessageViewModel(
             otherPublicKey: otherPublicKey
@@ -163,9 +167,35 @@ struct SecretMessageView: View {
         .navigationTitle(peerTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            // TASK-130: 対面で相手の鍵を検証する「安全番号を確認」への導線。
+            // 秘密鍵が取得できて安全番号を算出できるときだけ出す。
+            if let safetyNumber = viewModel.safetyNumber {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        safetyNumberSheet = SafetyNumberSheetItem(
+                            safetyNumber: safetyNumber,
+                            peerName: peerTitle
+                        )
+                    } label: {
+                        // TASK-131: 検証済みなら塗りつぶしの盾＋sea glass 色で「確認済み」を示す。
+                        Image(systemName: viewModel.isVerified ? "checkmark.shield.fill" : "checkmark.shield")
+                            .foregroundStyle(viewModel.isVerified ? Color.seaGlass : Color.accentColor)
+                    }
+                    .accessibilityLabel(viewModel.isVerified ? "安全番号（確認済み）" : "安全番号を確認")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 ephemeralMenu
             }
+        }
+        // TASK-130/131: 安全番号（数列 + QR）の確認と、相手 QR スキャンによる検証。
+        .sheet(item: $safetyNumberSheet) { item in
+            SafetyNumberView(
+                safetyNumber: item.safetyNumber,
+                peerName: item.peerName,
+                isVerified: viewModel.isVerified,
+                onScan: { viewModel.verifyScanned(payload: $0) }
+            )
         }
         // TASK-154: Unified error alert (key unavailable / encryption failed).
         .errorAlert(Binding(
@@ -174,7 +204,9 @@ struct SecretMessageView: View {
         ))
         .onAppear {
             viewModel.setup(
-                repository: SwiftDataSecretMessageRepository(container: modelContext.container)
+                repository: SwiftDataSecretMessageRepository(container: modelContext.container),
+                // TASK-131: 検証済み相手の永続化を結線。
+                verificationRepository: SwiftDataVerifiedContactRepository(container: modelContext.container)
             )
         }
         // TASK-150: on foreground return, re-purge and re-filter so messages that expired
@@ -183,6 +215,16 @@ struct SecretMessageView: View {
             if phase == .active { viewModel.loadMessages() }
         }
     }
+}
+
+// MARK: - SafetyNumberSheetItem
+
+/// TASK-130: `.sheet(item:)` 用のラッパ。提示時点で確定した安全番号を保持することで、
+/// シートが開いてから内容が `nil` になり空表示になる経路を作らない。
+private struct SafetyNumberSheetItem: Identifiable {
+    let id = UUID()
+    let safetyNumber: SafetyNumber
+    let peerName: String
 }
 
 // MARK: - MessageBubble

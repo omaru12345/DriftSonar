@@ -73,3 +73,24 @@ public final class InMemoryMessageCacheRepository: MessageCacheRepository {
         messages = Dictionary(uniqueKeysWithValues: survivors.map { ($0.postId, $0) })
     }
 }
+
+/// メモリ上だけで動く `VerifiedContactRepository`（TASK-131）。
+/// SwiftData 実装は `@MainActor`/`ModelContainer` を要求し SPM テストでは動かないため、
+/// 検証ロジックの純ロジックテストではこちらを使う。スレッド安全ではない。
+public final class InMemoryVerifiedContactRepository: VerifiedContactRepository {
+    private var contacts: [Data: VerifiedContact] = [:]
+
+    public init() {}
+
+    public func save(_ contact: VerifiedContact) throws {
+        contacts[contact.publicKey] = contact
+    }
+
+    public func find(publicKey: Data) throws -> VerifiedContact? {
+        contacts[publicKey]
+    }
+
+    public func delete(publicKey: Data) throws {
+        contacts.removeValue(forKey: publicKey)
+    }
+}
