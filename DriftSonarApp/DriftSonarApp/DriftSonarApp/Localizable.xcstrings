@@ -1,6 +1,28 @@
 {
   "sourceLanguage": "ja",
   "strings": {
+    "%@ との安全番号": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety number with %@"
+          }
+        }
+      }
+    },
+    "%@ の安全番号が一致しました。この会話は途中で盗み見られていません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@'s safety number matches. This conversation hasn't been eavesdropped on."
+          }
+        }
+      }
+    },
     "%@、%@ にすれ違い": {
       "extractionState": "manual",
       "localizations": {
@@ -8,6 +30,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Crossed paths with %@ at %@"
+          }
+        }
+      }
+    },
+    "%@のメッセージ、%@、%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@'s message, %2$@, %3$@"
           }
         }
       }
@@ -41,6 +74,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "I am %lld or older"
+          }
+        }
+      }
+    },
+    "1時間": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 hour"
+          }
+        }
+      }
+    },
+    "1週間": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 week"
+          }
+        }
+      }
+    },
+    "24時間": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 hours"
           }
         }
       }
@@ -89,6 +155,17 @@
         }
       }
     },
+    "DriftSonar の安全番号 QR ではありません。相手の「安全番号」画面を読み取ってください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's not a DriftSonar safety-number QR. Scan the other person's Safety Number screen."
+          }
+        }
+      }
+    },
     "DriftSonar はサーバーを持たず、すべての通信は端末間の Bluetooth で完結します。": {
       "extractionState": "manual",
       "localizations": {
@@ -129,6 +206,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Peripheral (Advertiser)"
+          }
+        }
+      }
+    },
+    "QR をスキャン": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan QR"
+          }
+        }
+      }
+    },
+    "QR コードを生成できません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't generate the QR code"
           }
         }
       }
@@ -254,6 +353,28 @@
         }
       }
     },
+    "ここは二人だけの入江": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A cove for just the two of you"
+          }
+        }
+      }
+    },
+    "このあと送受信するメッセージは%@で消えます": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages sent and received from now on disappear after %@."
+          }
+        }
+      }
+    },
     "このボトルには収まりきらないようです。短い動画や小さめの画像でもう一度お試しください。": {
       "extractionState": "manual",
       "localizations": {
@@ -287,6 +408,17 @@
         }
       }
     },
+    "この会話は二人の入江に閉じています（端末間 E2E 暗号化）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This conversation is closed to the two of you (device-to-device E2E encryption)."
+          }
+        }
+      }
+    },
     "この形式のメディアはまだ流せません。別のファイルをお試しください。": {
       "extractionState": "manual",
       "localizations": {
@@ -305,6 +437,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Report This Post"
+          }
+        }
+      }
+    },
+    "この相手は確認済みです": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This contact is verified"
           }
         }
       }
@@ -430,6 +573,17 @@
         }
       }
     },
+    "もう一度スキャンして確認": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan again to verify"
+          }
+        }
+      }
+    },
     "もう一度耳を澄ます": {
       "extractionState": "manual",
       "localizations": {
@@ -437,6 +591,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listen again"
+          }
+        }
+      }
+    },
+    "やり取りは端末間で\nエンドツーエンド暗号化され、\nほかの誰にも流れ着きません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your exchange is end-to-end encrypted\nbetween devices and\ndrifts to no one else."
           }
         }
       }
@@ -507,6 +672,17 @@
         }
       }
     },
+    "オフ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
     "オープンソースライセンス": {
       "extractionState": "manual",
       "localizations": {
@@ -514,6 +690,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Source Licenses"
+          }
+        }
+      }
+    },
+    "カメラを使えません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera unavailable"
           }
         }
       }
@@ -903,6 +1090,17 @@
         }
       }
     },
+    "二人だけに届く言葉を…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Words for just the two of you…"
+          }
+        }
+      }
+    },
     "人が多い場所（カフェ・駅・イベント）で開くと届きやすくなります。": {
       "extractionState": "manual",
       "localizations": {
@@ -1123,6 +1321,83 @@
         }
       }
     },
+    "安全番号": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety Number"
+          }
+        }
+      }
+    },
+    "安全番号 %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety number %@"
+          }
+        }
+      }
+    },
+    "安全番号の QR コード": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety number QR code"
+          }
+        }
+      }
+    },
+    "安全番号を確認": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify safety number"
+          }
+        }
+      }
+    },
+    "安全番号（変更あり・要再確認）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety number (changed — re-verify)"
+          }
+        }
+      }
+    },
+    "安全番号（確認済み）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety number (verified)"
+          }
+        }
+      }
+    },
+    "対面で相手の画面と見比べ、数列（または QR）が一致すれば、この会話は途中で盗み見られていません。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare in person with the other person's screen. If the digits (or QR) match, this conversation hasn't been eavesdropped on."
+          }
+        }
+      }
+    },
     "広告中": {
       "extractionState": "manual",
       "localizations": {
@@ -1310,6 +1585,28 @@
         }
       }
     },
+    "消えるメッセージ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disappearing Messages"
+          }
+        }
+      }
+    },
+    "消えるメッセージの設定": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disappearing messages settings"
+          }
+        }
+      }
+    },
     "添付動画": {
       "extractionState": "manual",
       "localizations": {
@@ -1354,6 +1651,83 @@
         }
       }
     },
+    "番号が一致しない場合は、相手の鍵がすり替えられている可能性があります。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the numbers don't match, the other person's key may have been tampered with."
+          }
+        }
+      }
+    },
+    "番号が一致しません": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The numbers don't match"
+          }
+        }
+      }
+    },
+    "相手": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Them"
+          }
+        }
+      }
+    },
+    "相手の QR をスキャンして確認": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan their QR to verify"
+          }
+        }
+      }
+    },
+    "相手の「安全番号」画面の QR に重ねてください": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line up the QR on the other person's Safety Number screen."
+          }
+        }
+      }
+    },
+    "相手の安全番号が変わりました。もう一度確認してください": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This contact's safety number changed. Please verify again."
+          }
+        }
+      }
+    },
+    "相手の鍵がすり替えられている可能性があります。同じ相手であることを対面で確かめてください。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The other person's key may have been swapped. Confirm in person that it's the same person."
+          }
+        }
+      }
+    },
     "省電力モード": {
       "extractionState": "manual",
       "localizations": {
@@ -1376,6 +1750,17 @@
         }
       }
     },
+    "確認できました": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verified"
+          }
+        }
+      }
+    },
     "確認済み": {
       "extractionState": "manual",
       "localizations": {
@@ -1383,6 +1768,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verified"
+          }
+        }
+      }
+    },
+    "自分": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
           }
         }
       }
@@ -1453,6 +1849,17 @@
         }
       }
     },
+    "設定でカメラを許可するか、実機で対面スキャンしてください。数列を目視で突き合わせても確認できます。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow the camera in Settings, or scan in person on a real device. You can also verify by comparing the digits visually."
+          }
+        }
+      }
+    },
     "設定アプリで通知を許可": {
       "extractionState": "manual",
       "localizations": {
@@ -1471,6 +1878,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Allowed"
+          }
+        }
+      }
+    },
+    "読み取れませんでした": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read it"
+          }
+        }
+      }
+    },
+    "警告。相手の安全番号が変わりました。もう一度確認してください": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warning. This contact's safety number changed. Please verify again."
           }
         }
       }
@@ -1537,6 +1966,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Blocking a troublesome user instantly hides all of their posts."
+          }
+        }
+      }
+    },
+    "送信": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
           }
         }
       }

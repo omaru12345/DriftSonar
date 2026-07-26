@@ -89,22 +89,24 @@ struct SafetyNumberView: View {
     /// スキャン結果を突合し、UI へ反映する。
     private func handleScanned(_ payload: String) {
         guard let onScan else { return }
+        // TASK-228: ScanFeedback は String を保持し Text(String) で描くため、ここで
+        // String(localized:) により明示的にローカライズしてから積む。
         switch onScan(payload) {
         case .verified:
             justVerified = true
             scanFeedback = ScanFeedback(
-                title: "確認できました",
-                message: "\(peerName) の安全番号が一致しました。この会話は途中で盗み見られていません。"
+                title: String(localized: "確認できました"),
+                message: String(localized: "\(peerName) の安全番号が一致しました。この会話は途中で盗み見られていません。")
             )
         case .mismatch:
             scanFeedback = ScanFeedback(
-                title: "番号が一致しません",
-                message: "相手の鍵がすり替えられている可能性があります。同じ相手であることを対面で確かめてください。"
+                title: String(localized: "番号が一致しません"),
+                message: String(localized: "相手の鍵がすり替えられている可能性があります。同じ相手であることを対面で確かめてください。")
             )
         case .invalidPayload:
             scanFeedback = ScanFeedback(
-                title: "読み取れませんでした",
-                message: "DriftSonar の安全番号 QR ではありません。相手の「安全番号」画面を読み取ってください。"
+                title: String(localized: "読み取れませんでした"),
+                message: String(localized: "DriftSonar の安全番号 QR ではありません。相手の「安全番号」画面を読み取ってください。")
             )
         }
     }
@@ -182,12 +184,17 @@ struct SafetyNumberView: View {
     }
 
     // TASK-131: 相手の QR を読み取って自動突合する導線。目視突合より確実。
+    // TASK-228: 三項を Label へ直接渡すと String 初期化子に落ちてローカライズされないため、
+    // LocalizedStringKey として明示的に型付けする。
+    private var scanButtonTitle: LocalizedStringKey {
+        showsVerified ? "もう一度スキャンして確認" : "相手の QR をスキャンして確認"
+    }
+
     private var scanButton: some View {
         Button {
             showScanner = true
         } label: {
-            Label(showsVerified ? "もう一度スキャンして確認" : "相手の QR をスキャンして確認",
-                  systemImage: "qrcode.viewfinder")
+            Label(scanButtonTitle, systemImage: "qrcode.viewfinder")
                 .font(.dsBody)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, DSLayout.Spacing.sm)
