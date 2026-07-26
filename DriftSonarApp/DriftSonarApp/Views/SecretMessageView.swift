@@ -11,6 +11,10 @@ struct SecretMessageView: View {
     /// Optional nickname received via BLE (TASK-080). Falls back to fingerprint.
     private let peerNickname: String?
 
+    /// TASK-130: 「安全番号を確認」シートで提示する内容。`nil` の間は開かない。
+    /// 提示時に算出済みの安全番号を確定して渡すため、空シートが出る経路が無い。
+    @State private var safetyNumberSheet: SafetyNumberSheetItem?
+
     init(otherPublicKey: Data, peerNickname: String? = nil) {
         _viewModel = State(initialValue: SecretMessageViewModel(
             otherPublicKey: otherPublicKey
@@ -163,9 +167,28 @@ struct SecretMessageView: View {
         .navigationTitle(peerTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            // TASK-130: 対面で相手の鍵を検証する「安全番号を確認」への導線。
+            // 秘密鍵が取得できて安全番号を算出できるときだけ出す。
+            if let safetyNumber = viewModel.safetyNumber {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        safetyNumberSheet = SafetyNumberSheetItem(
+                            safetyNumber: safetyNumber,
+                            peerName: peerTitle
+                        )
+                    } label: {
+                        Image(systemName: "checkmark.shield")
+                    }
+                    .accessibilityLabel("安全番号を確認")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 ephemeralMenu
             }
+        }
+        // TASK-130: 安全番号（数列 + QR）の確認画面。
+        .sheet(item: $safetyNumberSheet) { item in
+            SafetyNumberView(safetyNumber: item.safetyNumber, peerName: item.peerName)
         }
         // TASK-154: Unified error alert (key unavailable / encryption failed).
         .errorAlert(Binding(
@@ -183,6 +206,16 @@ struct SecretMessageView: View {
             if phase == .active { viewModel.loadMessages() }
         }
     }
+}
+
+// MARK: - SafetyNumberSheetItem
+
+/// TASK-130: `.sheet(item:)` 用のラッパ。提示時点で確定した安全番号を保持することで、
+/// シートが開いてから内容が `nil` になり空表示になる経路を作らない。
+private struct SafetyNumberSheetItem: Identifiable {
+    let id = UUID()
+    let safetyNumber: SafetyNumber
+    let peerName: String
 }
 
 // MARK: - MessageBubble
