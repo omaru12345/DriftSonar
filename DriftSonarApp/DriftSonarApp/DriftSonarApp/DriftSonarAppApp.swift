@@ -58,6 +58,20 @@ struct DriftSonarAppApp: App {
     /// abort the process, failing the run even though every test case passes.
     private static let isRunningUnitTests = NSClassFromString("XCTestCase") != nil
 
+    /// True when the UI-test runner launched the app with `-uiTesting` (TASK-160). Unlike the
+    /// unit-test host, UI tests drive the *real* UI in a separate process, so we keep the full
+    /// boot but make it deterministic: an in-memory store (every launch starts with no profile,
+    /// so the onboarding flow is reachable) and no notification-permission prompt (a system
+    /// alert would steal focus from the automation).
+    ///
+    /// `#if DEBUG`-gated so the flag cannot exist in a release build — a shipped binary must
+    /// never be coaxable into the in-memory (data-wiping) store via a launch argument.
+    #if DEBUG
+    private static let isUITesting = ProcessInfo.processInfo.arguments.contains("-uiTesting")
+    #else
+    private static let isUITesting = false
+    #endif
+
     init() {
         guard !Self.isRunningUnitTests else { return }
         // TASK-192 (#228): apply the persisted UI language before any view renders, so
@@ -81,7 +95,7 @@ struct DriftSonarAppApp: App {
         // In-memory under XCTest so the test host never touches the on-disk store — the
         // `.modelContainer` modifier below is applied unconditionally, so the container is
         // built even when `body` renders `EmptyView` for unit tests (TASK-159).
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: Self.isRunningUnitTests)
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: Self.isRunningUnitTests || Self.isUITesting)
 
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -114,6 +128,8 @@ struct DriftSonarAppApp: App {
     // TASK-081: Request local notification permission on first launch.
     // TASK-085: Also register the tap delegate.
     private func requestNotificationPermission() async {
+        // TASK-160: a system permission alert would steal focus from the UI-test automation.
+        guard !Self.isUITesting else { return }
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
         let settings = await center.notificationSettings()
