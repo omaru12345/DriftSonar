@@ -211,7 +211,9 @@ private struct OnboardingIntroView: View {
                     onContinue()
                 }
             } label: {
-                Text(page < pages.count - 1 ? "次へ" : "はじめる")
+                // TASK-228: 三項の Text は LocalizedStringKey として型付けしないとローカライズされない。
+                Text(page < pages.count - 1
+                    ? LocalizedStringKey("次へ") : LocalizedStringKey("はじめる"))
                     .bold()
                     .frame(maxWidth: .infinity)
             }
@@ -224,10 +226,11 @@ private struct OnboardingIntroView: View {
 }
 
 /// 導入 1 ページ分の内容。アイコン・見出し・本文の素朴な組。
+/// TASK-228: title/body は Text(_:) に渡すので LocalizedStringKey として String Catalog を引かせる。
 private struct OnboardingPage {
     let symbol: String
-    let title: String
-    let body: String
+    let title: LocalizedStringKey
+    let body: LocalizedStringKey
 
     /// コンセプト 3 枚 ＋ 権限プライミング 1 枚。
     static let all: [OnboardingPage] = [
