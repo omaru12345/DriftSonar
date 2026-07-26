@@ -133,13 +133,14 @@ struct SettingsView: View {
     }
 
     private var notificationStatusText: String {
+        // TASK-228: Text(String) に渡すため String(localized:) で明示ローカライズ。
         switch notificationStatus {
-        case .authorized: return "許可"
-        case .denied: return "不許可"
-        case .notDetermined: return "未設定"
-        case .provisional: return "暫定的に許可"
-        case .ephemeral: return "一時的に許可"
-        @unknown default: return "不明"
+        case .authorized: return String(localized: "許可")
+        case .denied: return String(localized: "不許可")
+        case .notDetermined: return String(localized: "未設定")
+        case .provisional: return String(localized: "暫定的に許可")
+        case .ephemeral: return String(localized: "一時的に許可")
+        @unknown default: return String(localized: "不明")
         }
     }
 
@@ -456,7 +457,9 @@ private struct BLEDiagnosticsView: View {
         }
     }
 
-    private func row(_ label: String, _ value: String) -> some View {
+    // TASK-228: label は Text(_:) に渡すので LocalizedStringKey で受け、呼び出し側の
+    // 日本語リテラルを自動ローカライズさせる。value は実行時データなので String のまま。
+    private func row(_ label: LocalizedStringKey, _ value: String) -> some View {
         HStack {
             Text(label)
             Spacer()
@@ -468,7 +471,8 @@ private struct BLEDiagnosticsView: View {
 
     private func boolText(_ value: Bool?) -> String {
         guard let value else { return "—" }
-        return value ? "はい" : "いいえ"
+        // TASK-228: row の value（String）に渡るので String(localized:) で明示ローカライズ。
+        return value ? String(localized: "はい") : String(localized: "いいえ")
     }
 }
 
@@ -487,7 +491,8 @@ private struct BlockedKeyRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(displayName ?? "名前未取得のユーザー")
+                    // TASK-228: Text(String?) 経路なので fallback を String(localized:) で明示ローカライズ。
+                    Text(displayName ?? String(localized: "名前未取得のユーザー"))
                         .font(.subheadline.weight(.medium))
                     Text(fingerprint)
                         .font(.system(.caption2, design: .monospaced))
