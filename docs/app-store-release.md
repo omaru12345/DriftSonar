@@ -16,7 +16,7 @@ iOS アプリを初めて App Store に出すための実践手順。DriftSonar 
 | 表示名 | `CFBundleDisplayName = DriftSonar`（ホーム画面表示） |
 | バージョン | `MARKETING_VERSION = 0.1.0` / `CURRENT_PROJECT_VERSION = 1` |
 | 署名方式 | `CODE_SIGN_STYLE = Automatic`（自動署名） |
-| 暗号輸出申告 | `ITSAppUsesNonExemptEncryption = false`（標準暗号として適用除外） |
+| 暗号輸出申告 | `ITSAppUsesNonExemptEncryption = true`（マスマーケット例外／要 BIS 年次報告・下記参照） |
 | アプリアイコン | 設置済み（1024 単一形式・ライト/ダーク/tinted） |
 | Background Modes | `bluetooth-central` / `bluetooth-peripheral`（Info.plist） |
 | 権限説明文 | `NSBluetoothAlwaysUsageDescription` 設定済み |
@@ -132,7 +132,24 @@ App Store Connect → App Privacy で申告。DriftSonar は:
 
 ### その他のリジェクト要因
 - **Minimum Functionality**: 単体で何もできないと見なされない様、空状態 UI やデモ性を担保。**初回起動時に「ようこそ」システム投稿を自動シードし、単独端末（審査員環境）でも Timeline が必ず非空になる**（TASK-170、Release ビルドでも有効）。詳細 → §8.2。
-- **暗号**: `ITSAppUsesNonExemptEncryption=false` で標準暗号の適用除外を申告済み（CryptoKit のみ使用前提）。
+- **暗号輸出コンプライアンス（TASK-171 / #206）**: 下記「暗号輸出申告」節を参照。E2E 暗号 DM がコア機能のため `ITSAppUsesNonExemptEncryption=true`。
+
+### 暗号輸出申告（ITSAppUsesNonExemptEncryption）
+
+**結論**: `true`（旧 `false` は誤申告リスクのため是正）。
+
+**根拠**:
+- 使用暗号は CryptoKit の標準アルゴリズムのみ（X25519 鍵共有 / Ed25519 署名 / AES-GCM / HKDF / SHA-256・512、鍵保管 Keychain）。**独自・非公開の暗号アルゴリズムは実装していない。**
+- Apple が `false`（申告不要）を許すのは、暗号が「OS 提供の HTTPS/TLS 呼び出し」「認証・デジタル署名・DRM 限定」等の**限定的除外**に収まる場合のみ。本アプリは **DM のユーザーコンテンツを E2E 暗号化するのがコア機能**で、この限定除外には該当しない → `false` は不適切。
+- 標準暗号を用いるマスマーケット・アプリは **EAR Category 5 Part 2 のマスマーケット例外（5D992.c）** に該当し得る。
+
+**App Store Connect の暗号化質問への回答**:
+1. 「アプリは暗号を使用していますか？」→ **はい**
+2. 「Category 5, Part 2 の例外に該当しますか？」→ **はい**（標準暗号・マスマーケット）
+
+**運用側で必要な政府提出（コード外・要対応）**:
+- 米 BIS（および NSA）への **年次自己分類レポート（annual self-classification report）** の提出義務がある（マスマーケット例外の利用条件）。**この政府提出は本リポの変更対象外**であり、公開運用者が別途対応すること。未提出のまま例外を主張すると輸出管理違反となり得る点に注意。
+- 参考: Apple「Complying with Encryption Export Regulations」／BIS EAR §740.17。
 
 ---
 
