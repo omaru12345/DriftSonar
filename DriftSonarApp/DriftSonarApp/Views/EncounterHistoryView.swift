@@ -49,8 +49,9 @@ struct EncounterHistoryView: View {
 
     /// 今日 / 昨日 / それ以外は「M月d日(E)」。
     static func dayLabel(for day: Date, calendar: Calendar = .current) -> String {
-        if calendar.isDateInToday(day) { return "今日" }
-        if calendar.isDateInYesterday(day) { return "昨日" }
+        // TASK-228: Section(String) 経路なので相対日ラベルは String(localized:) で明示ローカライズ。
+        if calendar.isDateInToday(day) { return String(localized: "今日") }
+        if calendar.isDateInYesterday(day) { return String(localized: "昨日") }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
         formatter.calendar = calendar
@@ -66,7 +67,7 @@ private struct EncounterHistoryRow: View {
 
     private var displayName: String {
         if let nickname = event.nickname, !nickname.isEmpty { return nickname }
-        return "名前のない漂流者"
+        return String(localized: "名前のない漂流者")
     }
 
     private var timeText: String {
