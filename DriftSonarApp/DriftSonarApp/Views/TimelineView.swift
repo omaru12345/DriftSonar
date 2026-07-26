@@ -131,7 +131,7 @@ struct PostTimelineView: View {
                 presenting: reportTarget
             ) { post in
                 ForEach(ReportStore.Reason.allCases) { reason in
-                    Button(reason.rawValue, role: .destructive) {
+                    Button(reason.displayName, role: .destructive) {
                         report(post: post, reason: reason)
                     }
                 }
