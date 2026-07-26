@@ -52,6 +52,9 @@ private struct MainTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @State private var appServices: AppServices?
+    /// TASK-169 (GL 2.5.4): user control for background すれ違い通信. Default on — the
+    /// Store-and-Forward mesh is the app's core purpose and relies on background BLE.
+    @AppStorage("backgroundBLEEnabled") private var backgroundBLEEnabled = true
 
     var body: some View {
         if let appServices {
@@ -109,17 +112,18 @@ private struct MainTabView: View {
     private func onScenePhaseChange(_ newPhase: ScenePhase) {
         switch newPhase {
         case .active:
-            // TASK-094: Restart BLE on foreground return to recover stale scan state.
-            // restart() also switches the scan back to the foreground (continuous) cadence.
-            appServices?.bleService.restart()
+            // TASK-094: Restart BLE on foreground return to recover stale scan state, and
+            // TASK-169: fully revive discovery when it was stopped for the background-off
+            // policy. execute() re-plans the foreground (duty-cycled) cadence either way.
+            appServices?.resumeEncounterDiscovery()
             // TASK-149: Purge content past the retention window on every foreground return
             // so long-running sessions still honour "記録に残らない" without a relaunch.
             appServices?.purgeExpiredContent()
         case .background:
-            // TASK-145: switch to the background scan cadence (continuous — iOS manages
-            // background scan power; a userland OFF window can't be resumed while the
-            // app is suspended). Foreground duty-cycling resumes on the next .active.
-            appServices?.bleService.setScanningInBackground(true)
+            // TASK-145/169: honour the user's background-communication toggle (GL 2.5.4).
+            // On (default): stay live on the continuous background scan cadence. Off: fully
+            // stop scanning/advertising while backgrounded. Foreground .active resumes it.
+            appServices?.setBackgroundScanning(enabled: backgroundBLEEnabled)
         case .inactive:
             break
         @unknown default:

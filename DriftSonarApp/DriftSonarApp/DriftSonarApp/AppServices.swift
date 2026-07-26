@@ -52,6 +52,11 @@ final class AppServices {
 
     /// TASK-146: maps the device power state to a scan-reduction decision.
     private let scanPowerPolicy = ScanPowerPolicy()
+    /// TASK-169: the public key すれ違い discovery was started with, retained so the app
+    /// can fully resume discovery on foreground return after it was stopped for the
+    /// background-communication-off policy (GL 2.5.4). `nil` if BLE never started
+    /// (integrity failure / no profile).
+    private var encounterPublicKey: Data?
     /// Retained NotificationCenter tokens for the power-state observers. Assigned once
     /// on the main actor in `init`; `nonisolated(unsafe)` so the nonisolated `deinit`
     /// can remove them (the array is effectively immutable after `init`).
@@ -147,6 +152,7 @@ final class AppServices {
             // or scanned and messages never reached the other device.
             if let profile {
                 ble.myNickname = profile.nickname
+                encounterPublicKey = profile.publicKey
                 try? ble.execute(command: StartDiscoveryCommand(myPublicKey: profile.publicKey))
             }
         }
@@ -190,6 +196,31 @@ final class AppServices {
         guard shouldReduce != isScanPowerSaving else { return }
         isScanPowerSaving = shouldReduce
         bleService.setScanPowerSaving(shouldReduce)
+    }
+
+    // MARK: - Background BLE policy (TASK-169 / GL 2.5.4)
+
+    /// Apply the user's background-communication preference as the app leaves the
+    /// foreground. When enabled, discovery stays live on the continuous background
+    /// scan cadence (default — Store-and-Forward mesh is the app's core purpose and
+    /// depends on背景 BLE). When disabled, discovery is fully stopped so no scanning
+    /// or advertising happens while the app is backgrounded, honouring the user's
+    /// choice and saving battery. `resumeEncounterDiscovery()` restarts it on return.
+    func setBackgroundScanning(enabled: Bool) {
+        if enabled {
+            bleService.setScanningInBackground(true)
+        } else {
+            bleService.stop()
+        }
+    }
+
+    /// Restart すれ違い discovery on foreground return. `execute` is idempotent — it
+    /// re-plans the foreground scan cadence when the managers already exist and fully
+    /// revives discovery after a background `stop()` — so this is safe to call on every
+    /// `.active` transition. No-op when BLE never started (no retained key).
+    func resumeEncounterDiscovery() {
+        guard let encounterPublicKey else { return }
+        try? bleService.execute(command: StartDiscoveryCommand(myPublicKey: encounterPublicKey))
     }
 
     // MARK: - Retention purge (TASK-149)
