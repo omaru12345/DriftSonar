@@ -45,6 +45,26 @@ public struct SafetyNumber: Equatable {
         }.joined(separator: " ")
     }
 
+    // MARK: - QR 突合ペイロード（TASK-131）
+
+    /// 対面突合用 QR に載せる URI スキーム。既存の `driftsonar://pk/` と揃える。
+    /// 生成（`SafetyNumberView`）と照合（`ContactVerificationService`）でこの 1 箇所を
+    /// 共有し、スキームの食い違いを防ぐ。
+    public static let qrScheme = "driftsonar://sn/"
+
+    /// この安全番号を QR へ載せるときのペイロード。例: "driftsonar://sn/12345...".
+    public var qrPayload: String { Self.qrScheme + digits }
+
+    /// スキャンした QR 文字列から 60 桁の安全番号を取り出す。
+    /// スキーム不一致・桁数不正・数字以外を含む場合は `nil`（照合前に弾く）。
+    public static func digits(fromQRPayload payload: String) -> String? {
+        guard payload.hasPrefix(qrScheme) else { return nil }
+        let digits = String(payload.dropFirst(qrScheme.count))
+        // 60 桁ちょうど・ASCII 数字のみ（`isNumber` は全角/上付きも通すため範囲比較で厳密化）。
+        guard digits.count == 60, digits.allSatisfy({ ("0"..."9").contains($0) }) else { return nil }
+        return digits
+    }
+
     // MARK: - Helpers
 
     /// 2つの Data をバイト列として辞書順比較し、lhs が小さいかどうかを返す。

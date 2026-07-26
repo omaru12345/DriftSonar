@@ -32,6 +32,11 @@ class SecretMessageViewModel {
         return SafetyNumber.compute(myPublicKey, otherPublicKey)
     }
 
+    /// TASK-131: この相手を対面の安全番号突合で検証済みにしたか。バッジ表示に使う。
+    private(set) var isVerified: Bool = false
+    /// TASK-131: 安全番号突合と検証済み保存を担うサービス（`setup` で結線）。
+    private var verificationService: ContactVerificationService?
+
     private var messageRepository: SecretMessageRepository?
     /// Called with encrypted data to enqueue for BLE delivery.
     var onSendEncrypted: ((Data) -> Void)?
@@ -40,8 +45,14 @@ class SecretMessageViewModel {
         self.otherPublicKey = otherPublicKey
     }
 
-    func setup(repository: SecretMessageRepository) {
+    func setup(repository: SecretMessageRepository, verificationRepository: VerifiedContactRepository? = nil) {
         self.messageRepository = repository
+        // TASK-131: 検証済み相手の永続化を結線し、この相手が検証済みかを反映する。
+        if let verificationRepository {
+            let service = ContactVerificationService(repository: verificationRepository)
+            self.verificationService = service
+            isVerified = (try? service.isVerified(otherPublicKey: otherPublicKey)) ?? false
+        }
         loadEphemeralDuration()
         // TASK-153: Load the agreement private key here instead of receiving it from
         // the View. Failure is surfaced to the user rather than silently using empty Data.
@@ -56,6 +67,20 @@ class SecretMessageViewModel {
             return
         }
         loadMessages()
+    }
+
+    /// TASK-131: スキャンした相手の安全番号 QR を自端末計算値と突合し、一致時のみ検証済みを保存する。
+    /// - Returns: 突合結果（`.verified` / `.mismatch` / `.invalidPayload`）。UI 側で結果を提示する。
+    @discardableResult
+    func verifyScanned(payload: String) -> ContactVerificationResult {
+        guard let verificationService, let myPublicKey else { return .invalidPayload }
+        let result = (try? verificationService.verify(
+            scannedPayload: payload,
+            myPublicKey: myPublicKey,
+            otherPublicKey: otherPublicKey
+        )) ?? .invalidPayload
+        if case .verified = result { isVerified = true }
+        return result
     }
 
     func loadMessages() {
