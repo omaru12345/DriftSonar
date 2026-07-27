@@ -10,6 +10,9 @@ on:
       - '**.md'
       - '.github/**'
 
+permissions:
+  contents: write
+
 jobs:
   bump:
     name: Bump Build Number
