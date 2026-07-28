@@ -45,6 +45,13 @@ class SecretMessageViewModel {
     /// Called with encrypted data to enqueue for BLE delivery.
     var onSendEncrypted: ((Data) -> Void)?
 
+    // TASK-160: `@Observable` makes this class implicitly `@MainActor`, which gives it a
+    // main-actor-isolated `deinit`. On the iOS 17 back-deploy concurrency runtime that
+    // isolated deinit double-frees its task-local scope and crashes host-based unit tests
+    // that create the ViewModel. Marking deinit `nonisolated` keeps teardown off the
+    // executor and sidesteps the runtime bug (same fix as `TimelineViewModel`).
+    nonisolated deinit {}
+
     init(otherPublicKey: Data) {
         self.otherPublicKey = otherPublicKey
     }
