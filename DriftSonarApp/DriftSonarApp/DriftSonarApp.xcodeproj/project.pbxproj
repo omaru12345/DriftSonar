@@ -31,6 +31,7 @@
 		6E7C0DA39C079EB025DE141D /* TestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */; };
 		7B7D044083FD186E3073BCF3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2484C368750D0A201ADDCC1 /* Foundation.framework */; };
 		7FE8BEBC7AAE5289056311EE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2484C368750D0A201ADDCC1 /* Foundation.framework */; };
+		A6DFA45C7971320220E89BBD /* ComposeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */; };
 		BB0C457357257784DF1CBCD5 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 8FEE59CEBE453D079C61FD14 /* SnapshotTesting */; };
 		D615CE1EECBFA6314727557A /* PostRowViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A681A50CE62173BB9CC384 /* PostRowViewSnapshotTests.swift */; };
 /* End PBXBuildFile section */
@@ -74,6 +75,7 @@
 		407FD5EDEF963BECFE6B67C1 /* DriftSonarAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5709E8866AEC2FF9DBD6A441 /* InitialSetupViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InitialSetupViewModelTests.swift; sourceTree = "<group>"; };
 		8485ACECFF764E75DF04E445 /* SetupFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetupFlowUITests.swift; sourceTree = "<group>"; };
+		B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComposeFlowUITests.swift; sourceTree = "<group>"; };
 		B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9D98BB4FDEB8E3B1CB4AD5D /* MessageBubbleSnapshotTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MessageBubbleSnapshotTests.swift; sourceTree = "<group>"; };
 		C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestDoubles.swift; sourceTree = "<group>"; };
@@ -197,6 +199,7 @@
 			isa = PBXGroup;
 			children = (
 				8485ACECFF764E75DF04E445 /* SetupFlowUITests.swift */,
+				B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */,
 			);
 			name = DriftSonarAppUITests;
 			path = DriftSonarAppUITests;
@@ -395,6 +398,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				65687871EF2ADB8DAB3A9F3A /* SetupFlowUITests.swift in Sources */,
+				A6DFA45C7971320220E89BBD /* ComposeFlowUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

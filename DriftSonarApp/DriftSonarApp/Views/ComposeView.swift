@@ -146,6 +146,7 @@ struct ComposeView: View {
                         Button("流す") { submit() }
                             .bold()
                             .disabled(!canPost)
+                            .accessibilityIdentifier("compose_submit_button")  // TASK-160
                     }
                 }
             }
@@ -187,6 +188,7 @@ struct ComposeView: View {
                     .frame(minHeight: 140)
                     .padding(.horizontal, DSLayout.Spacing.md)
                     .padding(.top, DSLayout.Spacing.sm)
+                    .accessibilityIdentifier("compose_text_editor")  // TASK-160
             }
 
             if !mediaPreviews.isEmpty || isProcessingMedia {

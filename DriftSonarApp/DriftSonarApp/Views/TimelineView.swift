@@ -116,6 +116,7 @@ struct PostTimelineView: View {
                     }
                     // TASK-143: Icon-only button needs an explicit VoiceOver label.
                     .accessibilityLabel("新規投稿")
+                    .accessibilityIdentifier("compose_button")  // TASK-160
                 }
             }
             .sheet(isPresented: $showingCompose) {
