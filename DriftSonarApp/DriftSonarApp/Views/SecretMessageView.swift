@@ -272,7 +272,9 @@ private struct SafetyNumberSheetItem: Identifiable {
 
 // MARK: - MessageBubble
 
-private struct MessageBubble: View {
+// TASK-161: `internal` (not `private`) so snapshot tests can instantiate it directly
+// via `@testable import`. Still only used within the SecretMessage feature.
+struct MessageBubble: View {
     let text: String
     let isMine: Bool
     let timestamp: Date
