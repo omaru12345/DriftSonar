@@ -311,7 +311,10 @@ struct PostRowView: View {
     /// TASK-197: Posts that already played their drift-in this session. Row `@State` is
     /// discarded when a List row scrolls far off screen, so without this a post would
     /// wash ashore again every time it scrolls back into view.
-    private static var driftedInIds = Set<UUID>()
+    /// TASK-161: `internal` (not `private`) so snapshot tests can pre-seed a post id and
+    /// render the row at full opacity, skipping the one-shot drift-in animation whose
+    /// `onAppear`/timing is non-deterministic under snapshotting.
+    static var driftedInIds = Set<UUID>()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// True when the row should be visible immediately instead of drifting in.
