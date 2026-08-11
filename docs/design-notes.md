@@ -67,3 +67,4 @@ swift-snapshot-testing で主要 View の見た目回帰を検出する（`Drift
 - **意図した見た目変更の更新手順**：対象の `.png` を削除して再実行（自動再記録→fail）→ 差分を目視確認 → コミット → 再実行で green。デザイン変更 PR ではこの再撮影を差分に含める。
 - **決定論を保つ**：時刻・ロケール依存を排除する。相対時刻は `Date()` からの固定オフセット、絶対時刻は固定エポック（今日以外）を使い、`\.locale` は `ja_JP` に固定。アニメーション（例: PostRowView の drift-in）は開始状態が opacity 0 になり得るため、`PostRowView.driftedInIds` を事前シードして初期フレームから可視にする。
 - **対象**：`EmptyTimelineView` / `PostRowView` / `MessageBubble`。Light・Dark と Dynamic Type（accessibility3）の主要バリアントを撮る。
+- **CI では実行しない＝ローカル専用ゲート（TASK-162 / #197）**：GitHub ホストランナー（macos-26）は Xcode 26.2・iOS 26.2 を記録環境と一致させても、物理 Mac とテキストレンダリングが微妙に異なり `perceptualPrecision 0.98` でも全滅する（"does not match reference"）。基準画像は撮影マシンでのみ正となるため、CI（`app-test.yml`）は `-skip-testing` でスナップショット3クラスを除外し、unit / UI のみをゲートする。スナップショット回帰は **push 前にローカルでフル `xcodebuild test` を回して**担保する。

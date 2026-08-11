@@ -49,7 +49,15 @@ jobs:
           restore-keys: |
             spm-${{ runner.os }}-
 
-      # Runs DriftSonarAppTests (ViewModel unit + snapshot) and DriftSonarAppUITests.
+      # Runs DriftSonarAppTests (ViewModel unit) and DriftSonarAppUITests.
+      #
+      # Snapshot tests (*SnapshotTests) are skipped in CI: even on the identical Xcode 26.2
+      # / iOS 26.2 simulator, the hosted runner renders text a hair differently from the
+      # physical Mac the baselines were recorded on, so every snapshot fails at
+      # perceptualPrecision 0.98 ("does not match reference"). Snapshot baselines are only
+      # authoritative on the recording machine — they stay a LOCAL regression gate (run the
+      # full `xcodebuild test` before pushing). CI gates the environment-portable layers.
+      #
       # -retry-tests-on-failure tolerates the occasional UI-test flake (keyboard/animation
       # timing on a cold simulator) without turning a real regression green.
       - name: Run App tests
@@ -63,7 +71,9 @@ jobs:
             -enableCodeCoverage YES \
             -retry-tests-on-failure \
             -resultBundlePath TestResults.xcresult \
-            -quiet
+            -skip-testing:DriftSonarAppTests/PostRowViewSnapshotTests \
+            -skip-testing:DriftSonarAppTests/MessageBubbleSnapshotTests \
+            -skip-testing:DriftSonarAppTests/EmptyTimelineViewSnapshotTests
 
       # Surface a per-target coverage summary in the job log (TASK-044 alignment).
       # Best-effort: never fail the job on a reporting hiccup.
