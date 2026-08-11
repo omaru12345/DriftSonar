@@ -59,6 +59,13 @@ final class AppServices {
     /// never fires again. Buffering here lets the Radar seed its list with peers met before
     /// it was ever opened (#320), so a peer that is right there is not shown as an empty radar.
     private(set) var liveEncounteredPeers: [EncounteredEvent] = []
+    /// #320: the peer whose DM conversation is currently on screen, and a sink that
+    /// delivers a live incoming DM to it. Set by `SecretMessageView` while visible and
+    /// cleared on disappear, so an open conversation shows a message the instant it
+    /// arrives. When no conversation is open the incoming ciphertext is persisted instead
+    /// (see the `onDirectMessageReceived` wiring) so it appears on next open.
+    var activeConversationPeer: Data?
+    var activeConversationHandler: ((_ senderKey: Data, _ ciphertext: Data) -> Void)?
     /// TASK-146: true while BLE scanning is in the power-saving cadence (Low Power Mode
     /// or low battery). Drives the subtle Radar indicator.
     var isScanPowerSaving: Bool = false
@@ -127,6 +134,31 @@ final class AppServices {
                 self.liveEncounteredPeers.append(event)
             }
             self.liveEncounterHandler?(event)
+        }
+
+        // #320: route incoming E2E direct messages app-wide. The DM transport was never
+        // wired to the conversation screen (onSendEncrypted / receiveEncrypted were dead),
+        // so DMs never crossed devices. Wire it here — not in a tab's view model — so a DM
+        // is handled regardless of which tab is open. onDirectMessageReceived is dispatched
+        // on the main queue by BLEEncounterService, so the repository write is safe.
+        ble.onDirectMessageReceived = { [weak self] senderKey, ciphertext in
+            guard let self else { return }
+            if self.activeConversationPeer == senderKey, let deliver = self.activeConversationHandler {
+                // The open conversation's view model decrypts, persists and displays it.
+                deliver(senderKey, ciphertext)
+            } else {
+                // No open conversation for this peer: persist the ciphertext keyed by sender
+                // so it appears (decrypted on read) the next time the conversation is opened.
+                try? self.secretMessageRepository.save(
+                    encryptedData: ciphertext,
+                    otherPublicKey: senderKey,
+                    isMine: false,
+                    timestamp: Date(),
+                    expiresAt: nil
+                )
+            }
+            // TASK-082/083: notify the user a DM arrived (content stays encrypted).
+            NotificationService.sendDMNotification()
         }
 
         // TASK-069: BLE received post → timeline refresh.

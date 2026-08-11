@@ -73,7 +73,8 @@ struct EncounterView: View {
                                 // View no longer reads the Keychain per row.
                                 NavigationLink(destination: SecretMessageView(
                                     otherPublicKey: peer.peerPublicKey,
-                                    peerNickname: peer.nickname
+                                    peerNickname: peer.nickname,
+                                    appServices: appServices
                                 )) {
                                     ContactRowView(
                                         peer: peer,
