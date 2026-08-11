@@ -52,6 +52,13 @@ final class AppServices {
     /// so `onEncounter` can both persist history and feed the live list without either
     /// overwriting the single `onEncounter` closure.
     var liveEncounterHandler: ((EncounteredEvent) -> Void)?
+    /// Peers encountered this session, appended on every `onEncounter`. The Radar's live
+    /// handler is wired only when its tab first appears (`EncounterView.onAppear`), but BLE
+    /// auto-starts at launch (#229), so the first encounter can fire BEFORE that wiring —
+    /// and because `onEncounter` is deduplicated per public key for the whole session, it
+    /// never fires again. Buffering here lets the Radar seed its list with peers met before
+    /// it was ever opened (#320), so a peer that is right there is not shown as an empty radar.
+    private(set) var liveEncounteredPeers: [EncounteredEvent] = []
     /// TASK-146: true while BLE scanning is in the power-saving cadence (Low Power Mode
     /// or low battery). Drives the subtle Radar indicator.
     var isScanPowerSaving: Bool = false
@@ -114,6 +121,11 @@ final class AppServices {
         ble.onEncounter = { [weak self] event in
             guard let self else { return }
             try? self.encounterHistoryRepository.saveEncounter(event)
+            // #320: remember peers met this session so the Radar can seed its live list
+            // even for encounters that fired before its tab (and handler) first appeared.
+            if !self.liveEncounteredPeers.contains(where: { $0.peerPublicKey == event.peerPublicKey }) {
+                self.liveEncounteredPeers.append(event)
+            }
             self.liveEncounterHandler?(event)
         }
 

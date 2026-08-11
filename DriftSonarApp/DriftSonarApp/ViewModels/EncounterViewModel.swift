@@ -41,6 +41,13 @@ class EncounterViewModel {
         appServices.liveEncounterHandler = { [weak self] event in
             self?.handleLiveEncounter(event)
         }
+        // #320: BLE auto-starts at launch, so peers can be encountered before this view
+        // wires the handler above — and onEncounter dedupes per session, so those peers
+        // would never reach the live list. Seed from the session buffer (oldest→newest so
+        // the newest lands at the front) so a peer already in range shows immediately.
+        for event in appServices.liveEncounteredPeers {
+            handleLiveEncounter(event)
+        }
         bleService.onDirectMessageReceived = { [weak self] senderKey, ciphertext in
             self?.onDirectMessageReceived?(senderKey, ciphertext)
             // TASK-083: Notify user of incoming DM (content stays encrypted).
