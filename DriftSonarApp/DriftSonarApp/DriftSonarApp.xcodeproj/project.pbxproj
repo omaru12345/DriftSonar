@@ -30,6 +30,7 @@
 		6B204A46800914E5DF901AB7 /* TimelineViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F667441E795FA5AB235210B1 /* TimelineViewModelTests.swift */; };
 		6E7C0DA39C079EB025DE141D /* TestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */; };
 		7B7D044083FD186E3073BCF3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2484C368750D0A201ADDCC1 /* Foundation.framework */; };
+		7C3AA86CC9F658AC44F6796D /* EncounterViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C0356652E0813E650F85A0E /* EncounterViewModelTests.swift */; };
 		7FE8BEBC7AAE5289056311EE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2484C368750D0A201ADDCC1 /* Foundation.framework */; };
 		9CD6E5E3EF1BC0E8DD2FC9BC /* PublicKeyFingerprintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596E0EA3827E580CC345718D /* PublicKeyFingerprintTests.swift */; };
 		A6DFA45C7971320220E89BBD /* ComposeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */; };
@@ -77,6 +78,7 @@
 		407FD5EDEF963BECFE6B67C1 /* DriftSonarAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5709E8866AEC2FF9DBD6A441 /* InitialSetupViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InitialSetupViewModelTests.swift; sourceTree = "<group>"; };
 		596E0EA3827E580CC345718D /* PublicKeyFingerprintTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PublicKeyFingerprintTests.swift; sourceTree = "<group>"; };
+		5C0356652E0813E650F85A0E /* EncounterViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EncounterViewModelTests.swift; sourceTree = "<group>"; };
 		8485ACECFF764E75DF04E445 /* SetupFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetupFlowUITests.swift; sourceTree = "<group>"; };
 		B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComposeFlowUITests.swift; sourceTree = "<group>"; };
 		B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -228,6 +230,7 @@
 				B9D98BB4FDEB8E3B1CB4AD5D /* MessageBubbleSnapshotTests.swift */,
 				BE72A949F45392D8F151D1D9 /* SecretMessageViewModelTests.swift */,
 				596E0EA3827E580CC345718D /* PublicKeyFingerprintTests.swift */,
+				5C0356652E0813E650F85A0E /* EncounterViewModelTests.swift */,
 			);
 			name = DriftSonarAppTests;
 			path = DriftSonarAppTests;
@@ -398,6 +401,7 @@
 				4FFB2D7119D8F2B29EA560A6 /* MessageBubbleSnapshotTests.swift in Sources */,
 				DE3C8DEB1F29111EF2DD460F /* SecretMessageViewModelTests.swift in Sources */,
 				9CD6E5E3EF1BC0E8DD2FC9BC /* PublicKeyFingerprintTests.swift in Sources */,
+				7C3AA86CC9F658AC44F6796D /* EncounterViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
