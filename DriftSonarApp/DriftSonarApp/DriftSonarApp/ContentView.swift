@@ -274,7 +274,7 @@ private struct ProfileView: View {
 
                     // TASK-120: すれ違い履歴のタイムラインへの導線。
                     NavigationLink {
-                        EncounterHistoryView(appServices: appServices)
+                        EncounterHistoryView(appServices: appServices, myPublicKey: profile.publicKey)
                     } label: {
                         Label("すれ違いの記録", systemImage: "clock.arrow.circlepath")
                             .frame(maxWidth: .infinity)
