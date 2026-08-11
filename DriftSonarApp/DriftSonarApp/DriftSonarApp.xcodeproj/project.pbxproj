@@ -35,6 +35,7 @@
 		9CD6E5E3EF1BC0E8DD2FC9BC /* PublicKeyFingerprintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596E0EA3827E580CC345718D /* PublicKeyFingerprintTests.swift */; };
 		A6DFA45C7971320220E89BBD /* ComposeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */; };
 		BB0C457357257784DF1CBCD5 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 8FEE59CEBE453D079C61FD14 /* SnapshotTesting */; };
+		BD58311238AD6B5B0104D647 /* RadarFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3391D8AD7F237DDE7521DF2C /* RadarFlowUITests.swift */; };
 		D615CE1EECBFA6314727557A /* PostRowViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A681A50CE62173BB9CC384 /* PostRowViewSnapshotTests.swift */; };
 		DE3C8DEB1F29111EF2DD460F /* SecretMessageViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE72A949F45392D8F151D1D9 /* SecretMessageViewModelTests.swift */; };
 /* End PBXBuildFile section */
@@ -58,6 +59,7 @@
 
 /* Begin PBXFileReference section */
 		32A681A50CE62173BB9CC384 /* PostRowViewSnapshotTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PostRowViewSnapshotTests.swift; sourceTree = "<group>"; };
+		3391D8AD7F237DDE7521DF2C /* RadarFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RadarFlowUITests.swift; sourceTree = "<group>"; };
 		3D52D7922F4CB1C400293211 /* DriftSonarApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DriftSonarApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D52D7A32F4CB3F000293211 /* DriftSonarCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = DriftSonarCore; path = ../../../DriftSonarCore; sourceTree = "<group>"; };
 		3DBC25DB2F4CBD2400D66431 /* EncounterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterViewModel.swift; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 			children = (
 				8485ACECFF764E75DF04E445 /* SetupFlowUITests.swift */,
 				B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */,
+				3391D8AD7F237DDE7521DF2C /* RadarFlowUITests.swift */,
 			);
 			name = DriftSonarAppUITests;
 			path = DriftSonarAppUITests;
@@ -411,6 +414,7 @@
 			files = (
 				65687871EF2ADB8DAB3A9F3A /* SetupFlowUITests.swift in Sources */,
 				A6DFA45C7971320220E89BBD /* ComposeFlowUITests.swift in Sources */,
+				BD58311238AD6B5B0104D647 /* RadarFlowUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
