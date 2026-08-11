@@ -1,5 +1,4 @@
 import SwiftUI
-import UserNotifications
 import DriftSonarCore
 
 @Observable
@@ -18,9 +17,6 @@ class EncounterViewModel {
     private var encounterService: EncounterService? { bleService }
     #endif
     private var isSetup = false
-
-    /// Called with (senderPublicKey, encryptedData) when a direct message arrives over BLE.
-    var onDirectMessageReceived: ((Data, Data) -> Void)?
 
     /// @Observable の VM をホストベース単体テストで生成・破棄すると、既定 MainActor 隔離 +
     /// iOS26 back-deploy の二重解放で deinit がクラッシュするため nonisolated 化する
@@ -41,11 +37,15 @@ class EncounterViewModel {
         appServices.liveEncounterHandler = { [weak self] event in
             self?.handleLiveEncounter(event)
         }
-        bleService.onDirectMessageReceived = { [weak self] senderKey, ciphertext in
-            self?.onDirectMessageReceived?(senderKey, ciphertext)
-            // TASK-083: Notify user of incoming DM (content stays encrypted).
-            NotificationService.sendDMNotification()
+        // #320: BLE auto-starts at launch, so peers can be encountered before this view
+        // wires the handler above — and onEncounter dedupes per session, so those peers
+        // would never reach the live list. Seed from the session buffer (oldest→newest so
+        // the newest lands at the front) so a peer already in range shows immediately.
+        for event in appServices.liveEncounteredPeers {
+            handleLiveEncounter(event)
         }
+        // #320: incoming DM handling lives in AppServices.init (app-wide, not tied to the
+        // Radar tab). Wiring it here too would clobber that handler when this view appears.
         self.bleService = bleService
         startDiscovery(myPublicKey: myPublicKey)
     }
@@ -57,11 +57,6 @@ class EncounterViewModel {
     func handleLiveEncounter(_ event: EncounteredEvent) {
         guard !encounteredPeers.contains(where: { $0.peerPublicKey == event.peerPublicKey }) else { return }
         encounteredPeers.insert(event, at: 0)
-    }
-
-    /// Enqueue an encrypted direct message for delivery to a specific peer.
-    func enqueueDirectMessage(_ encryptedData: Data, for peerPublicKey: Data) {
-        bleService?.enqueueDirectMessage(encryptedData, for: peerPublicKey)
     }
 
     func startDiscovery(myPublicKey: Data) {

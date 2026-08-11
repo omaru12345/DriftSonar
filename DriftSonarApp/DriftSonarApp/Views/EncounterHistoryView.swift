@@ -59,7 +59,8 @@ struct EncounterHistoryView: View {
                                 NavigationLink {
                                     SecretMessageView(
                                         otherPublicKey: event.peerPublicKey,
-                                        peerNickname: event.nickname
+                                        peerNickname: event.nickname,
+                                        appServices: appServices
                                     )
                                 } label: {
                                     EncounterHistoryRow(

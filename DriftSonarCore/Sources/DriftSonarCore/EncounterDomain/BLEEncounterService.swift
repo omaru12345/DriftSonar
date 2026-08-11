@@ -390,6 +390,24 @@ public final class BLEEncounterService: NSObject, EncounterService, @unchecked S
         bleQueue.asyncAfter(deadline: .now() + .seconds(seconds), execute: work)
     }
 
+    /// #320: reciprocate an inbound connection so a brief pass-by exchanges BOTH ways.
+    ///
+    /// Posts only travel central→peripheral (write). When a peer connects to us and reads
+    /// our identity it is right here, pushing its posts — but for OUR posts to reach it we
+    /// must connect back as central. Mid scan-OFF that wait is up to a full duty cycle, so a
+    /// short encounter delivers only one direction. Waking the scanner now (from a clean
+    /// baseline, so the next phase turns scanning ON immediately and re-allows reconnecting
+    /// to the peer) makes the reciprocal push happen within a second or two.
+    ///
+    /// No-op while already scanning (we will discover them anyway) so active traffic does not
+    /// thrash the scheduler, and only while running so it never revives a scan the user stopped.
+    /// Runs on `bleQueue` (the peripheral-manager delegate queue).
+    private func reciprocateScanIfIdle() {
+        guard isRunning, centralManager != nil, !scanPhaseIsOn else { return }
+        log("reciprocate: waking scan on inbound connection (#320)")
+        startScanScheduler()
+    }
+
     /// TASK-145: switch the scan cadence between the foreground (duty-cycled) and
     /// background (continuous) cycles. Called from the app's scenePhase handler.
     /// Re-plans from a clean baseline so the new cadence takes effect immediately —
@@ -615,6 +633,10 @@ extension BLEEncounterService: CBPeripheralManagerDelegate {
             }
             request.value = myPublicKey.subdata(in: request.offset..<myPublicKey.count)
             peripheral.respond(to: request, withResult: .success)
+            // #320: a peer just connected to us — reciprocate so our posts reach it now,
+            // not a full duty cycle later. The public-key read fires on every inbound
+            // connection, so this is the earliest reliable "peer is here" signal.
+            reciprocateScanIfIdle()
         } else if request.characteristic.uuid == DriftSonarBLE.nicknameCharacteristicUUID {
             // TASK-076: Return UTF-8 nickname bytes.
             let nicknameData = Data(myNickname.utf8)

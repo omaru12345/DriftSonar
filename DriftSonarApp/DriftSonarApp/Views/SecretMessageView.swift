@@ -10,16 +10,20 @@ struct SecretMessageView: View {
 
     /// Optional nickname received via BLE (TASK-080). Falls back to fingerprint.
     private let peerNickname: String?
+    /// #320: shared services — the BLE send queue for outbound DMs and the active-
+    /// conversation registration used to deliver incoming DMs live.
+    private let appServices: AppServices
 
     /// TASK-130: 「安全番号を確認」シートで提示する内容。`nil` の間は開かない。
     /// 提示時に算出済みの安全番号を確定して渡すため、空シートが出る経路が無い。
     @State private var safetyNumberSheet: SafetyNumberSheetItem?
 
-    init(otherPublicKey: Data, peerNickname: String? = nil) {
+    init(otherPublicKey: Data, peerNickname: String? = nil, appServices: AppServices) {
         _viewModel = State(initialValue: SecretMessageViewModel(
             otherPublicKey: otherPublicKey
         ))
         self.peerNickname = peerNickname
+        self.appServices = appServices
     }
 
     private var peerTitle: String {
@@ -251,6 +255,26 @@ struct SecretMessageView: View {
                 // TASK-131: 検証済み相手の永続化を結線。
                 verificationRepository: SwiftDataVerifiedContactRepository(container: modelContext.container)
             )
+            // #320: wire the DM transport. Sending enqueues the ciphertext on the BLE
+            // outbound queue for this peer; it is delivered on the next encounter.
+            let peerKey = viewModel.otherPublicKey
+            viewModel.onSendEncrypted = { [appServices] ciphertext in
+                appServices.bleService.enqueueDirectMessage(ciphertext, for: peerKey)
+            }
+            // #320: register as the active conversation so an incoming DM from this peer is
+            // delivered live (decrypted + shown) instead of only persisted for next open.
+            appServices.activeConversationPeer = peerKey
+            appServices.activeConversationHandler = { [weak viewModel] senderKey, ciphertext in
+                viewModel?.receiveEncrypted(ciphertext, senderPublicKey: senderKey)
+            }
+        }
+        .onDisappear {
+            // #320: stop taking live delivery when we leave, so a later DM for this peer is
+            // persisted (and badged) rather than dropped into a view that is gone.
+            if appServices.activeConversationPeer == viewModel.otherPublicKey {
+                appServices.activeConversationPeer = nil
+                appServices.activeConversationHandler = nil
+            }
         }
         // TASK-150: on foreground return, re-purge and re-filter so messages that expired
         // while backgrounded disappear from an already-open conversation, not just on reopen.
