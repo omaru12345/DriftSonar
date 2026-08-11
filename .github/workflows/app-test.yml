@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   test:
-    name: Unit / UI / Snapshot
+    name: Unit / UI
     # macos-26 ships Xcode 26.2 (17C52) + the iOS 26.2 simulator with iPhone 17 —
     # exactly the environment the snapshot baselines were recorded on, so they match
     # at perceptualPrecision 0.98 instead of drifting across Xcode point releases.
@@ -75,13 +75,32 @@ jobs:
             -skip-testing:DriftSonarAppTests/MessageBubbleSnapshotTests \
             -skip-testing:DriftSonarAppTests/EmptyTimelineViewSnapshotTests
 
-      # Surface a per-target coverage summary in the job log (TASK-044 alignment).
+      # Surface a per-target coverage summary in the job log (quick glance).
       # Best-effort: never fail the job on a reporting hiccup.
       - name: Coverage summary
         if: ${{ !cancelled() }}
         run: |
           xcrun xccov view --report --only-targets TestResults.xcresult || \
             echo "coverage summary unavailable"
+
+      # TASK-044 alignment: convert the App's source coverage to LCOV and feed the same
+      # Codecov report the Core layer uses (flag DriftSonarApp). Self-contained xccov→lcov
+      # so no gem / third-party uploader is needed. Best-effort — never blocks the gate.
+      - name: Convert coverage to LCOV
+        if: ${{ !cancelled() }}
+        run: |
+          python3 .github/scripts/xccov_to_lcov.py TestResults.xcresult "$GITHUB_WORKSPACE" coverage.lcov || \
+            echo "coverage conversion skipped"
+
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.lcov
+          flags: DriftSonarApp
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       # Keep the result bundle for post-mortem on failures (test logs, coverage, attachments).
       - name: Upload test results
