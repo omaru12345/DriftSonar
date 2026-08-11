@@ -34,6 +34,7 @@
 		A6DFA45C7971320220E89BBD /* ComposeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */; };
 		BB0C457357257784DF1CBCD5 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 8FEE59CEBE453D079C61FD14 /* SnapshotTesting */; };
 		D615CE1EECBFA6314727557A /* PostRowViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A681A50CE62173BB9CC384 /* PostRowViewSnapshotTests.swift */; };
+		DE3C8DEB1F29111EF2DD460F /* SecretMessageViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE72A949F45392D8F151D1D9 /* SecretMessageViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -78,6 +79,7 @@
 		B0A228573064AC1B208B0449 /* ComposeFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComposeFlowUITests.swift; sourceTree = "<group>"; };
 		B1C48C07A51B96FDD24A51DE /* DriftSonarAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriftSonarAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9D98BB4FDEB8E3B1CB4AD5D /* MessageBubbleSnapshotTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MessageBubbleSnapshotTests.swift; sourceTree = "<group>"; };
+		BE72A949F45392D8F151D1D9 /* SecretMessageViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SecretMessageViewModelTests.swift; sourceTree = "<group>"; };
 		C9A31B6D17F3BA72A7279630 /* TestDoubles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestDoubles.swift; sourceTree = "<group>"; };
 		DD2AB0E7B4FFB624F327565B /* EmptyTimelineViewSnapshotTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmptyTimelineViewSnapshotTests.swift; sourceTree = "<group>"; };
 		E2484C368750D0A201ADDCC1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -222,6 +224,7 @@
 				DD2AB0E7B4FFB624F327565B /* EmptyTimelineViewSnapshotTests.swift */,
 				32A681A50CE62173BB9CC384 /* PostRowViewSnapshotTests.swift */,
 				B9D98BB4FDEB8E3B1CB4AD5D /* MessageBubbleSnapshotTests.swift */,
+				BE72A949F45392D8F151D1D9 /* SecretMessageViewModelTests.swift */,
 			);
 			name = DriftSonarAppTests;
 			path = DriftSonarAppTests;
@@ -390,6 +393,7 @@
 				5960D8BEC19CF6ABD70A23E2 /* EmptyTimelineViewSnapshotTests.swift in Sources */,
 				D615CE1EECBFA6314727557A /* PostRowViewSnapshotTests.swift in Sources */,
 				4FFB2D7119D8F2B29EA560A6 /* MessageBubbleSnapshotTests.swift in Sources */,
+				DE3C8DEB1F29111EF2DD460F /* SecretMessageViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
