@@ -292,6 +292,7 @@ private struct ProfileView: View {
                     }
                     .buttonStyle(.bordered)
                     .padding(.horizontal)
+                    .accessibilityIdentifier("demo_seed_button")  // TASK-160
                     #endif
                 }
                 .padding(.vertical)
@@ -367,6 +368,10 @@ private struct ProfileView: View {
             modelContext.insert(encounter)
         }
         try? modelContext.save()
+        // The Timeline reads from timelineViewModel (a repository fetch), not a live @Query,
+        // so a direct insert isn't reflected until a refresh. Nudge it so the seeded posts
+        // appear immediately instead of only after a manual pull-to-refresh.
+        appServices.timelineViewModel.refresh()
     }
     #endif
 }

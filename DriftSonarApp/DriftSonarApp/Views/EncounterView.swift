@@ -153,6 +153,7 @@ struct EncounterView: View {
             Text(statusTitleKey)
                 .font(.dsTitle)
                 .foregroundStyle(statusTint)
+                .accessibilityIdentifier("radar_status_title")  // TASK-160
             Text(statusSubtitleKey)
             .font(.dsCaption)
             .foregroundStyle(Color.dsTextSecondary)
