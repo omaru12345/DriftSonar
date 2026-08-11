@@ -8,11 +8,24 @@ class EncounterViewModel {
     var encounteredPeers: [EncounteredEvent] = []
 
     private var bleService: BLEEncounterService?
+    #if DEBUG
+    /// Test seam (TASK-159 / EPIC #32): when set, discovery drives this instead of the
+    /// concrete BLE service, so start/stopDiscovery can be exercised without CoreBluetooth.
+    /// Compiled only in DEBUG so the Release build keeps no injection surface.
+    var encounterServiceOverride: EncounterService?
+    private var encounterService: EncounterService? { encounterServiceOverride ?? bleService }
+    #else
     private var encounterService: EncounterService? { bleService }
+    #endif
     private var isSetup = false
 
     /// Called with (senderPublicKey, encryptedData) when a direct message arrives over BLE.
     var onDirectMessageReceived: ((Data, Data) -> Void)?
+
+    /// @Observable の VM をホストベース単体テストで生成・破棄すると、既定 MainActor 隔離 +
+    /// iOS26 back-deploy の二重解放で deinit がクラッシュするため nonisolated 化する
+    /// （TimelineViewModel / SecretMessageViewModel と同方針）。
+    nonisolated deinit {}
 
     /// Safe to call multiple times — initialises the service only once (TASK-059).
     /// Pass the shared `AppServices` so the live list is fed via `liveEncounterHandler`
@@ -26,10 +39,7 @@ class EncounterViewModel {
         let bleService = appServices.bleService
         // onEncounter is dispatched on the main queue, so this handler runs on main.
         appServices.liveEncounterHandler = { [weak self] event in
-            guard let self else { return }
-            if !self.encounteredPeers.contains(where: { $0.peerPublicKey == event.peerPublicKey }) {
-                self.encounteredPeers.insert(event, at: 0)
-            }
+            self?.handleLiveEncounter(event)
         }
         bleService.onDirectMessageReceived = { [weak self] senderKey, ciphertext in
             self?.onDirectMessageReceived?(senderKey, ciphertext)
@@ -38,6 +48,15 @@ class EncounterViewModel {
         }
         self.bleService = bleService
         startDiscovery(myPublicKey: myPublicKey)
+    }
+
+    /// 新しく出会ったピアを重複なくライブ一覧の先頭へ積む（TASK-120）。`setupService` が
+    /// `appServices.liveEncounterHandler` にこの関数を配線する。同じ公開鍵のピアは二重に
+    /// 積まず、既存（＝先に出会った）エントリを保つ。純粋なので AppServices / CoreBluetooth
+    /// 抜きで単体テストできる。
+    func handleLiveEncounter(_ event: EncounteredEvent) {
+        guard !encounteredPeers.contains(where: { $0.peerPublicKey == event.peerPublicKey }) else { return }
+        encounteredPeers.insert(event, at: 0)
     }
 
     /// Enqueue an encrypted direct message for delivery to a specific peer.

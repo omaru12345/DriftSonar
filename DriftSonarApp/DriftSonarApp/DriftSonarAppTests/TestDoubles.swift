@@ -38,6 +38,29 @@ final class InMemoryPostRepository: PostRepository {
     }
 }
 
+/// Fake `EncounterService` for `EncounterViewModel` discovery tests (EPIC #32).
+/// Records calls so start/stopDiscovery can be verified without CoreBluetooth.
+final class FakeEncounterService: EncounterService {
+    var onEncounter: ((EncounteredEvent) -> Void)?
+    private(set) var executeCallCount = 0
+    private(set) var lastCommand: StartDiscoveryCommand?
+    private(set) var stopCallCount = 0
+    /// When true, `execute` throws so the failure path (isDiscovering stays false) is exercised.
+    var throwOnExecute = false
+
+    func execute(command: StartDiscoveryCommand) throws {
+        if throwOnExecute {
+            throw NSError(domain: "FakeEncounterService", code: 1)
+        }
+        executeCallCount += 1
+        lastCommand = command
+    }
+
+    func stop() {
+        stopCallCount += 1
+    }
+}
+
 /// In-memory `UserRepository` for `InitialSetupViewModel` tests.
 final class InMemoryUserRepository: UserRepository {
     private(set) var saved: UserProfile?
